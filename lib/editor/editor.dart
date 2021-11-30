@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/controller/language_controller.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
@@ -67,15 +68,8 @@ class EditorState extends State<Editor> {
         onMatch: (List<String> matches) {
           print('object');
         },
-        patternMatchMap: <RegExp, TextStyle>{
-          RegExp('<\/?([a-z]{1,10})([0-9]{0,2})\>?'):
-              const TextStyle(color: Colors.yellow),
-          RegExp('<'): const TextStyle(color: Colors.yellow),
-          RegExp('>'): const TextStyle(color: Colors.yellow),
-          RegExp('"([a-zA-Z0-9\-\.\=\,\:\/]*"*)'):
-              TextStyle(color: Colors.orange[300]),
-          RegExp('([A-Za-z\-]*)\='): TextStyle(color: Colors.green[300])
-        });
+        patternMatchMap:
+            LanguageController.provideLanguageMap(widget.language));
   }
 
   int numLines = 1;
