@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/language_controller.dart';
+import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
@@ -73,6 +75,7 @@ class EditorState extends State<Editor> {
   }
 
   int numLines = 1;
+  double initialWidth = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -80,11 +83,8 @@ class EditorState extends State<Editor> {
       children: [
         Container(
             color: widget.linebarColor,
-            constraints: const BoxConstraints(minWidth: 15, maxWidth: 50),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20.0),
-              child: linecountBar(),
-            )),
+            constraints: BoxConstraints(minWidth: 10, maxWidth: initialWidth),
+            child: linecountBar()),
         Container(
           color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
           width: 5,
@@ -135,12 +135,21 @@ class EditorState extends State<Editor> {
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: numLines,
-            itemBuilder: (_, i) {
-              return Text(
-                i.toString(),
-                style: const TextStyle(fontSize: 18, color: Colors.white),
-              );
-            },
+            itemBuilder: (_, i) => Linebar(
+                calculateBarWidth: () {
+                  SchedulerBinding.instance!.addPostFrameCallback((timeStamp) {
+                    setState(() {
+                      initialWidth = Linebar.calculateTextSize(i.toString(),
+                          style: const TextStyle(
+                              fontSize: 18, color: Colors.white),
+                          context: context);
+                    });
+                  });
+                },
+                child: Text(
+                  i.toString(),
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                )),
           ),
         )
       ],
