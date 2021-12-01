@@ -79,7 +79,7 @@ class EditorState extends State<Editor> {
   }
 
   int numLines = 1;
-  double initialWidth = 10;
+  double initialWidth = 21;
 
   @override
   Widget build(BuildContext context) {
