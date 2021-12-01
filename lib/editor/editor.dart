@@ -7,7 +7,6 @@ import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
-import 'package:flutter_code_editor/preview/preview.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
 class Editor extends StatefulWidget {
@@ -84,71 +83,52 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            SizedBox(
-                width: 200,
-                height: 50,
-                child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => CodePreview()));
-                    },
-                    child: Text('Webview')))
-          ],
+        Container(
+            color: widget.linebarColor,
+            constraints: BoxConstraints(minWidth: 10, maxWidth: initialWidth),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20.0),
+              child: linecountBar(),
+            )),
+        Container(
+          color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
+          width: 5,
+          height: MediaQuery.of(context).size.height,
         ),
         Expanded(
-          child: Row(
-            children: [
-              Container(
-                  color: widget.linebarColor,
-                  constraints:
-                      BoxConstraints(minWidth: 10, maxWidth: initialWidth),
-                  child: linecountBar()),
-              Container(
-                color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
-                width: 5,
+          child: Container(
+            color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
+            height: MediaQuery.of(context).size.height,
+            width: 1000,
+            child: ListView(scrollDirection: Axis.horizontal, children: [
+              SizedBox(
                 height: MediaQuery.of(context).size.height,
-              ),
-              Expanded(
-                child: Container(
-                  color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
-                  height: MediaQuery.of(context).size.height,
-                  width: 1000,
-                  child: ListView(scrollDirection: Axis.horizontal, children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height,
-                      width: 1000,
-                      child: TextField(
-                        controller: controller,
-                        decoration: decoration,
-                        scrollController: editor,
-                        onChanged: (String e) {
-                          setState(() {
-                            numLines = '\n'.allMatches(e).length + 1;
-                          });
-                          linebarController.jumpTo(
-                              linebarController.position.maxScrollExtent);
+                width: 1000,
+                child: TextField(
+                  controller: controller,
+                  decoration: decoration,
+                  scrollController: editor,
+                  onChanged: (String e) {
+                    setState(() {
+                      numLines = '\n'.allMatches(e).length + 1;
+                    });
+                    linebarController
+                        .jumpTo(linebarController.position.maxScrollExtent);
 
-                          FileController.writeFile(controller?.text as String);
-                        },
-                        expands: true,
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                        style: TextStyle(
-                          color: widget.linebarTextColor,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ]),
+                    FileController.writeFile(controller?.text as String);
+                  },
+                  expands: true,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(
+                    color: widget.linebarTextColor,
+                    fontSize: 18,
+                  ),
                 ),
               ),
-            ],
+            ]),
           ),
         ),
       ],
@@ -166,14 +146,17 @@ class EditorState extends State<Editor> {
             itemCount: numLines,
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
-                  SchedulerBinding.instance!.addPostFrameCallback((timeStamp) {
-                    setState(() {
-                      initialWidth = Linebar.calculateTextSize(i.toString(),
-                          style: const TextStyle(
-                              fontSize: 18, color: Colors.white),
-                          context: context);
+                  if (i > 9) {
+                    SchedulerBinding.instance!
+                        .addPostFrameCallback((timeStamp) {
+                      setState(() {
+                        initialWidth = Linebar.calculateTextSize(i.toString(),
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.white),
+                            context: context);
+                      });
                     });
-                  });
+                  }
                 },
                 child: Text(
                   i.toString(),

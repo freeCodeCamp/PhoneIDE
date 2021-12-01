@@ -42,19 +42,16 @@ class CodePreviewState extends State<CodePreview> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.redAccent[700],
-      child: WebView(
-        javascriptMode: widget.allowJavaScript
-            ? JavascriptMode.unrestricted
-            : JavascriptMode.disabled,
-        initialUrl: widget.initialUrl,
-        userAgent: widget.userAgent,
-        onWebViewCreated: (WebViewController controller) {
-          _controller = controller;
-          _loadCodeFromAssets();
-        },
-      ),
+    return WebView(
+      javascriptMode: widget.allowJavaScript
+          ? JavascriptMode.unrestricted
+          : JavascriptMode.disabled,
+      initialUrl: widget.initialUrl,
+      userAgent: widget.userAgent,
+      onWebViewCreated: (WebViewController controller) {
+        _controller = controller;
+        _loadCodeFromAssets();
+      },
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/controller/editor_view_controller.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
+import 'package:flutter_code_editor/editor/preview/preview.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 
 void main() {
@@ -29,8 +31,11 @@ class PreviewState extends State<Preview> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Editor(
-        language: Language.html,
+      body: EditorViewController(
+        editor: Editor(
+          language: Language.html,
+        ),
+        codePreview: CodePreview(),
       ),
     );
   }
