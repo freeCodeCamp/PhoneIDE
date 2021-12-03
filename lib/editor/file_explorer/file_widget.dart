@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as dev;
 
 class FileWidget extends StatefulWidget {
-  const FileWidget(
+  FileWidget(
       {Key? key,
-      this.openDirectory = false,
-      required this.directoriesWithFiles})
+      this.directoryOpen = false,
+      this.parentDirectory,
+      this.childDirectories,
+      this.files = const [],
+      required this.directoryName})
       : super(key: key);
 
-  // is the current directory open or not
+  bool directoryOpen;
 
-  final bool openDirectory;
+  final List? parentDirectory;
 
-  // the directories in the projects folder
+  final List? childDirectories;
 
-  final List directoriesWithFiles;
+  final List files;
+
+  final String directoryName;
 
   @override
   State<StatefulWidget> createState() => FileWidgetState();
@@ -22,28 +28,35 @@ class FileWidget extends StatefulWidget {
 class FileWidgetState extends State<FileWidget> {
   @override
   Widget build(BuildContext context) {
-    List<Widget> fileTree = [];
-    List projects = widget.directoriesWithFiles;
-
-    for (int i = 0; i < projects.length; i++) {
-      fileTree.add(ListTile(
-        leading: const Icon(Icons.folder),
-        title: Text(projects[i][0]),
-      ));
-      for (int j = 1; j < projects[i].length; j++) {
-        fileTree.add(Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: ListTile(
-            title: Text(projects[i][j]),
-            leading: const Icon(Icons.file_copy_rounded),
-          ),
-        ));
+    ListTile returnFiles() {
+      for (int i = 0; i < widget.files.length; i++) {
+        dev.log(widget.files.toString());
+        return ListTile(
+          leading: const Icon(Icons.file_copy),
+          title: Text(widget.files[i]),
+        );
       }
+
+      return const ListTile();
     }
 
     return ListView(
       shrinkWrap: true,
-      children: fileTree,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.folder),
+          title: Text(widget.directoryName),
+          trailing: widget.directoryOpen
+              ? const Icon(Icons.arrow_drop_down_sharp)
+              : const Icon(Icons.arrow_drop_up_sharp),
+          onTap: () {
+            setState(() {
+              widget.directoryOpen = !widget.directoryOpen;
+            });
+          },
+        ),
+        widget.directoryOpen ? returnFiles() : Container()
+      ],
     );
   }
 }

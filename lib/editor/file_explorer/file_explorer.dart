@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
+import 'package:flutter_code_editor/editor/file_explorer/file_widget.dart';
 
 class FileExplorer extends StatefulWidget {
   const FileExplorer({Key? key}) : super(key: key);
@@ -15,35 +16,27 @@ class FileExplorerState extends State<FileExplorer> {
     FileController.listProjectWithFiles();
   }
 
+  List<Widget> fileTree = <Widget>[];
+
   @override
   Widget build(BuildContext context) {
-    final fileTree = <Widget>[];
-
     return Drawer(
       child: Column(
         children: [
-          FutureBuilder<List<List>>(
+          FutureBuilder<Map<String, dynamic>>(
               future: FileController.listProjectWithFiles(),
               builder: (BuildContext context, snapshot) {
                 if (snapshot.hasData) {
-                  List projects = snapshot.data ?? [];
+                  fileTree = [];
+                  Map<String, dynamic> projects = snapshot.data ?? {};
 
-                  for (int i = 0; i < projects.length; i++) {
-                    fileTree.add(ListTile(
-                      leading: const Icon(Icons.folder),
-                      title: Text(projects[i][0]),
-                    ));
-                    for (int j = 1; j < projects[i].length; j++) {
-                      fileTree.add(Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: ListTile(
-                          title: Text(projects[i][j]),
-                          leading: const Icon(Icons.file_copy_rounded),
-                        ),
-                      ));
-                    }
+                  for (int i = 0; i < projects.keys.length; i++) {
+                    var directoryKeys = projects.keys.toList()[i];
+                    var fileKeys = projects[directoryKeys].keys.toList();
+
+                    fileTree.add(FileWidget(
+                        directoryName: directoryKeys, files: fileKeys ?? []));
                   }
-
                   return ListView(
                     shrinkWrap: true,
                     children: fileTree,

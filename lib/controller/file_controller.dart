@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:developer' as dev;
-import 'package:flutter_code_editor/enums/language.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FileController {
@@ -89,23 +88,25 @@ class FileController {
     return projects;
   }
 
-  static Future<List<List<String>>> listProjectWithFiles() async {
+  static Future<Map<String, dynamic>> listProjectWithFiles() async {
     String projectFolder = await initProjectsDirectory();
 
     List<String> projects = await listProjects();
 
-    List<List<String>> fileTree = [];
+    Map<String, dynamic> fileTree = {};
 
     for (int i = 0; i < projects.length; i++) {
       List<FileSystemEntity> filesInDir =
           Directory('$projectFolder/${projects[i]}').listSync();
 
-      fileTree.add([projects[i]]);
+      fileTree[projects[i]] = {};
 
       for (int j = 0; j < filesInDir.length; j++) {
-        fileTree[i].add(filesInDir[j].path.split("/").last);
+        var fileName = filesInDir[j].path.split("/").last;
+        fileTree[projects[i]][fileName] = fileName;
       }
     }
+
     return fileTree;
   }
 }
