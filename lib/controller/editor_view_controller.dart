@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
+import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
 
 class EditorViewController extends StatefulWidget {
@@ -30,6 +31,7 @@ class EditorViewControllerState extends State<EditorViewController> {
     return DefaultTabController(
         length: 2,
         child: Scaffold(
+          drawer: const FileExplorer(),
           appBar: AppBar(
             backgroundColor: widget.tabBarColor,
             toolbarHeight: 10,

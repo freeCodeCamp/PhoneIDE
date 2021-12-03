@@ -68,7 +68,11 @@ class EditorState extends State<Editor> {
       linebarController.jumpTo(editor.offset);
     });
 
-    FileController.readFile();
+    FileController.listProjects();
+
+    Future.delayed(Duration.zero, () async {
+      controller?.text = await FileController.readFile();
+    });
 
     controller = RichTextController(
         onMatch: (List<String> matches) {
