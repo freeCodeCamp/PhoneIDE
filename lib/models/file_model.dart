@@ -1,16 +1,16 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class FileIDE extends StatefulWidget {
-  FileIDE(
+  const FileIDE(
       {Key? key,
       required this.fileName,
       required this.filePath,
       required this.fileContent})
       : super(key: key);
 
-  String fileName;
-  String filePath;
-  String fileContent;
+  final String fileName;
+  final String filePath;
+  final String fileContent;
 
   @override
   State<StatefulWidget> createState() => FileIDEState();
@@ -19,6 +19,9 @@ class FileIDE extends StatefulWidget {
 class FileIDEState extends State<FileIDE> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return ListTile(
+      leading: const Icon(Icons.insert_drive_file),
+      title: Text(widget.fileName),
+    );
   }
 }

@@ -68,11 +68,11 @@ class EditorState extends State<Editor> {
       linebarController.jumpTo(editor.offset);
     });
 
-    FileController.listProjects();
+    // FileController.listProjects();
 
-    Future.delayed(Duration.zero, () async {
-      controller?.text = await FileController.readFile();
-    });
+    // Future.delayed(Duration.zero, () async {
+    //   controller?.text = await FileController.readFile();
+    // });
 
     controller = RichTextController(
         onMatch: (List<String> matches) {
@@ -121,7 +121,7 @@ class EditorState extends State<Editor> {
                     linebarController
                         .jumpTo(linebarController.position.maxScrollExtent);
 
-                    FileController.writeFile(controller?.text as String);
+                    // FileController.writeFile(controller?.text as String);
                   },
                   expands: true,
                   maxLines: null,
