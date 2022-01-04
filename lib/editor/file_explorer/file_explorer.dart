@@ -13,10 +13,14 @@ class FileExplorer extends StatefulWidget {
 
   List historyCache = [];
 
-  late Future<List> _explorerTree;
+  Future<List>? _explorerTree;
 
   set setParentDirectory(String newParentDirectory) {
     parentDirectory = newParentDirectory;
+  }
+
+  Future<List> getInitialTree() async {
+    return fc.listProjects(await fc.initProjectsDirectory());
   }
 
   @override
@@ -28,33 +32,26 @@ class FileExplorerState extends State<FileExplorer> {
   void initState() {
     super.initState();
     widget.fc = FileController(fileExplorer: widget);
-    Future.delayed(
-        Duration.zero,
-        () async => {
-              widget._explorerTree = widget.fc
-                  .listProjects(await widget.fc.initProjectsDirectory())
-            });
+    widget._explorerTree = widget.getInitialTree();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
+        future: widget._explorerTree,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const CircularProgressIndicator();
-      }
+          if (snapshot.hasData) {
+            List content = snapshot.data;
+            return ListView.builder(
+                itemCount: content.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Column(
+                    children: [content[index]],
+                  );
+                });
+          }
 
-      if (snapshot.connectionState == ConnectionState.done) {
-        if (snapshot.hasError) {
-          return const Text('an error occured while fetching your projects');
-        }
-
-        if (snapshot.hasData) {
-          return const Text('snapshot has data');
-        }
-      }
-
-      return Text('State: ${snapshot.connectionState}');
-    });
+          return CircularProgressIndicator();
+        });
   }
 }

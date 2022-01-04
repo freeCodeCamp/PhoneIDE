@@ -31,7 +31,7 @@ class EditorViewControllerState extends State<EditorViewController> {
     return DefaultTabController(
         length: 2,
         child: Scaffold(
-          drawer: FileExplorer(),
+          drawer: Drawer(child: FileExplorer()),
           appBar: AppBar(
             backgroundColor: widget.tabBarColor,
             toolbarHeight: 10,
