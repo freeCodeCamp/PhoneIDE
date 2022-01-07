@@ -66,7 +66,7 @@ class DirectoryIDEState extends State<DirectoryIDE> {
                 widget.directoryOpen ? widget.directoryContent.length : 0,
             itemBuilder: (BuildContext context, int index) {
               return Padding(
-                padding: const EdgeInsets.only(left: 25),
+                padding: const EdgeInsets.only(left: 12),
                 child: widget.directoryContent[index],
               );
             })

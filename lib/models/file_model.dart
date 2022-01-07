@@ -19,10 +19,15 @@ class FileIDE extends StatefulWidget {
 class FileIDEState extends State<FileIDE> {
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.insert_drive_file),
-      title: Text(widget.fileName),
-      onTap: () {},
+    return Container(
+      decoration: const BoxDecoration(
+          border: Border(left: BorderSide(width: 1, color: Colors.grey))),
+      child: ListTile(
+        leading: const Icon(Icons.insert_drive_file),
+        dense: true,
+        title: Text(widget.fileName),
+        onTap: () {},
+      ),
     );
   }
 }
