@@ -5,7 +5,6 @@ import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:developer' as dev;
 
 class FileController {
   FileController({required this.fileExplorer});

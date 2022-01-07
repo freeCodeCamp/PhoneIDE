@@ -19,6 +19,10 @@ class FileExplorer extends StatefulWidget {
     parentDirectory = newParentDirectory;
   }
 
+  set setExplorerTree(String path) {
+    _explorerTree = fc.listProjects(path);
+  }
+
   Future<List> getInitialTree() async {
     return fc.listProjects(await fc.initProjectsDirectory());
   }
@@ -50,8 +54,7 @@ class FileExplorerState extends State<FileExplorer> {
                   );
                 });
           }
-
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         });
   }
 }

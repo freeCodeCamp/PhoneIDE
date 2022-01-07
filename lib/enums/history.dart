@@ -1,0 +1,1 @@
+enum HistoryIDE { delete, push }

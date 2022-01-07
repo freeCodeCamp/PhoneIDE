@@ -22,6 +22,7 @@ class FileIDEState extends State<FileIDE> {
     return ListTile(
       leading: const Icon(Icons.insert_drive_file),
       title: Text(widget.fileName),
+      onTap: () {},
     );
   }
 }

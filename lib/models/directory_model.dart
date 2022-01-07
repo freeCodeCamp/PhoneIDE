@@ -15,9 +15,9 @@ class DirectoryIDE extends StatefulWidget {
       : super(key: key);
 
   String directoryName;
+
   final String directoryPath;
   final List directoryContent;
-
   final FileExplorer fileExplorer;
 
   bool directoryOpen;
@@ -56,7 +56,8 @@ class DirectoryIDEState extends State<DirectoryIDE> {
               widget.directoryOpen = !widget.directoryOpen;
             });
 
-            widget.fileExplorer.setParentDirectory = "hi";
+            widget.fileExplorer.setParentDirectory = widget.directoryName;
+            widget.fileExplorer.setExplorerTree = widget.directoryPath;
           },
         ),
         ListView.builder(
@@ -64,7 +65,10 @@ class DirectoryIDEState extends State<DirectoryIDE> {
             itemCount:
                 widget.directoryOpen ? widget.directoryContent.length : 0,
             itemBuilder: (BuildContext context, int index) {
-              return widget.directoryContent[index];
+              return Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: widget.directoryContent[index],
+              );
             })
       ],
     );
