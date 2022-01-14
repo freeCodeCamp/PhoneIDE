@@ -37,6 +37,7 @@ dependencies:
   rich_text_controller: ^1.4.0
   path_provider: ^2.0.7
   webview_flutter: ^2.3.1
+  property_change_notifier: ^0.3.0
 
 dev_dependencies:
   flutter_test:
