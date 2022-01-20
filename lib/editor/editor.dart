@@ -9,14 +9,17 @@ import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
+// ignore: must_be_immutable
 class Editor extends StatefulWidget {
-  const Editor(
+  Editor(
       {Key? key,
       this.minHeight = 500,
       this.minWidth = 500,
       this.color = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
       this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
       this.linebarTextColor = Colors.white,
+      required this.onChange,
+      required this.textController,
       required this.language})
       : super(key: key);
 
@@ -44,6 +47,12 @@ class Editor extends StatefulWidget {
 
   final Language language;
 
+  // controller of text
+
+  RichTextController? textController;
+
+  Function() onChange;
+
   @override
   State<StatefulWidget> createState() => EditorState();
 }
@@ -53,10 +62,8 @@ class EditorState extends State<Editor> {
       contentPadding: EdgeInsets.only(top: 20.0, left: 10, right: 10),
       border: InputBorder.none);
 
-  RichTextController? controller;
-
+  ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
-  ScrollController editor = ScrollController();
 
   @override
   void initState() {
@@ -64,17 +71,17 @@ class EditorState extends State<Editor> {
 
     // when user scrolls the editor keep the line numbers aligned with the editor
 
-    editor.addListener(() {
-      linebarController.jumpTo(editor.offset);
+    scrollController.addListener(() {
+      linebarController.jumpTo(scrollController.offset);
     });
 
     FileController.listProjects();
 
     Future.delayed(Duration.zero, () async {
-      controller?.text = await FileController.readFile();
+      widget.textController?.text = await FileController.readFile();
     });
 
-    controller = RichTextController(
+    widget.textController = RichTextController(
         onMatch: (List<String> matches) {
           print('object');
         },
@@ -101,41 +108,46 @@ class EditorState extends State<Editor> {
           width: 5,
           height: MediaQuery.of(context).size.height,
         ),
-        Expanded(
-          child: Container(
-            color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
+        IEdtorView(context),
+      ],
+    );
+  }
+
+  // ignore: non_constant_identifier_names
+  Widget IEdtorView(BuildContext context) {
+    return Expanded(
+      child: Container(
+        color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
+        height: MediaQuery.of(context).size.height,
+        width: 1000,
+        child: ListView(scrollDirection: Axis.horizontal, children: [
+          SizedBox(
             height: MediaQuery.of(context).size.height,
             width: 1000,
-            child: ListView(scrollDirection: Axis.horizontal, children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: 1000,
-                child: TextField(
-                  controller: controller,
-                  decoration: decoration,
-                  scrollController: editor,
-                  onChanged: (String e) {
-                    setState(() {
-                      numLines = '\n'.allMatches(e).length + 1;
-                    });
-                    linebarController
-                        .jumpTo(linebarController.position.maxScrollExtent);
+            child: TextField(
+              controller: widget.textController,
+              decoration: decoration,
+              scrollController: scrollController,
+              onChanged: (String e) {
+                setState(() {
+                  numLines = '\n'.allMatches(e).length + 1;
+                });
+                widget.onChange();
 
-                    FileController.writeFile(controller?.text as String);
-                  },
-                  expands: true,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  style: TextStyle(
-                    color: widget.linebarTextColor,
-                    fontSize: 18,
-                  ),
-                ),
+                linebarController
+                    .jumpTo(linebarController.position.maxScrollExtent);
+              },
+              expands: true,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              style: TextStyle(
+                color: widget.linebarTextColor,
+                fontSize: 18,
               ),
-            ]),
+            ),
           ),
-        ),
-      ],
+        ]),
+      ),
     );
   }
 
