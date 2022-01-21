@@ -23,7 +23,7 @@ class App extends StatelessWidget {
 }
 
 // ignore: must_be_immutable
-class EditorView extends StatefulWidget with IEditor {
+class EditorView extends StatefulWidget {
   EditorView({Key? key}) : super(key: key);
 
   RichTextController? controller;
@@ -32,17 +32,22 @@ class EditorView extends StatefulWidget with IEditor {
   State<StatefulWidget> createState() => PreviewState();
 }
 
-class PreviewState extends State<EditorView> with IEditor {
+class PreviewState extends State<EditorView> {
   @override
   Widget build(BuildContext context) {
+    Editor editor = Editor(
+      language: Language.html,
+      textController: widget.controller,
+      onChange: () {},
+    );
+
+    editor.onChange = () {
+      editor.returnEditorValue(editor.textController);
+    };
+
     return Scaffold(
       body: EditorViewController(
-        editor: Editor(
-            language: Language.html,
-            textController: widget.controller,
-            onChange: () {
-              returnEditorValue(widget.controller);
-            }),
+        editor: editor,
         codePreview: const CodePreview(),
       ),
     );
