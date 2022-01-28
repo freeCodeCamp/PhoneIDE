@@ -129,9 +129,9 @@ class EditorState extends State<Editor> {
                 height: MediaQuery.of(context).size.height,
                 width: 1000,
                 child: TextField(
-                  controller: controller,
+                  controller: widget.textController,
                   decoration: decoration,
-                  scrollController: editor,
+                  scrollController: scrollController,
                   onChanged: (String e) {
                     setState(() {
                       numLines = '\n'.allMatches(e).length + 1;
@@ -150,7 +150,7 @@ class EditorState extends State<Editor> {
                   ),
                 ),
               ),
-            ),
+            ]),
           ),
         ]),
       ),
