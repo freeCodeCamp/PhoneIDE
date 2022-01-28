@@ -1,10 +1,32 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
-import 'package:flutter_code_editor/editor/file_explorer/file_widget.dart';
+import 'dart:developer' as dev;
 
+// ignore: must_be_immutable
 class FileExplorer extends StatefulWidget {
-  const FileExplorer({Key? key}) : super(key: key);
+  FileExplorer({Key? key, this.parentDirectory = "/"}) : super(key: key);
+
+  late FileController fc;
+
+  String parentDirectory;
+
+  List historyCache = [];
+
+  Future<List>? _explorerTree;
+
+  set setParentDirectory(String newParentDirectory) {
+    parentDirectory = newParentDirectory;
+  }
+
+  set setExplorerTree(String path) {
+    _explorerTree = fc.listProjects(path);
+  }
+
+  Future<List> getInitialTree() async {
+    return fc.listProjects(await fc.initProjectsDirectory());
+  }
+
   @override
   State<StatefulWidget> createState() => FileExplorerState();
 }
@@ -13,39 +35,26 @@ class FileExplorerState extends State<FileExplorer> {
   @override
   void initState() {
     super.initState();
-    FileController.listProjectWithFiles();
+    widget.fc = FileController(fileExplorer: widget);
+    widget._explorerTree = widget.getInitialTree();
   }
-
-  List<Widget> fileTree = <Widget>[];
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          FutureBuilder<Map<String, dynamic>>(
-              future: FileController.listProjectWithFiles(),
-              builder: (BuildContext context, snapshot) {
-                if (snapshot.hasData) {
-                  fileTree = [];
-                  Map<String, dynamic> projects = snapshot.data ?? {};
-
-                  for (int i = 0; i < projects.keys.length; i++) {
-                    var directoryKeys = projects.keys.toList()[i];
-                    var fileKeys = projects[directoryKeys].keys.toList();
-
-                    fileTree.add(FileWidget(
-                        directoryName: directoryKeys, files: fileKeys ?? []));
-                  }
-                  return ListView(
-                    shrinkWrap: true,
-                    children: fileTree,
+    return FutureBuilder(
+        future: widget._explorerTree,
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            List content = snapshot.data;
+            return ListView.builder(
+                itemCount: content.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Column(
+                    children: [content[index]],
                   );
-                }
-                return Container();
-              })
-        ],
-      ),
-    );
+                });
+          }
+          return const CircularProgressIndicator();
+        });
   }
 }

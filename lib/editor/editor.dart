@@ -75,11 +75,11 @@ class EditorState extends State<Editor> {
       linebarController.jumpTo(scrollController.offset);
     });
 
-    FileController.listProjects();
+    // FileController.listProjects();
 
-    Future.delayed(Duration.zero, () async {
-      widget.textController?.text = await FileController.readFile();
-    });
+    // Future.delayed(Duration.zero, () async {
+    //   controller?.text = await FileController.readFile();
+    // });
 
     widget.textController = RichTextController(
         onMatch: (List<String> matches) {
@@ -124,25 +124,31 @@ class EditorState extends State<Editor> {
           SizedBox(
             height: MediaQuery.of(context).size.height,
             width: 1000,
-            child: TextField(
-              controller: widget.textController,
-              decoration: decoration,
-              scrollController: scrollController,
-              onChanged: (String e) {
-                setState(() {
-                  numLines = '\n'.allMatches(e).length + 1;
-                });
-                widget.onChange();
+            child: ListView(scrollDirection: Axis.horizontal, children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height,
+                width: 1000,
+                child: TextField(
+                  controller: controller,
+                  decoration: decoration,
+                  scrollController: editor,
+                  onChanged: (String e) {
+                    setState(() {
+                      numLines = '\n'.allMatches(e).length + 1;
+                    });
+                    linebarController
+                        .jumpTo(linebarController.position.maxScrollExtent);
 
-                linebarController
-                    .jumpTo(linebarController.position.maxScrollExtent);
-              },
-              expands: true,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              style: TextStyle(
-                color: widget.linebarTextColor,
-                fontSize: 18,
+                    // FileController.writeFile(controller?.text as String);
+                  },
+                  expands: true,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(
+                    color: widget.linebarTextColor,
+                    fontSize: 18,
+                  ),
+                ),
               ),
             ),
           ),

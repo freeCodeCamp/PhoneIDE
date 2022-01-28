@@ -33,11 +33,11 @@ class CodePreviewState extends State<CodePreview> {
   late WebViewController _controller;
 
   Future<void> _loadCodeFromAssets() async {
-    String fileText = await FileController.readFile();
+    // String fileText = await FileController.readFile();
 
-    _controller.loadUrl(Uri.dataFromString(fileText,
-            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-        .toString());
+    // _controller.loadUrl(Uri.dataFromString(fileText,
+    //         mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+    //     .toString());
   }
 
   @override
