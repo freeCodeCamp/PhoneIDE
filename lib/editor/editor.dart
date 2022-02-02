@@ -1,12 +1,9 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
-import 'package:flutter_code_editor/model/editor.dart';
+import 'package:flutter_code_editor/models/editor.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
 // ignore: must_be_immutable
@@ -19,7 +16,6 @@ class Editor extends StatefulWidget with IEditor {
       this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
       this.linebarTextColor = Colors.white,
       required this.onChange,
-      required this.textController,
       required this.language})
       : super(key: key);
 
@@ -138,6 +134,8 @@ class EditorState extends State<Editor> {
                     });
                     linebarController
                         .jumpTo(linebarController.position.maxScrollExtent);
+
+                    widget.onChange();
 
                     // FileController.writeFile(controller?.text as String);
                   },

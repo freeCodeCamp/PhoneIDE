@@ -26,7 +26,10 @@ class FileIDEState extends State<FileIDE> {
         leading: const Icon(Icons.insert_drive_file),
         dense: true,
         title: Text(widget.fileName),
-        onTap: () {},
+        onTap: () {
+          Navigator.pop(context);
+          // Navigator.pushReplacement(context, )
+        },
       ),
     );
   }
