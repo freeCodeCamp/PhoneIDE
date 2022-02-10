@@ -3,7 +3,6 @@ import 'package:flutter_code_editor/controller/editor_view_controller.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
 import 'package:flutter_code_editor/enums/language.dart';
-import 'package:rich_text_controller/rich_text_controller.dart';
 
 void main() {
   runApp(const App());
@@ -14,7 +13,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: EditorView(),
       debugShowCheckedModeBanner: false,
     );
@@ -23,7 +22,7 @@ class App extends StatelessWidget {
 
 // ignore: must_be_immutable
 class EditorView extends StatefulWidget {
-  EditorView({
+  const EditorView({
     Key? key,
   }) : super(key: key);
 
