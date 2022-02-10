@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
-import 'dart:developer' as dev;
 
 mixin IEditor {
   void returnEditorValue(String text) {}
@@ -18,7 +17,7 @@ mixin IEditor {
   Future<List<dynamic>> getCachedTags(String openedFile) async {
     final localDirectory = await getApplicationDocumentsDirectory();
 
-    String location = '${localDirectory.path}/$openedFile.txt';
+    String location = '${localDirectory.path}/$openedFile.json';
 
     File file = File(location);
 
@@ -27,7 +26,7 @@ mixin IEditor {
     if (!fileExists) {
       file.createSync();
     } else {
-      return await jsonDecode(await file.readAsString());
+      return await jsonDecode(file.readAsStringSync())['tags'];
     }
 
     return [];
@@ -36,7 +35,7 @@ mixin IEditor {
   Future<bool> writeNewTagCache(List tags, String openedFile) async {
     final localDirectory = await getApplicationDocumentsDirectory();
 
-    String location = '${localDirectory.path}/$openedFile.txt';
+    String location = '${localDirectory.path}/$openedFile.json';
 
     File file = File(location);
 
@@ -44,43 +43,37 @@ mixin IEditor {
 
     List tagCopy = tags.map((e) => '"$e"').toList();
 
+    String json = '{"tags": ${tagCopy.toString()}}';
+
     if (!fileExists) {
       file.createSync();
-      file.writeAsString(tagCopy.toString());
+      file.writeAsString(json);
     } else {
-      file.writeAsString(tagCopy.toString());
+      file.writeAsString(json);
     }
 
     return false;
   }
 
-  bool shouldReplicateTag(List<String> tags, String tag) {
-    int matchedOpenTags = 0;
-    int matchedClosedTags = 0;
+  bool shouldReplicateTag(List<String> tags, String newtag) {
+    int closingTags = 0;
+    int openTags = 0;
 
-    for (var tagInTags in tags) {
-      if (tagInTags.trim().length < 2) continue;
+    RegExp matchClosingTag = RegExp("<\/{1}[a-z0-9]*>");
 
-      List toClosedTag = tag.split("<");
-      String closedTag;
+    for (String tag in tags) {
+      bool isClosedTag = matchClosingTag.hasMatch(tag);
 
-      if (!tag.contains('/')) {
-        closedTag = '</' + toClosedTag[1];
-      } else {
-        closedTag = tag;
+      if (tag == newtag && !isClosedTag) {
+        openTags++;
       }
 
-      if (tagInTags == closedTag && tagInTags.contains('/')) {
-        matchedClosedTags++;
-      }
-
-      if (tagInTags == tag && !tagInTags.contains('/')) {
-        matchedOpenTags++;
+      if (isClosedTag) {
+        closingTags++;
       }
     }
 
-    if (matchedOpenTags > matchedClosedTags) {
-      dev.log(matchedOpenTags.toString() + '' + matchedClosedTags.toString());
+    if (openTags > closingTags) {
       return true;
     }
 
@@ -103,17 +96,28 @@ mixin IEditor {
 
     outerloop:
     for (int i = 0; i < tags.length; i++) {
-      for (int j = 0; j < cachedTags.length; j++) {
-        if (shouldReplicateTag(tags, tags[i])) {
-          List toClosedTag = tags[i].split("<");
-          String closedTag = '</${toClosedTag[1]}';
+      if (tags.length == cachedTags.length) break;
 
+      if (cachedTags.isEmpty) {
+        if (shouldReplicateTag(tags, tags[i])) {
           controller.value = controller.value.copyWith(
-              text: controller.text.replaceRange(
-                  max(cursorPos, 0), max(cursorPos, 0), closedTag),
+              text: controller.text.replaceRange(max(cursorPos, 0),
+                  max(cursorPos, 0), '</${tags[i].split("<")[1]}'),
               selection: TextSelection.fromPosition(
                   TextPosition(offset: max(cursorPos, 0))));
-          break outerloop;
+        }
+      }
+
+      for (int j = 0; j < cachedTags.length; j++) {
+        if (cachedTags[j] != tags[i]) {
+          if (shouldReplicateTag(tags, tags[i])) {
+            controller.value = controller.value.copyWith(
+                text: controller.text.replaceRange(max(cursorPos, 0),
+                    max(cursorPos, 0), '</${tags[i].split("<")[1]}'),
+                selection: TextSelection.fromPosition(
+                    TextPosition(offset: max(cursorPos, 0))));
+          }
+          break;
         }
       }
     }
