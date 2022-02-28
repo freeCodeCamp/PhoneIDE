@@ -1,127 +1,68 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer' as dev;
+import 'dart:math';
 
 mixin IEditor {
   void returnEditorValue(String text) {}
 
   /// Takes a text controller and returns the current position of the cursor.
 
-  int getCursorPosition(RichTextController? controller) {
-    return controller!.selection.baseOffset;
+  String getTextOnCurrentLine(RichTextController? controller) {
+    return controller!.selection
+        .textBefore(controller.value.text)
+        .split("\n")
+        .last;
   }
 
-  Future<List<dynamic>> getCachedTags(String openedFile) async {
-    final localDirectory = await getApplicationDocumentsDirectory();
+  List<RegExpMatch> matchTags(String text) {
+    RegExp pattern = RegExp('<("[^"\n]*"|\'[^\'\n]*\'|[^\'"\n>])*>');
+    Iterable<RegExpMatch> match = pattern.allMatches(text);
 
-    String location = '${localDirectory.path}/$openedFile.json';
-
-    File file = File(location);
-
-    bool fileExists = await file.exists();
-
-    if (!fileExists) {
-      file.createSync();
-    } else {
-      return await jsonDecode(file.readAsStringSync())['tags'];
-    }
-
-    return [];
-  }
-
-  Future<bool> writeNewTagCache(List tags, String openedFile) async {
-    final localDirectory = await getApplicationDocumentsDirectory();
-
-    String location = '${localDirectory.path}/$openedFile.json';
-
-    File file = File(location);
-
-    bool fileExists = await file.exists();
-
-    List tagCopy = tags.map((e) => '"$e"').toList();
-
-    String json = '{"tags": ${tagCopy.toString()}}';
-
-    if (!fileExists) {
-      file.createSync();
-      file.writeAsString(json);
-    } else {
-      file.writeAsString(json);
-    }
-
-    return false;
-  }
-
-  bool shouldReplicateTag(List<String> tags, String newtag) {
-    int closingTags = 0;
-    int openTags = 0;
-
-    RegExp matchClosingTag = RegExp("<\/{1}[a-z0-9]*>");
-
-    for (String tag in tags) {
-      bool isClosedTag = matchClosingTag.hasMatch(tag);
-
-      if (tag == newtag && !isClosedTag) {
-        openTags++;
-      }
-
-      if (isClosedTag) {
-        closingTags++;
-      }
-    }
-
-    if (openTags > closingTags) {
-      return true;
-    }
-
-    return false;
+    return match.toList();
   }
 
   void replicateTags(List<String> match, RichTextController? controller) async {
+    if (controller == null) return;
+
+    List<RegExpMatch> matches = matchTags(controller.text);
+
     List<String> tags = [];
 
-    RegExp pattern = RegExp('<("[^"\n]*"|\'[^\'\n]*\'|[^\'"\n>])*>');
-    Iterable<RegExpMatch> match = pattern.allMatches(controller!.text);
+    var prefs = await SharedPreferences.getInstance();
 
-    final int cursorPos = controller.selection.base.offset;
+    bool shouldReplicate = false;
 
-    List cachedTags = await getCachedTags('helloworld');
+    if (prefs.getInt('tagmatch') == null) {
+      prefs.setInt('tagmatch', 0);
+    }
 
-    for (var tag in match) {
+    if (matches.length > (prefs.getInt('tagmatch') as int)) {
+      prefs.setInt('tagmatch', matches.length);
+      shouldReplicate = true;
+    } else {
+      prefs.setInt('tagmatch', matches.length);
+    }
+
+    // get matches on the current line
+
+    String currentLine = getTextOnCurrentLine(controller);
+
+    matches = matchTags(currentLine);
+
+    for (var tag in matches) {
       tags.add(tag.group(0) as String);
     }
 
-    outerloop:
-    for (int i = 0; i < tags.length; i++) {
-      if (tags.length == cachedTags.length) break;
+    final int cursorPos = controller.selection.base.offset;
 
-      if (cachedTags.isEmpty) {
-        if (shouldReplicateTag(tags, tags[i])) {
-          controller.value = controller.value.copyWith(
-              text: controller.text.replaceRange(max(cursorPos, 0),
-                  max(cursorPos, 0), '</${tags[i].split("<")[1]}'),
-              selection: TextSelection.fromPosition(
-                  TextPosition(offset: max(cursorPos, 0))));
-        }
-      }
-
-      for (int j = 0; j < cachedTags.length; j++) {
-        if (cachedTags[j] != tags[i]) {
-          if (shouldReplicateTag(tags, tags[i])) {
-            controller.value = controller.value.copyWith(
-                text: controller.text.replaceRange(max(cursorPos, 0),
-                    max(cursorPos, 0), '</${tags[i].split("<")[1]}'),
-                selection: TextSelection.fromPosition(
-                    TextPosition(offset: max(cursorPos, 0))));
-          }
-          break;
-        }
-      }
+    if (matches.isNotEmpty && shouldReplicate) {
+      controller.value = controller.value.copyWith(
+          text: controller.text.replaceRange(max(cursorPos, 0),
+              max(cursorPos, 0), '</${tags.last.split("<")[1]}'),
+          selection: TextSelection.fromPosition(
+              TextPosition(offset: max(cursorPos, 0))));
     }
-
-    writeNewTagCache(tags, 'helloworld');
   }
 }

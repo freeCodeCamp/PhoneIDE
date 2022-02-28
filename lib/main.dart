@@ -3,6 +3,7 @@ import 'package:flutter_code_editor/controller/editor_view_controller.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
 import 'package:flutter_code_editor/enums/language.dart';
+import 'dart:developer' as dev;
 
 void main() {
   runApp(const App());
@@ -43,7 +44,7 @@ class EditorLayout extends State<EditorView> {
     );
 
     editor.onChange = () {
-      editor.returnEditorValue(editor.textController!.text);
+      dev.log(editor.getTextOnCurrentLine(editor.textController).toString());
     };
 
     return EditorViewController(
