@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/main.dart';
 
 class FileIDE extends StatefulWidget {
   const FileIDE(
@@ -28,6 +29,12 @@ class FileIDEState extends State<FileIDE> {
         title: Text(widget.fileName),
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: ((BuildContext context) => EditorView(
+                        content: widget.fileContent,
+                      ))));
         },
       ),
     );

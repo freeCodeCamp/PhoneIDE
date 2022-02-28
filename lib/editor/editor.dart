@@ -5,7 +5,6 @@ import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
-import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
@@ -16,6 +15,7 @@ class Editor extends StatefulWidget with IEditor {
       this.color = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
       this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
       this.linebarTextColor = Colors.white,
+      this.content = '',
       required this.onChange,
       required this.language})
       : super(key: key);
@@ -43,6 +43,10 @@ class Editor extends StatefulWidget with IEditor {
   // the coding language in the editor
 
   final Language language;
+
+  // content inside the editor
+
+  final String content;
 
   // controller of text
 
@@ -78,6 +82,10 @@ class EditorState extends State<Editor> {
         },
         patternMatchMap:
             LanguageController.provideLanguageMap(widget.language));
+
+    if (widget.content.isNotEmpty) {
+      widget.textController?.text = widget.content;
+    }
   }
 
   int numLines = 1;
