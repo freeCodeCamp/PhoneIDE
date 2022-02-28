@@ -5,6 +5,7 @@ import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
+import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
@@ -61,25 +62,19 @@ class EditorState extends State<Editor> {
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
 
+  List<String> patternMatches = [];
+
   @override
   void initState() {
     super.initState();
-
-    // when user scrolls the editor keep the line numbers aligned with the editor
 
     scrollController.addListener(() {
       linebarController.jumpTo(scrollController.offset);
     });
 
-    // FileController.listProjects();
-
-    // Future.delayed(Duration.zero, () async {
-    //   controller?.text = await FileController.readFile();
-    // });
-
     widget.textController = RichTextController(
         onMatch: (List<String> matches) {
-          print('object');
+          patternMatches = matches;
         },
         patternMatchMap:
             LanguageController.provideLanguageMap(widget.language));
@@ -135,9 +130,12 @@ class EditorState extends State<Editor> {
                     linebarController
                         .jumpTo(linebarController.position.maxScrollExtent);
 
-                    widget.onChange();
+                    if (widget.language == Language.html) {
+                      widget.replicateTags(
+                          patternMatches, widget.textController);
+                    }
 
-                    // FileController.writeFile(controller?.text as String);
+                    widget.onChange();
                   },
                   expands: true,
                   maxLines: null,

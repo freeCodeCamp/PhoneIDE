@@ -28,7 +28,6 @@ class FileIDEState extends State<FileIDE> {
         title: Text(widget.fileName),
         onTap: () {
           Navigator.pop(context);
-          // Navigator.pushReplacement(context, )
         },
       ),
     );
