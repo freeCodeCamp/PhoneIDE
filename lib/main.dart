@@ -25,7 +25,10 @@ class App extends StatelessWidget {
 class EditorView extends StatefulWidget {
   const EditorView({
     Key? key,
+    this.content = '',
   }) : super(key: key);
+
+  final String content;
 
   @override
   State<StatefulWidget> createState() => EditorLayout();
@@ -40,6 +43,7 @@ class EditorLayout extends State<EditorView> {
   Widget build(BuildContext context) {
     Editor editor = Editor(
       language: Language.html,
+      content: widget.content,
       onChange: () {},
     );
 
