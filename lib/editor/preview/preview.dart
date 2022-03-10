@@ -1,14 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class CodePreview extends StatefulWidget {
   const CodePreview({
     Key? key,
+    required this.filePath,
     this.initialUrl = 'about:blank',
     this.allowJavaScript = true,
     this.userAgent = 'random',
   });
+
+  // the path to the file to preview it
+
+  final String filePath;
 
   // the initialUrl the preview should go to before the actual view is loaded
 
@@ -30,11 +38,13 @@ class CodePreviewState extends State<CodePreview> {
   late WebViewController _controller;
 
   Future<void> _loadCodeFromAssets() async {
-    // String fileText = await FileController.readFile();
+    String fileText = await FileController.readFile(widget.filePath);
+    String viewPort =
+        '<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"></meta>';
 
-    // _controller.loadUrl(Uri.dataFromString(fileText,
-    //         mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-    //     .toString());
+    _controller.loadUrl(Uri.dataFromString('$viewPort$fileText',
+            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+        .toString());
   }
 
   @override

@@ -58,7 +58,7 @@ class EditorLayout extends State<EditorView> {
 
     return EditorViewController(
       editor: editor,
-      codePreview: const CodePreview(),
+      codePreview: true,
     );
   }
 }
