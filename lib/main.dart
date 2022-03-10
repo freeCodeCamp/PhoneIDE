@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/editor_view_controller.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
-import 'package:flutter_code_editor/editor/preview/preview.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'dart:developer' as dev;
-
 import 'package:flutter_code_editor/models/file_model.dart';
 
 void main() {

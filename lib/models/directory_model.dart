@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
+import 'package:flutter_code_editor/models/file_dir_creation_model.dart';
 
 // ignore: must_be_immutable
 class DirectoryIDE extends StatefulWidget {
@@ -48,8 +49,8 @@ class DirectoryIDEState extends State<DirectoryIDE> {
           leading: const Icon(Icons.folder),
           title: Text(widget.directoryName),
           trailing: widget.directoryOpen
-              ? const Icon(Icons.arrow_drop_up)
-              : const Icon(Icons.arrow_drop_down),
+              ? const Icon(Icons.arrow_drop_down)
+              : const Icon(Icons.arrow_right),
           onTap: () {
             setState(() {
               widget.directoryOpen = !widget.directoryOpen;
@@ -59,6 +60,11 @@ class DirectoryIDEState extends State<DirectoryIDE> {
             widget.fileExplorer.setExplorerTree = widget.directoryPath;
           },
         ),
+        widget.directoryOpen
+            ? FileDirCreationWidget(
+                dir: widget,
+              )
+            : Container(),
         ListView.builder(
             shrinkWrap: true,
             itemCount:

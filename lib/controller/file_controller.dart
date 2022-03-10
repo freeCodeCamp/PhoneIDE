@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
+import 'package:flutter_code_editor/models/file_dir_creation_model.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -29,6 +30,22 @@ class FileController {
     final File file = File(filePath);
 
     return await file.readAsString();
+  }
+
+  static Future<void> createNewDir(String path, String name) async {
+    final Directory _dir = Directory('$path/$name');
+
+    if (!await _dir.exists()) {
+      await _dir.create(recursive: true);
+    }
+  }
+
+  static Future<void> createFile(String path, String name) async {
+    final File _file = File('$path/$name');
+
+    if (!await _file.exists()) {
+      await _file.create(recursive: true);
+    }
   }
 
   static Future<void> writeFile(String filePath, String content) async {
