@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/editor.dart';
+import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
 // ignore: must_be_immutable
@@ -16,6 +18,7 @@ class Editor extends StatefulWidget with IEditor {
       this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
       this.linebarTextColor = Colors.white,
       this.content = '',
+      this.openedFile,
       required this.onChange,
       required this.language})
       : super(key: key);
@@ -47,6 +50,10 @@ class Editor extends StatefulWidget with IEditor {
   // content inside the editor
 
   final String content;
+
+  // an instance of the current file
+
+  final FileIDE? openedFile;
 
   // controller of text
 
@@ -83,8 +90,10 @@ class EditorState extends State<Editor> {
         patternMatchMap:
             LanguageController.provideLanguageMap(widget.language));
 
-    if (widget.content.isNotEmpty) {
-      widget.textController?.text = widget.content;
+    if (widget.openedFile != null) {
+      Future.delayed(const Duration(seconds: 0), (() async {
+        widget.textController?.text = widget.openedFile?.fileContent ?? '';
+      }));
     }
   }
 
@@ -131,7 +140,7 @@ class EditorState extends State<Editor> {
                   controller: widget.textController,
                   decoration: decoration,
                   scrollController: scrollController,
-                  onChanged: (String e) {
+                  onChanged: (String e) async {
                     setState(() {
                       numLines = '\n'.allMatches(e).length + 1;
                     });
@@ -141,6 +150,12 @@ class EditorState extends State<Editor> {
                     if (widget.language == Language.html) {
                       widget.replicateTags(
                           patternMatches, widget.textController);
+                    }
+
+                    if (widget.openedFile != null) {
+                      await FileController.writeFile(
+                          widget.openedFile!.filePath,
+                          widget.textController!.text);
                     }
 
                     widget.onChange();

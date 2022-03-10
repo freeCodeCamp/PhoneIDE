@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer' as dev;
 import 'dart:math';
 
 mixin IEditor {

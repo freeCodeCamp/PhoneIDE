@@ -5,6 +5,8 @@ import 'package:flutter_code_editor/editor/preview/preview.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'dart:developer' as dev;
 
+import 'package:flutter_code_editor/models/file_model.dart';
+
 void main() {
   runApp(const App());
 }
@@ -25,10 +27,13 @@ class App extends StatelessWidget {
 class EditorView extends StatefulWidget {
   const EditorView({
     Key? key,
+    this.file,
     this.content = '',
   }) : super(key: key);
 
   final String content;
+
+  final FileIDE? file;
 
   @override
   State<StatefulWidget> createState() => EditorLayout();
@@ -43,7 +48,7 @@ class EditorLayout extends State<EditorView> {
   Widget build(BuildContext context) {
     Editor editor = Editor(
       language: Language.html,
-      content: widget.content,
+      openedFile: widget.file,
       onChange: () {},
     );
 

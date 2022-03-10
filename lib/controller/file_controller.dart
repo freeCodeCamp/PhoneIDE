@@ -25,6 +25,22 @@ class FileController {
     return _appDocDirFolder.path;
   }
 
+  static Future<String> readFile(String filePath) async {
+    final File file = File(filePath);
+
+    return await file.readAsString();
+  }
+
+  static Future<void> writeFile(String filePath, String content) async {
+    final File file = File(filePath);
+
+    if (!file.existsSync()) {
+      throw Error();
+    } else {
+      file.writeAsString(content);
+    }
+  }
+
   Future<List<Widget>> listProjects(String path) async {
     final List<FileSystemEntity> projectPaths = Directory(path).listSync();
     List<Widget> projects = [];
@@ -40,7 +56,9 @@ class FileController {
             directoryContent: await listProjects(path)));
       } else {
         projects.add(FileIDE(
-            fileName: path.split("/").last, filePath: path, fileContent: ""));
+            fileName: path.split("/").last,
+            filePath: path,
+            fileContent: await readFile(path)));
       }
     }
 
