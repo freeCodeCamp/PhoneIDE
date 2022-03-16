@@ -29,39 +29,43 @@ mixin IEditor {
 
     List<String> tags = [];
 
-    var prefs = await SharedPreferences.getInstance();
-
     bool shouldReplicate = false;
-
-    if (prefs.getInt('tagmatch') == null) {
-      prefs.setInt('tagmatch', 0);
-    }
-
-    if (matches.length > (prefs.getInt('tagmatch') as int)) {
-      prefs.setInt('tagmatch', matches.length);
-      shouldReplicate = true;
-    } else {
-      prefs.setInt('tagmatch', matches.length);
-    }
-
-    // get matches on the current line
-
-    String currentLine = getTextOnCurrentLine(controller);
-
-    matches = matchTags(currentLine);
 
     for (var tag in matches) {
       tags.add(tag.group(0) as String);
     }
 
-    final int cursorPos = controller.selection.base.offset;
+    var getMatchLine = getTextOnCurrentLine(controller);
+    var getMatchesOnLine = matchTags(getMatchLine);
 
-    if (matches.isNotEmpty && shouldReplicate) {
-      controller.value = controller.value.copyWith(
-          text: controller.text.replaceRange(max(cursorPos, 0),
-              max(cursorPos, 0), '</${tags.last.split("<")[1]}'),
-          selection: TextSelection.fromPosition(
-              TextPosition(offset: max(cursorPos, 0))));
+    if (tags.isEmpty || getMatchesOnLine.isEmpty) return;
+
+    String latestMatch = getMatchesOnLine.last.group(0) ?? '';
+
+    int? openTags;
+    int? closedTags;
+
+    for (String tag in tags) {
+      if (latestMatch.isEmpty || latestMatch.contains('/')) break;
+
+      String closedTag = '</' + latestMatch.split('<')[1];
+
+      openTags = tags.where((tag) => tag == latestMatch).length;
+      closedTags = tags.where((tag) => tag == closedTag).length;
+    }
+
+    if (openTags! > closedTags!) {
+      final int cursorPos = controller.selection.base.offset;
+
+      shouldReplicate = true;
+
+      if (matches.isNotEmpty && shouldReplicate) {
+        controller.value = controller.value.copyWith(
+            text: controller.text.replaceRange(max(cursorPos, 0),
+                max(cursorPos, 0), '</' + latestMatch.split('<')[1]),
+            selection: TextSelection.fromPosition(
+                TextPosition(offset: max(cursorPos, 0))));
+      }
     }
   }
 }
