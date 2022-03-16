@@ -3,7 +3,8 @@ import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
 
 class FileDirCreationWidget extends StatefulWidget {
-  FileDirCreationWidget({Key? key, required this.dir, this.creatorOpen = false})
+  FileDirCreationWidget(
+      {Key? key, required this.dirPath, this.creatorOpen = false})
       : super(key: key);
 
   bool creatorOpen = false;
@@ -11,7 +12,7 @@ class FileDirCreationWidget extends StatefulWidget {
   bool isCreatingFile = false;
   bool isCreatingDirectory = false;
 
-  DirectoryIDE dir;
+  String dirPath;
 
   @override
   State<StatefulWidget> createState() => _FileDirCreationWidgetState();
@@ -20,57 +21,74 @@ class FileDirCreationWidget extends StatefulWidget {
 class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
   @override
   Widget build(BuildContext context) {
-    return widget.creatorOpen
-        ? Column(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.arrow_drop_down),
-                title: const Text('Close Creator'),
+    return Column(
+      children: [
+        !widget.isCreatingDirectory
+            ? ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text('Create Directory'),
+                tileColor: Colors.lightBlue,
                 onTap: () {
                   setState(() {
-                    widget.creatorOpen = !widget.creatorOpen;
+                    widget.isCreatingDirectory = true;
+                    widget.isCreatingFile = false;
                   });
                 },
+              )
+            : inputField(context, false),
+        !widget.isCreatingFile
+            ? ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text(
+                  'Create File',
+                ),
+                tileColor: Colors.lightBlue,
+                onTap: () {
+                  setState(() {
+                    widget.isCreatingDirectory = false;
+                    widget.isCreatingFile = true;
+                  });
+                },
+              )
+            : inputField(context, true),
+        Row(
+          children: [
+            Expanded(
+                child: InkWell(
+              onTap: () {
+                // FileController.deleteFile(widget.filePath);
+                // setState(() {
+                //   widget.isDeleting = false;
+                //   widget.parentDir!.directoryContent = [];
+                // });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.redAccent,
+                child: const Center(child: Text('Delete')),
               ),
-              !widget.isCreatingDirectory
-                  ? ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text('Create Directory'),
-                      tileColor: Colors.lightBlue,
-                      onTap: () {
-                        setState(() {
-                          widget.isCreatingDirectory = true;
-                          widget.isCreatingFile = false;
-                        });
-                      },
-                    )
-                  : inputField(context, false),
-              !widget.isCreatingFile
-                  ? ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text(
-                        'Create File',
-                      ),
-                      tileColor: Colors.lightBlue,
-                      onTap: () {
-                        setState(() {
-                          widget.isCreatingDirectory = false;
-                          widget.isCreatingFile = true;
-                        });
-                      },
-                    )
-                  : inputField(context, true)
-            ],
-          )
-        : ListTile(
-            leading: const Icon(Icons.arrow_right_sharp),
-            title: const Text('Open Creator'),
-            onTap: () {
-              setState(() {
-                widget.creatorOpen = !widget.creatorOpen;
-              });
-            },
-          );
+            )),
+            Expanded(
+                child: InkWell(
+              onTap: () {
+                setState(() {
+                  // widget.isDeleting = false;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.green,
+                child: const Center(
+                    child: Text(
+                  'Cancel',
+                  textAlign: TextAlign.center,
+                )),
+              ),
+            ))
+          ],
+        )
+      ],
+    );
   }
 
   Widget inputField(BuildContext context, bool isCreatingFile) {
@@ -83,9 +101,9 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
         ),
         onSubmitted: (name) {
           if (isCreatingFile) {
-            FileController.createFile(widget.dir.directoryPath, name);
+            FileController.createFile(widget.dirPath, name);
           } else {
-            FileController.createNewDir(widget.dir.directoryPath, name);
+            FileController.createNewDir(widget.dirPath, name);
           }
 
           setState(() {

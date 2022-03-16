@@ -8,10 +8,6 @@ import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FileController {
-  FileController({required this.fileExplorer});
-
-  FileExplorer fileExplorer;
-
   Future<String> initProjectsDirectory() async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
 
@@ -48,6 +44,18 @@ class FileController {
     }
   }
 
+  static Future<void> deleteDir(String path) async {
+    final Directory _dir = Directory(path);
+
+    await _dir.delete();
+  }
+
+  static Future<void> deleteFile(String path) async {
+    final File _file = File(path);
+
+    await _file.delete();
+  }
+
   static Future<void> writeFile(String filePath, String content) async {
     final File file = File(filePath);
 
@@ -58,7 +66,7 @@ class FileController {
     }
   }
 
-  Future<List<Widget>> listProjects(String path) async {
+  Future<List<Widget>> listTree(String path, [DirectoryIDE? parentDir]) async {
     final List<FileSystemEntity> projectPaths = Directory(path).listSync();
     List<Widget> projects = [];
 
@@ -67,15 +75,17 @@ class FileController {
 
       if (await Directory(path).exists()) {
         projects.add(DirectoryIDE(
-            fileExplorer: fileExplorer,
             directoryName: path.split("/").last,
             directoryPath: path,
-            directoryContent: await listProjects(path)));
+            parentDirectory: parentDir,
+            directoryContent: await listTree(path)));
       } else {
         projects.add(FileIDE(
-            fileName: path.split("/").last,
-            filePath: path,
-            fileContent: await readFile(path)));
+          fileName: path.split("/").last,
+          filePath: path,
+          fileContent: await readFile(path),
+          parentDir: parentDir,
+        ));
       }
     }
 

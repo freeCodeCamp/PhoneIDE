@@ -20,11 +20,11 @@ class FileExplorer extends StatefulWidget {
   }
 
   set setExplorerTree(String path) {
-    _explorerTree = fc.listProjects(path);
+    _explorerTree = fc.listTree(path);
   }
 
   Future<List> getInitialTree() async {
-    return fc.listProjects(await fc.initProjectsDirectory());
+    return fc.listTree(await fc.initProjectsDirectory());
   }
 
   @override
@@ -35,7 +35,7 @@ class FileExplorerState extends State<FileExplorer> {
   @override
   void initState() {
     super.initState();
-    widget.fc = FileController(fileExplorer: widget);
+    widget.fc = FileController();
     widget._explorerTree = widget.getInitialTree();
   }
 
