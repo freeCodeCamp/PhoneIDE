@@ -29,6 +29,28 @@ mixin IEditor {
 
     List<String> tags = [];
 
+    String makeClosedTag(String openTag) {
+      if (openTag.contains(' ')) {
+        List<String> openTagPieces = openTag.split(' ');
+
+        String tagName = openTagPieces[0].split('<')[1];
+
+        return '</$tagName>';
+      } else {
+        return '</${openTag.split('<')[1]}';
+      }
+    }
+
+    String removeTagAttributes(String openTag) {
+      if (!openTag.contains(' ')) return openTag;
+
+      List<String> openTagPieces = openTag.split(' ');
+
+      String tagName = openTagPieces[0].split('<')[1];
+
+      return '<$tagName>';
+    }
+
     bool shouldReplicate = false;
 
     for (var tag in matches) {
@@ -42,19 +64,22 @@ mixin IEditor {
 
     String latestMatch = getMatchesOnLine.last.group(0) ?? '';
 
-    int? openTags;
-    int? closedTags;
+    int openTags = 0;
+    int closedTags = 0;
 
     for (String tag in tags) {
       if (latestMatch.isEmpty || latestMatch.contains('/')) break;
 
-      String closedTag = '</' + latestMatch.split('<')[1];
+      tag = removeTagAttributes(tag);
+      latestMatch = removeTagAttributes(latestMatch);
+
+      String closedTag = makeClosedTag(latestMatch);
 
       openTags = tags.where((tag) => tag == latestMatch).length;
       closedTags = tags.where((tag) => tag == closedTag).length;
     }
 
-    if (openTags! > closedTags!) {
+    if (openTags > closedTags) {
       final int cursorPos = controller.selection.base.offset;
 
       shouldReplicate = true;
@@ -62,7 +87,7 @@ mixin IEditor {
       if (matches.isNotEmpty && shouldReplicate) {
         controller.value = controller.value.copyWith(
             text: controller.text.replaceRange(max(cursorPos, 0),
-                max(cursorPos, 0), '</' + latestMatch.split('<')[1]),
+                max(cursorPos, 0), makeClosedTag(latestMatch)),
             selection: TextSelection.fromPosition(
                 TextPosition(offset: max(cursorPos, 0))));
       }
