@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
@@ -59,7 +60,13 @@ class Editor extends StatefulWidget with IEditor {
 
   RichTextController? textController;
 
+  // a function that executes when the state of the editor changes
+
   Function() onChange;
+
+  // check if the user is deleting text inside the editor
+
+  bool _deleting = false;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -72,6 +79,8 @@ class EditorState extends State<Editor> {
 
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
+
+  final FocusNode _focusNode = FocusNode();
 
   List<String> patternMatches = [];
 
@@ -95,6 +104,22 @@ class EditorState extends State<Editor> {
         widget.textController?.text = widget.openedFile?.fileContent ?? '';
       }));
     }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void handleBackSpaceEvent(RawKeyEvent event) {
+    setState(() {
+      if (event.logicalKey == LogicalKeyboardKey.backspace) {
+        widget._deleting = true;
+      } else {
+        widget._deleting = false;
+      }
+    });
   }
 
   int numLines = 1;
@@ -136,36 +161,44 @@ class EditorState extends State<Editor> {
               SizedBox(
                 height: MediaQuery.of(context).size.height,
                 width: 1000,
-                child: TextField(
-                  controller: widget.textController,
-                  decoration: decoration,
-                  scrollController: scrollController,
-                  onChanged: (String e) async {
-                    setState(() {
-                      numLines = '\n'.allMatches(e).length + 1;
-                    });
-                    linebarController
-                        .jumpTo(linebarController.position.maxScrollExtent);
+                child: RawKeyboardListener(
+                  focusNode: _focusNode,
+                  onKey: handleBackSpaceEvent,
+                  child: TextField(
+                    controller: widget.textController,
+                    decoration: decoration,
+                    scrollController: scrollController,
+                    onTap: () {
+                      FocusScope.of(context).requestFocus();
+                    },
+                    onChanged: (String e) async {
+                      setState(() {
+                        numLines = '\n'.allMatches(e).length + 1;
+                      });
+                      linebarController
+                          .jumpTo(linebarController.position.maxScrollExtent);
 
-                    if (widget.language == Language.html) {
-                      widget.replicateTags(
-                          patternMatches, widget.textController);
-                    }
+                      if (widget.language == Language.html &&
+                          !widget._deleting) {
+                        widget.replicateTags(
+                            patternMatches, widget.textController);
+                      }
 
-                    if (widget.openedFile != null) {
-                      await FileController.writeFile(
-                          widget.openedFile!.filePath,
-                          widget.textController!.text);
-                    }
+                      if (widget.openedFile != null) {
+                        await FileController.writeFile(
+                            widget.openedFile!.filePath,
+                            widget.textController!.text);
+                      }
 
-                    widget.onChange();
-                  },
-                  expands: true,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  style: TextStyle(
-                    color: widget.linebarTextColor,
-                    fontSize: 18,
+                      widget.onChange();
+                    },
+                    expands: true,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    style: TextStyle(
+                      color: widget.linebarTextColor,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
               ),
