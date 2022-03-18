@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/editor_view_controller.dart';
-import 'package:flutter_code_editor/editor/editor.dart';
-import 'package:flutter_code_editor/enums/language.dart';
-import 'package:flutter_code_editor/models/file_model.dart';
 
 void main() {
   runApp(const App());
@@ -13,45 +10,11 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: EditorView(),
+    return MaterialApp(
+      home: EditorViewController(
+        codePreview: true,
+      ),
       debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-// ignore: must_be_immutable
-class EditorView extends StatefulWidget {
-  const EditorView({
-    Key? key,
-    this.file,
-    this.content = '',
-  }) : super(key: key);
-
-  final String content;
-
-  final FileIDE? file;
-
-  @override
-  State<StatefulWidget> createState() => EditorLayout();
-
-  Widget build(BuildContext context) {
-    return Scaffold(body: EditorLayout().widget);
-  }
-}
-
-class EditorLayout extends State<EditorView> {
-  @override
-  Widget build(BuildContext context) {
-    Editor editor = Editor(
-      language: Language.html,
-      openedFile: widget.file,
-      onChange: () {},
-    );
-
-    return EditorViewController(
-      editor: editor,
-      codePreview: true,
     );
   }
 }

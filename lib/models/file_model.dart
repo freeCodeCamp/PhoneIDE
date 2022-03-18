@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/main.dart';
+import 'package:flutter_code_editor/controller/editor_view_controller.dart';
 
 class FileIDE extends StatefulWidget {
   const FileIDE(
@@ -32,7 +32,7 @@ class FileIDEState extends State<FileIDE> {
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: ((BuildContext context) => EditorView(
+                  builder: ((BuildContext context) => EditorViewController(
                         file: widget,
                       ))));
         },

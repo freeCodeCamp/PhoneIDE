@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
+import 'package:flutter_code_editor/enums/language.dart';
+import 'package:flutter_code_editor/models/file_model.dart';
 
 class EditorViewController extends StatefulWidget {
-  const EditorViewController(
+  EditorViewController(
       {Key? key,
-      required this.editor,
+      this.title = '',
       this.codePreview = true,
       this.tabBarColor = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
+      this.editor,
+      this.file,
       this.tabBarLineColor = Colors.white})
       : super(key: key);
 
-  final Editor editor;
+  final String title;
 
   final bool codePreview;
 
@@ -20,11 +24,25 @@ class EditorViewController extends StatefulWidget {
 
   final Color tabBarLineColor;
 
+  final FileIDE? file;
+
+  Editor? editor;
+
   @override
   State<StatefulWidget> createState() => EditorViewControllerState();
 }
 
 class EditorViewControllerState extends State<EditorViewController> {
+  @override
+  void initState() {
+    super.initState();
+    widget.editor = Editor(
+      language: Language.html,
+      openedFile: widget.file,
+      onChange: () {},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -39,18 +57,19 @@ class EditorViewControllerState extends State<EditorViewController> {
                     },
                     icon: const Icon(Icons.folder)),
               ),
+              title: widget.title.isEmpty ? null : Text(widget.title),
               backgroundColor: widget.tabBarColor,
               toolbarHeight: 50,
-              bottom: widget.editor.openedFile != null && widget.codePreview
+              bottom: widget.editor?.openedFile != null && widget.codePreview
                   ? const TabBar(tabs: [Text('editor'), Text('preview')])
                   : null,
             ),
-            body: widget.editor.openedFile != null && widget.codePreview
+            body: widget.editor?.openedFile != null && widget.codePreview
                 ? TabBarView(
                     children: [
-                      widget.editor,
+                      widget.editor as Widget,
                       CodePreview(
-                        filePath: widget.editor.openedFile!.filePath,
+                        filePath: widget.editor?.openedFile!.filePath as String,
                       )
                     ],
                   )
