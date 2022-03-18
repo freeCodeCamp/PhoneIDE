@@ -65,9 +65,9 @@ class Editor extends StatefulWidget with IEditor {
 
   Function() onChange;
 
-  // the last pressed key in the editor
+  // holds a copy of the last key events that happened
 
-  LogicalKeyboardKey? lastPressedKey;
+  RawKeyEvent? lastKeyEvent;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -119,12 +119,14 @@ class EditorState extends State<Editor> {
           widget.openedFile!.filePath, widget.textController!.text);
     }
 
-    bool isTriggerKeyForHtml = widget.language == Language.html &&
-            widget.lastPressedKey == LogicalKeyboardKey.shiftLeft ||
-        widget.lastPressedKey == LogicalKeyboardKey.greater;
+    bool isTriggerKeyForHtmlDesktop = widget.language == Language.html &&
+        widget.lastKeyEvent!.isShiftPressed &&
+        widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.period;
 
-    if (isTriggerKeyForHtml) {
-      dev.log('is trigger for html');
+    bool isTriggerKeyForHtmlMobile = widget.language == Language.html &&
+        widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.greater;
+
+    if (isTriggerKeyForHtmlDesktop || isTriggerKeyForHtmlMobile) {
       widget.replicateTags(patternMatches, widget.textController);
     }
 
@@ -136,7 +138,7 @@ class EditorState extends State<Editor> {
 
   void handleKeyEvents(RawKeyEvent event) {
     setState(() {
-      widget.lastPressedKey = event.logicalKey;
+      widget.lastKeyEvent = event;
     });
   }
 
