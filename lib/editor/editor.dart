@@ -8,7 +8,6 @@ import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
-import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
@@ -103,6 +102,7 @@ class EditorState extends State<Editor> {
     if (widget.openedFile != null) {
       Future.delayed(const Duration(seconds: 0), (() async {
         widget.textController?.text = widget.openedFile?.fileContent ?? '';
+        setNewLinebarState(widget.textController?.text ?? '');
       }));
     }
   }
@@ -130,6 +130,10 @@ class EditorState extends State<Editor> {
       widget.replicateTags(patternMatches, widget.textController);
     }
 
+    setNewLinebarState(event);
+  }
+
+  void setNewLinebarState(String event) {
     setState(() {
       TextSpan span = TextSpan(text: event);
       TextPainter tp =
