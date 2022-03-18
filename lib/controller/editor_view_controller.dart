@@ -32,8 +32,15 @@ class EditorViewControllerState extends State<EditorViewController> {
         child: Scaffold(
             drawer: Drawer(child: FileExplorer()),
             appBar: AppBar(
+              leading: Builder(
+                builder: (BuildContext context) => IconButton(
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    icon: const Icon(Icons.folder)),
+              ),
               backgroundColor: widget.tabBarColor,
-              toolbarHeight: 10,
+              toolbarHeight: 50,
               bottom: widget.editor.openedFile != null && widget.codePreview
                   ? const TabBar(tabs: [Text('editor'), Text('preview')])
                   : null,

@@ -13,8 +13,8 @@ import 'package:rich_text_controller/rich_text_controller.dart';
 class Editor extends StatefulWidget with IEditor {
   Editor(
       {Key? key,
-      this.minHeight = 500,
-      this.minWidth = 500,
+      this.minHeight = 1000,
+      this.minWidth = 1000,
       this.color = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
       this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
       this.linebarTextColor = Colors.white,
@@ -189,11 +189,11 @@ class EditorState extends State<Editor> {
         child: ListView(scrollDirection: Axis.horizontal, children: [
           SizedBox(
             height: MediaQuery.of(context).size.height,
-            width: 1000,
+            width: widget.minHeight,
             child: ListView(scrollDirection: Axis.horizontal, children: [
               SizedBox(
                 height: MediaQuery.of(context).size.height,
-                width: 1000,
+                width: widget.minWidth,
                 child: RawKeyboardListener(
                   focusNode: _focusNode,
                   onKey: handleKeyEvents,
