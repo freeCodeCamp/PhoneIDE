@@ -131,7 +131,16 @@ class EditorState extends State<Editor> {
     }
 
     setState(() {
-      numLines = '\n'.allMatches(event).length + 1;
+      TextSpan span = TextSpan(text: event);
+      TextPainter tp =
+          TextPainter(text: span, textDirection: TextDirection.ltr);
+      tp.layout(
+        maxWidth: widget.minWidth,
+      );
+
+      List lines = tp.computeLineMetrics();
+
+      numLines = lines.length;
     });
     linebarController.jumpTo(linebarController.position.maxScrollExtent);
   }
