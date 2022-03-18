@@ -8,6 +8,7 @@ import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
+import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
@@ -64,9 +65,9 @@ class Editor extends StatefulWidget with IEditor {
 
   Function() onChange;
 
-  // check if the user is deleting text inside the editor
+  // the last pressed key in the editor
 
-  bool _deleting = false;
+  LogicalKeyboardKey? lastPressedKey;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -112,13 +113,30 @@ class EditorState extends State<Editor> {
     super.dispose();
   }
 
-  void handleBackSpaceEvent(RawKeyEvent event) {
+  void handlePossibleExecutingEvents(String event) async {
+    if (widget.openedFile != null) {
+      await FileController.writeFile(
+          widget.openedFile!.filePath, widget.textController!.text);
+    }
+
+    bool isTriggerKeyForHtml = widget.language == Language.html &&
+            widget.lastPressedKey == LogicalKeyboardKey.shiftLeft ||
+        widget.lastPressedKey == LogicalKeyboardKey.greater;
+
+    if (isTriggerKeyForHtml) {
+      dev.log('is trigger for html');
+      widget.replicateTags(patternMatches, widget.textController);
+    }
+
     setState(() {
-      if (event.logicalKey == LogicalKeyboardKey.backspace) {
-        widget._deleting = true;
-      } else {
-        widget._deleting = false;
-      }
+      numLines = '\n'.allMatches(event).length + 1;
+    });
+    linebarController.jumpTo(linebarController.position.maxScrollExtent);
+  }
+
+  void handleKeyEvents(RawKeyEvent event) {
+    setState(() {
+      widget.lastPressedKey = event.logicalKey;
     });
   }
 
@@ -163,32 +181,13 @@ class EditorState extends State<Editor> {
                 width: 1000,
                 child: RawKeyboardListener(
                   focusNode: _focusNode,
-                  onKey: handleBackSpaceEvent,
+                  onKey: handleKeyEvents,
                   child: TextField(
                     controller: widget.textController,
                     decoration: decoration,
                     scrollController: scrollController,
-                    onTap: () {
-                      FocusScope.of(context).requestFocus();
-                    },
-                    onChanged: (String e) async {
-                      setState(() {
-                        numLines = '\n'.allMatches(e).length + 1;
-                      });
-                      linebarController
-                          .jumpTo(linebarController.position.maxScrollExtent);
-
-                      if (widget.language == Language.html &&
-                          !widget._deleting) {
-                        widget.replicateTags(
-                            patternMatches, widget.textController);
-                      }
-
-                      if (widget.openedFile != null) {
-                        await FileController.writeFile(
-                            widget.openedFile!.filePath,
-                            widget.textController!.text);
-                      }
+                    onChanged: (String event) async {
+                      handlePossibleExecutingEvents(event);
 
                       widget.onChange();
                     },
