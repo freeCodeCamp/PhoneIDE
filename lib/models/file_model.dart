@@ -34,6 +34,7 @@ class FileIDEState extends State<FileIDE> {
               MaterialPageRoute(
                   builder: ((BuildContext context) => EditorViewController(
                         file: widget,
+                        title: widget.fileName,
                       ))));
         },
       ),

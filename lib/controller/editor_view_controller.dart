@@ -11,6 +11,7 @@ class EditorViewController extends StatefulWidget {
       this.title = '',
       this.codePreview = true,
       this.tabBarColor = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
+      this.scaffoldBackgrounColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
       this.editor,
       this.file,
       this.tabBarLineColor = Colors.white})
@@ -23,6 +24,8 @@ class EditorViewController extends StatefulWidget {
   final Color tabBarColor;
 
   final Color tabBarLineColor;
+
+  final Color scaffoldBackgrounColor;
 
   final FileIDE? file;
 
@@ -48,6 +51,7 @@ class EditorViewControllerState extends State<EditorViewController> {
     return DefaultTabController(
         length: 2,
         child: Scaffold(
+            backgroundColor: widget.scaffoldBackgrounColor,
             drawer: Drawer(child: FileExplorer()),
             appBar: AppBar(
               leading: Builder(

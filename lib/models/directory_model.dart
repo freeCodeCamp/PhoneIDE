@@ -55,9 +55,6 @@ class DirectoryIDEState extends State<DirectoryIDE> {
             setState(() {
               widget.directoryOpen = !widget.directoryOpen;
             });
-
-            widget.fileExplorer.setParentDirectory = widget.directoryName;
-            widget.fileExplorer.setExplorerTree = widget.directoryPath;
           },
         ),
         widget.directoryOpen
