@@ -24,20 +24,22 @@ class FileIDEState extends State<FileIDE> {
       decoration: const BoxDecoration(
           border: Border(left: BorderSide(width: 1, color: Colors.grey))),
       child: ListTile(
-        leading: const Icon(Icons.insert_drive_file),
-        dense: true,
-        title: Text(widget.fileName),
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: ((BuildContext context) => EditorViewController(
-                        file: widget,
-                        title: widget.fileName,
-                      ))));
-        },
-      ),
+          leading: const Icon(Icons.insert_drive_file),
+          dense: true,
+          title: Text(widget.fileName),
+          onTap: () {
+            Navigator.pop(context);
+
+            Navigator.pushReplacement(
+                context,
+                PageRouteBuilder(
+                    transitionDuration: Duration.zero,
+                    pageBuilder: (context, animation1, animation2) =>
+                        EditorViewController(
+                          file: widget,
+                          title: widget.fileName,
+                        )));
+          }),
     );
   }
 }
