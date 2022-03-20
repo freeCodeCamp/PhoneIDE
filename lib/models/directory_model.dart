@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/file_dir_creation_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class DirectoryIDE extends StatefulWidget {
@@ -40,6 +41,36 @@ class DirectoryIDE extends StatefulWidget {
 }
 
 class DirectoryIDEState extends State<DirectoryIDE> {
+  Future<void> getDirectoryOpenClosedState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (prefs.getString(widget.directoryPath) == null) {
+      prefs.setString(widget.directoryPath, widget.directoryOpen.toString());
+    }
+
+    if (prefs.getString(widget.directoryPath) == 'true') {
+      setState(() {
+        widget.directoryOpen = true;
+      });
+    }
+  }
+
+  Future<void> setNewDirectoryState(bool newState) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    prefs.setString(widget.directoryPath, newState.toString());
+
+    setState(() {
+      widget.directoryOpen = newState;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getDirectoryOpenClosedState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -52,9 +83,7 @@ class DirectoryIDEState extends State<DirectoryIDE> {
               ? const Icon(Icons.arrow_drop_down)
               : const Icon(Icons.arrow_right),
           onTap: () {
-            setState(() {
-              widget.directoryOpen = !widget.directoryOpen;
-            });
+            setNewDirectoryState(!widget.directoryOpen);
           },
         ),
         widget.directoryOpen
