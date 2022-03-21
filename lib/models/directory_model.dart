@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/file_dir_creation_model.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class DirectoryIDE extends StatefulWidget {
-  DirectoryIDE(
-      {Key? key,
-      required this.fileExplorer,
-      required this.directoryName,
-      required this.directoryPath,
-      required this.directoryContent,
-      this.directoryOpen = false,
-      this.isParentDirectory = true})
-      : super(key: key);
+  DirectoryIDE({
+    Key? key,
+    required this.fileExplorer,
+    required this.directoryName,
+    required this.directoryPath,
+    required this.directoryContent,
+    this.recentlyOpenedFiles = const [],
+    this.directoryOpen = false,
+  }) : super(key: key);
 
   String directoryName;
 
@@ -21,20 +22,9 @@ class DirectoryIDE extends StatefulWidget {
   final List directoryContent;
   final FileExplorer fileExplorer;
 
+  final List<String> recentlyOpenedFiles;
+
   bool directoryOpen;
-  bool isParentDirectory;
-
-  String get getDirectoryName {
-    return directoryName;
-  }
-
-  set setDirectoryName(String newDirectoryName) {
-    directoryName = newDirectoryName;
-  }
-
-  String get getDirectoryPath {
-    return directoryPath;
-  }
 
   @override
   State<StatefulWidget> createState() => DirectoryIDEState();

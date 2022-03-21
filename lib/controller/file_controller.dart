@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
-import 'package:flutter_code_editor/models/file_dir_creation_model.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -75,6 +74,7 @@ class FileController {
         projects.add(FileIDE(
             fileName: path.split("/").last,
             filePath: path,
+            parentDirectory: path.split("/")[path.split("/").length - 2],
             fileContent: await readFile(path)));
       }
     }

@@ -6,13 +6,14 @@ class FileIDE extends StatefulWidget {
       {Key? key,
       required this.fileName,
       required this.filePath,
-      required this.fileContent})
+      required this.fileContent,
+      required this.parentDirectory})
       : super(key: key);
 
   final String fileName;
   final String filePath;
   final String fileContent;
-
+  final String parentDirectory;
   @override
   State<StatefulWidget> createState() => FileIDEState();
 }
