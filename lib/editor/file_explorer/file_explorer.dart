@@ -1,7 +1,6 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
-import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class FileExplorer extends StatefulWidget {
@@ -12,14 +11,6 @@ class FileExplorer extends StatefulWidget {
   String parentDirectory;
 
   Future<List>? _explorerTree;
-
-  set setParentDirectory(String newParentDirectory) {
-    parentDirectory = newParentDirectory;
-  }
-
-  set setExplorerTree(String path) {
-    _explorerTree = fc.listProjects(path);
-  }
 
   Future<List> getInitialTree() async {
     return fc.listProjects(await fc.initProjectsDirectory());

@@ -56,6 +56,18 @@ class EditorViewControllerState extends State<EditorViewController> {
     setRecentlyOpenedFilesInDir();
   }
 
+  List<FileIDE> cachedFileStringToFile(List<String> stringFileList) {
+    List<FileIDE> files = [];
+
+    for (var file in stringFileList) {
+      var fileToJson = json.decode(file);
+
+      files.add(FileIDE.fromJSON(fileToJson));
+    }
+
+    return files;
+  }
+
   Future<void> setRecentlyOpenedFilesInDir() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -76,18 +88,6 @@ class EditorViewControllerState extends State<EditorViewController> {
       }
     });
 
-    List<FileIDE> cachedFileStringToFile(List<String> stringFileList) {
-      List<FileIDE> files = [];
-
-      for (var file in stringFileList) {
-        var fileToJson = json.decode(file);
-
-        files.add(FileIDE.fromJSON(fileToJson));
-      }
-
-      return files;
-    }
-
     prefs.setStringList(key, recentlyOpenedFiles);
 
     setState(() {
@@ -95,8 +95,33 @@ class EditorViewControllerState extends State<EditorViewController> {
     });
   }
 
-  Future<void> removeRecentlyOpenedFile(String fileName) async {
+  Future<void> removeRecentlyOpenedFile(String fileToClose) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String key = (widget.file?.parentDirectory as String) + '-recently-opened';
+
+    if (prefs.getStringList(key) != null) {
+      List<String>? fileStrings = prefs.getStringList(key);
+
+      if (fileStrings == null) return;
+
+      for (int i = 0; i < fileStrings.length; i++) {
+        var fileObject = json.decode(fileStrings[i]);
+
+        FileIDE file = FileIDE.fromJSON(fileObject);
+
+        if (file.fileName == fileToClose) {
+          fileStrings.removeAt(i);
+
+          prefs.setStringList(key, fileStrings);
+
+          setState(() {
+            widget.recentlyOpenedFiles = cachedFileStringToFile(fileStrings);
+          });
+
+          break;
+        }
+      }
+    }
   }
 
   bool fileIsFocused(String fileName) {
@@ -122,6 +147,7 @@ class EditorViewControllerState extends State<EditorViewController> {
             backgroundColor: widget.scaffoldBackgrounColor,
             drawer: Drawer(child: FileExplorer()),
             appBar: AppBar(
+              title: Text(widget.file?.parentDirectory ?? ''),
               leading: Builder(
                 builder: (BuildContext context) => IconButton(
                     onPressed: () {
@@ -167,31 +193,60 @@ class EditorViewControllerState extends State<EditorViewController> {
   }
 
   ListView fileTabBar() {
+    if (widget.recentlyOpenedFiles.isEmpty) {
+      setRecentlyOpenedFilesInDir();
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       padding: EdgeInsets.zero,
       scrollDirection: Axis.horizontal,
       itemCount: widget.recentlyOpenedFiles.length,
-      itemBuilder: (context, index) => SizedBox(
+      itemBuilder: (context, index) => Container(
         height: 25,
-        width: 100,
-        child: TextButton(
-          onPressed: () {
-            pushNewView(widget.recentlyOpenedFiles[index]);
-          },
-          style: TextButton.styleFrom(
-              backgroundColor:
-                  fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
-                      ? widget.scaffoldBackgrounColor
-                      : widget.tabBarColor,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.zero),
-              )),
-          child: Text(
-            widget.recentlyOpenedFiles[index].fileName,
-            maxLines: 1,
-            style: const TextStyle(color: Colors.white),
-            overflow: TextOverflow.ellipsis,
+        constraints: const BoxConstraints(
+          minWidth: 150,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+              border: Border(right: BorderSide(width: 2, color: Colors.white))),
+          child: TextButton(
+            onPressed: () {
+              pushNewView(widget.recentlyOpenedFiles[index]);
+            },
+            style: TextButton.styleFrom(
+                backgroundColor:
+                    !fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
+                        ? widget.scaffoldBackgrounColor
+                        : widget.tabBarColor,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.zero),
+                )),
+            child: Row(
+              children: [
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 75),
+                  child: Text(
+                    widget.recentlyOpenedFiles[index].fileName,
+                    maxLines: 1,
+                    style: const TextStyle(color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                widget.recentlyOpenedFiles.length > 1
+                    ? IconButton(
+                        onPressed: () {
+                          removeRecentlyOpenedFile(
+                              widget.recentlyOpenedFiles[index].fileName);
+                        },
+                        icon: const Icon(
+                          Icons.cancel_outlined,
+                          color: Colors.white,
+                        ),
+                        padding: const EdgeInsets.only(left: 16))
+                    : Container()
+              ],
+            ),
           ),
         ),
       ),
