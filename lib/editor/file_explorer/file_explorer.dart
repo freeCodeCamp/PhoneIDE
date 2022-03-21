@@ -11,8 +11,6 @@ class FileExplorer extends StatefulWidget {
 
   String parentDirectory;
 
-  List historyCache = [];
-
   Future<List>? _explorerTree;
 
   set setParentDirectory(String newParentDirectory) {

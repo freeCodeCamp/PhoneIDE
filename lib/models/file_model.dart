@@ -16,6 +16,26 @@ class FileIDE extends StatefulWidget {
   final String parentDirectory;
   @override
   State<StatefulWidget> createState() => FileIDEState();
+
+  static Map<String, dynamic> fileToMap(FileIDE file) {
+    Map<String, dynamic> fileMap = {
+      "fileName": file.fileName,
+      "fileContent": file.fileContent,
+      "filePath": file.filePath,
+      "parentDirectory": file.parentDirectory
+    };
+
+    return fileMap;
+  }
+
+  factory FileIDE.fromJSON(Map<String, dynamic> data) {
+    return FileIDE(
+      fileContent: data["fileContent"],
+      fileName: data["fileName"],
+      filePath: data["filePath"],
+      parentDirectory: data["parentDirectory"],
+    );
+  }
 }
 
 class FileIDEState extends State<FileIDE> {

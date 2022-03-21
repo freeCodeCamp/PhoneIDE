@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
@@ -30,7 +33,7 @@ class EditorViewController extends StatefulWidget {
 
   final Color scaffoldBackgrounColor;
 
-  List<String> recentlyOpenedFiles;
+  List<FileIDE> recentlyOpenedFiles;
 
   final FileIDE? file;
 
@@ -60,25 +63,36 @@ class EditorViewControllerState extends State<EditorViewController> {
 
     String key = (widget.file?.parentDirectory as String) + '-recently-opened';
 
-    List<String> recentlyOpenenFiles = [];
+    List<String> recentlyOpenedFiles = [];
 
     List<String>? cache = prefs.getStringList(key);
 
-    recentlyOpenenFiles.add(widget.file!.fileName);
+    recentlyOpenedFiles
+        .add(json.encode(FileIDE.fileToMap(widget.file as FileIDE)));
 
     cache?.forEach((file) {
-      if (!recentlyOpenenFiles.contains(file)) {
-        recentlyOpenenFiles.add(file);
+      if (!recentlyOpenedFiles.contains(file)) {
+        recentlyOpenedFiles.add(file);
       }
     });
 
-    prefs.setStringList(key, recentlyOpenenFiles);
+    List<FileIDE> cachedFileStringToFile(List<String> stringFileList) {
+      List<FileIDE> files = [];
+
+      for (var file in stringFileList) {
+        var fileToJson = json.decode(file);
+
+        files.add(FileIDE.fromJSON(fileToJson));
+      }
+
+      return files;
+    }
+
+    prefs.setStringList(key, recentlyOpenedFiles);
 
     setState(() {
-      widget.recentlyOpenedFiles = recentlyOpenenFiles;
+      widget.recentlyOpenedFiles = cachedFileStringToFile(recentlyOpenedFiles);
     });
-
-    dev.log(widget.recentlyOpenedFiles.toString());
   }
 
   Future<void> removeRecentlyOpenedFile(String fileName) async {
@@ -164,14 +178,15 @@ class EditorViewControllerState extends State<EditorViewController> {
         child: TextButton(
           onPressed: () {},
           style: TextButton.styleFrom(
-              backgroundColor: fileIsFocused(widget.recentlyOpenedFiles[index])
-                  ? widget.scaffoldBackgrounColor
-                  : widget.tabBarColor,
+              backgroundColor:
+                  fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
+                      ? widget.scaffoldBackgrounColor
+                      : widget.tabBarColor,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.zero),
               )),
           child: Text(
-            widget.recentlyOpenedFiles[index],
+            widget.recentlyOpenedFiles[index].fileName,
             maxLines: 1,
             style: const TextStyle(color: Colors.white),
             overflow: TextOverflow.ellipsis,
