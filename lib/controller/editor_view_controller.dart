@@ -1,14 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class EditorViewController extends StatefulWidget {

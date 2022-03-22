@@ -63,35 +63,39 @@ class DirectoryIDEState extends State<DirectoryIDE> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.folder),
-          title: Text(widget.directoryName),
-          trailing: widget.directoryOpen
-              ? const Icon(Icons.arrow_drop_down)
-              : const Icon(Icons.arrow_right),
-          onTap: () {
-            setNewDirectoryState(!widget.directoryOpen);
-          },
-        ),
-        widget.directoryOpen
-            ? FileDirCreationWidget(
-                dir: widget,
-              )
-            : Container(),
-        ListView.builder(
-            shrinkWrap: true,
-            itemCount:
-                widget.directoryOpen ? widget.directoryContent.length : 0,
-            itemBuilder: (BuildContext context, int index) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: widget.directoryContent[index],
-              );
-            })
-      ],
+    return Container(
+      decoration: const BoxDecoration(
+          border: Border(left: BorderSide(width: 1, color: Colors.grey))),
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.folder),
+            title: Text(widget.directoryName),
+            trailing: widget.directoryOpen
+                ? const Icon(Icons.arrow_drop_down)
+                : const Icon(Icons.arrow_right),
+            onTap: () {
+              setNewDirectoryState(!widget.directoryOpen);
+            },
+          ),
+          widget.directoryOpen
+              ? FileDirCreationWidget(
+                  dir: widget,
+                )
+              : Container(),
+          ListView.builder(
+              shrinkWrap: true,
+              itemCount:
+                  widget.directoryOpen ? widget.directoryContent.length : 0,
+              itemBuilder: (BuildContext context, int index) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: widget.directoryContent[index],
+                );
+              })
+        ],
+      ),
     );
   }
 }
