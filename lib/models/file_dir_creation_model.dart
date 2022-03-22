@@ -3,11 +3,10 @@ import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
 
 class FileDirCreationWidget extends StatefulWidget {
-  FileDirCreationWidget({Key? key, required this.dir, this.creatorOpen = false})
-      : super(key: key);
-
-  bool creatorOpen = false;
-
+  FileDirCreationWidget({
+    Key? key,
+    required this.dir,
+  }) : super(key: key);
   bool isCreatingFile = false;
   bool isCreatingDirectory = false;
 
@@ -20,57 +19,38 @@ class FileDirCreationWidget extends StatefulWidget {
 class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
   @override
   Widget build(BuildContext context) {
-    return widget.creatorOpen
-        ? Column(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.arrow_drop_down),
-                title: const Text('Close Creator'),
+    return Column(
+      children: [
+        !widget.isCreatingDirectory
+            ? ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text('Create Directory'),
+                tileColor: Colors.lightBlue,
                 onTap: () {
                   setState(() {
-                    widget.creatorOpen = !widget.creatorOpen;
+                    widget.isCreatingDirectory = true;
+                    widget.isCreatingFile = false;
                   });
                 },
-              ),
-              !widget.isCreatingDirectory
-                  ? ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text('Create Directory'),
-                      tileColor: Colors.lightBlue,
-                      onTap: () {
-                        setState(() {
-                          widget.isCreatingDirectory = true;
-                          widget.isCreatingFile = false;
-                        });
-                      },
-                    )
-                  : inputField(context, false),
-              !widget.isCreatingFile
-                  ? ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text(
-                        'Create File',
-                      ),
-                      tileColor: Colors.lightBlue,
-                      onTap: () {
-                        setState(() {
-                          widget.isCreatingDirectory = false;
-                          widget.isCreatingFile = true;
-                        });
-                      },
-                    )
-                  : inputField(context, true)
-            ],
-          )
-        : ListTile(
-            leading: const Icon(Icons.arrow_right_sharp),
-            title: const Text('Open Creator'),
-            onTap: () {
-              setState(() {
-                widget.creatorOpen = !widget.creatorOpen;
-              });
-            },
-          );
+              )
+            : inputField(context, false),
+        !widget.isCreatingFile
+            ? ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text(
+                  'Create File',
+                ),
+                tileColor: Colors.lightBlue,
+                onTap: () {
+                  setState(() {
+                    widget.isCreatingDirectory = false;
+                    widget.isCreatingFile = true;
+                  });
+                },
+              )
+            : inputField(context, true)
+      ],
+    );
   }
 
   Widget inputField(BuildContext context, bool isCreatingFile) {
