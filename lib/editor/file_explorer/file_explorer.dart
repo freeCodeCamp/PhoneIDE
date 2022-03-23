@@ -18,8 +18,8 @@ class FileExplorer extends StatefulWidget {
     return fc.listProjects(await fc.initProjectsDirectory());
   }
 
-  final _controller = StreamController<bool>.broadcast();
-  StreamController<bool> get controller => _controller;
+  final _controller = StreamController<Future<List>>.broadcast();
+  StreamController<Future<List>> get controller => _controller;
 
   @override
   State<StatefulWidget> createState() => FileExplorerState();
@@ -29,16 +29,8 @@ class FileExplorerState extends State<FileExplorer> {
   @override
   void initState() {
     super.initState();
-    widget.controller.sink.add(false);
-    widget.controller.stream.listen((event) {
-      if (event) {
-        setState(() {
-          widget.explorerTree = widget.getInitialTree();
-        });
-      }
-    });
     widget.fc = FileController(fileExplorer: widget);
-    widget.explorerTree = widget.getInitialTree();
+    widget.controller.sink.add(widget.getInitialTree());
   }
 
   @override
@@ -46,17 +38,20 @@ class FileExplorerState extends State<FileExplorer> {
     super.dispose();
   }
 
+  void updateTree() {
+    widget.controller.sink.add(widget.getInitialTree());
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<bool>(
+    return StreamBuilder<Future<List>>(
         stream: widget._controller.stream,
         builder: (context, snapshot) {
-          dev.log(snapshot.data.toString());
           return FutureBuilder(
-              future: widget.explorerTree,
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                if (snapshot.hasData) {
-                  List content = snapshot.data;
+              future: snapshot.data,
+              builder: (BuildContext context, AsyncSnapshot dataSnapshot) {
+                if (dataSnapshot.hasData) {
+                  List content = dataSnapshot.data;
                   return ListView.builder(
                       itemCount: content.length,
                       itemBuilder: (BuildContext context, int index) {
@@ -64,6 +59,8 @@ class FileExplorerState extends State<FileExplorer> {
                           children: [content[index]],
                         );
                       });
+                } else {
+                  updateTree();
                 }
                 return Container();
               });

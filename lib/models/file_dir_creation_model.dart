@@ -98,7 +98,8 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
           }
 
           setState(() {
-            widget.fileExplorer.controller.sink.add(true);
+            widget.fileExplorer.controller.sink
+                .add(widget.fileExplorer.getInitialTree());
             widget.isCreatingDirectory = false;
             widget.isCreatingFile = false;
           });

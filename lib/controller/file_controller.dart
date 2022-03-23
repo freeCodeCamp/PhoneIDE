@@ -5,6 +5,7 @@ import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FileController {
   FileController({required this.fileExplorer});
@@ -57,6 +58,21 @@ class FileController {
     }
   }
 
+  Future<bool> getDirectoryOpenClosedState(String directoryPath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (prefs.getString(directoryPath) == null) {
+      prefs.setString(directoryPath, 'false');
+      return false;
+    }
+
+    if (prefs.getString(directoryPath) == 'true') {
+      return true;
+    }
+
+    return false;
+  }
+
   Future<List<Widget>> listProjects(String path) async {
     final List<FileSystemEntity> projectPaths = Directory(path).listSync();
     List<Widget> projects = [];
@@ -68,6 +84,7 @@ class FileController {
         projects.add(DirectoryIDE(
             fileExplorer: fileExplorer,
             directoryName: path.split("/").last,
+            directoryOpen: await getDirectoryOpenClosedState(path),
             directoryPath: path,
             directoryContent: await listProjects(path)));
       } else {
