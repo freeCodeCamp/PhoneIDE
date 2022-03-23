@@ -127,6 +127,8 @@ class EditorViewControllerState extends State<EditorViewController> {
   }
 
   void pushNewView(FileIDE tappedFile) {
+    if (tappedFile.fileName == widget.file?.fileName) return;
+
     Navigator.pushReplacement(
         context,
         PageRouteBuilder(
@@ -206,8 +208,13 @@ class EditorViewControllerState extends State<EditorViewController> {
           minWidth: 150,
         ),
         child: Container(
-          decoration: const BoxDecoration(
-              border: Border(right: BorderSide(width: 2, color: Colors.white))),
+          decoration: BoxDecoration(
+              border: fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
+                  ? const Border(
+                      right: BorderSide(width: 2, color: Colors.white),
+                      top: BorderSide(width: 2, color: Colors.white))
+                  : const Border(
+                      bottom: BorderSide(width: 2, color: Colors.white))),
           child: TextButton(
             onPressed: () {
               pushNewView(widget.recentlyOpenedFiles[index]);
