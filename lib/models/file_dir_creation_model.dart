@@ -12,6 +12,8 @@ class FileDirCreationWidget extends StatefulWidget {
 
   FileExplorer fileExplorer;
 
+  final textController = TextEditingController();
+
   DirectoryIDE dir;
 
   @override
@@ -50,9 +52,12 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
                     children: [
                       Expanded(
                         child: ListTile(
-                          title: const Text('apply'),
+                          title: const Text('Create'),
                           tileColor: Colors.green,
                           onTap: () {
+                            createNewDirOrFile(
+                                false, widget.textController.text);
+
                             setState(() {
                               widget.isCreatingDirectory = false;
                             });
@@ -82,24 +87,28 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
     );
   }
 
+  void createNewDirOrFile(bool isFile, String name) {
+    if (isFile) {
+      FileController.createFile(widget.dir.directoryPath, name);
+    } else {
+      FileController.createNewDir(widget.dir.directoryPath, name);
+    }
+
+    widget.fileExplorer.updateTree();
+  }
+
   Widget inputField(BuildContext context, bool isCreatingFile) {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: TextField(
+        controller: widget.textController,
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
           hintText: 'Enter a ${isCreatingFile ? 'File' : 'Directory'} name',
         ),
         onSubmitted: (name) {
-          if (isCreatingFile) {
-            FileController.createFile(widget.dir.directoryPath, name);
-          } else {
-            FileController.createNewDir(widget.dir.directoryPath, name);
-          }
-
+          createNewDirOrFile(isCreatingFile, name);
           setState(() {
-            widget.fileExplorer.controller.sink
-                .add(widget.fileExplorer.getInitialTree());
             widget.isCreatingDirectory = false;
             widget.isCreatingFile = false;
           });

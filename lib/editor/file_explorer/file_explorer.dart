@@ -18,6 +18,10 @@ class FileExplorer extends StatefulWidget {
     return fc.listProjects(await fc.initProjectsDirectory());
   }
 
+  void updateTree() {
+    controller.sink.add(getInitialTree());
+  }
+
   final _controller = StreamController<Future<List>>.broadcast();
   StreamController<Future<List>> get controller => _controller;
 
@@ -30,16 +34,12 @@ class FileExplorerState extends State<FileExplorer> {
   void initState() {
     super.initState();
     widget.fc = FileController(fileExplorer: widget);
-    widget.controller.sink.add(widget.getInitialTree());
+    widget.updateTree();
   }
 
   @override
   void dispose() {
     super.dispose();
-  }
-
-  void updateTree() {
-    widget.controller.sink.add(widget.getInitialTree());
   }
 
   @override
@@ -60,7 +60,7 @@ class FileExplorerState extends State<FileExplorer> {
                         );
                       });
                 } else {
-                  updateTree();
+                  widget.updateTree();
                 }
                 return Container();
               });
