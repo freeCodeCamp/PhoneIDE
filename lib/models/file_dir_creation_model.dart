@@ -82,7 +82,33 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
                   });
                 },
               )
-            : inputField(context, true)
+            : Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: inputField(context, true)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ListTile(
+                          title: const Text('Create'),
+                          tileColor: Colors.green,
+                          onTap: () {
+                            createNewDirOrFile(
+                                true, widget.textController.text);
+
+                            setState(() {
+                              widget.isCreatingFile = false;
+                            });
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
       ],
     );
   }
@@ -108,6 +134,7 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
         ),
         onSubmitted: (name) {
           createNewDirOrFile(isCreatingFile, name);
+
           setState(() {
             widget.isCreatingDirectory = false;
             widget.isCreatingFile = false;
