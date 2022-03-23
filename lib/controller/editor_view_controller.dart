@@ -119,6 +119,7 @@ class EditorViewControllerState extends State<EditorViewController> {
           break;
         }
       }
+      pushNewView(widget.recentlyOpenedFiles[0]);
     }
   }
 
