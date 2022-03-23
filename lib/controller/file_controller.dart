@@ -58,6 +58,18 @@ class FileController {
     }
   }
 
+  static Future<void> deleteDir(String path) async {
+    final Directory _dir = Directory(path);
+
+    await _dir.delete();
+  }
+
+  static Future<void> deleteFile(String path) async {
+    final File _file = File(path);
+
+    await _file.delete();
+  }
+
   Future<bool> getDirectoryOpenClosedState(String directoryPath) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -89,6 +101,7 @@ class FileController {
             directoryContent: await listProjects(path)));
       } else {
         projects.add(FileIDE(
+            fileExplorer: fileExplorer,
             fileName: path.split("/").last,
             filePath: path,
             parentDirectory: path.split("/")[path.split("/").length - 2],
