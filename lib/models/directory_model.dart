@@ -105,7 +105,11 @@ class DirectoryIDEState extends State<DirectoryIDE> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: FileDirCreationWidget(dir: widget))
+                      Expanded(
+                          child: FileDirCreationWidget(
+                        dir: widget,
+                        fileExplorer: widget.fileExplorer,
+                      ))
                     ],
                   ),
                   Row(

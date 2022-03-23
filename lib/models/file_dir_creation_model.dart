@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
+import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
 
 class FileDirCreationWidget extends StatefulWidget {
-  FileDirCreationWidget({
-    Key? key,
-    required this.dir,
-  }) : super(key: key);
+  FileDirCreationWidget(
+      {Key? key, required this.dir, required this.fileExplorer})
+      : super(key: key);
   bool isCreatingFile = false;
   bool isCreatingDirectory = false;
+
+  FileExplorer fileExplorer;
 
   DirectoryIDE dir;
 
@@ -22,18 +24,45 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
     return Column(
       children: [
         !widget.isCreatingDirectory
-            ? ListTile(
-                leading: const Icon(Icons.add),
-                title: const Text('Create Directory'),
-                tileColor: Colors.lightBlue,
-                onTap: () {
-                  setState(() {
-                    widget.isCreatingDirectory = true;
-                    widget.isCreatingFile = false;
-                  });
-                },
+            ? Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text('Create Directory'),
+                    tileColor: Colors.lightBlue,
+                    onTap: () {
+                      setState(() {
+                        widget.isCreatingDirectory = true;
+                        widget.isCreatingFile = false;
+                      });
+                    },
+                  ),
+                ],
               )
-            : inputField(context, false),
+            : Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: inputField(context, false)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ListTile(
+                          title: const Text('apply'),
+                          tileColor: Colors.green,
+                          onTap: () {
+                            setState(() {
+                              widget.isCreatingDirectory = false;
+                            });
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
         !widget.isCreatingFile
             ? ListTile(
                 leading: const Icon(Icons.add),
@@ -69,6 +98,7 @@ class _FileDirCreationWidgetState extends State<FileDirCreationWidget> {
           }
 
           setState(() {
+            widget.fileExplorer.controller.sink.add(true);
             widget.isCreatingDirectory = false;
             widget.isCreatingFile = false;
           });
