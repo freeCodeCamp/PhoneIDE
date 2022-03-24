@@ -171,6 +171,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                           child: fileTabBar(),
                         ),
                         Container(
+                          height: 35,
                           color: widget.tabBarColor,
                           child: const TabBar(
                               tabs: <Text>[Text('editor'), Text('preview')]),
@@ -209,6 +210,7 @@ class EditorViewControllerState extends State<EditorViewController> {
           minWidth: 150,
         ),
         child: Container(
+          padding: const EdgeInsets.only(right: 4),
           decoration: BoxDecoration(
               border: fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
                   ? const Border(
