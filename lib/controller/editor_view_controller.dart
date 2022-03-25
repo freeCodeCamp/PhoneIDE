@@ -164,8 +164,14 @@ class EditorViewControllerState extends State<EditorViewController> {
                         Container(
                           height: 35,
                           color: widget.options.tabBarColor,
-                          child: const TabBar(
-                              tabs: <Text>[Text('editor'), Text('preview')]),
+                          child: TabBar(tabs: <Text>[
+                            const Text('editor'),
+                            const Text('preview'),
+                            for (int i = 0;
+                                i < widget.options.customViewNames.length;
+                                i++)
+                              widget.options.customViewNames[i]
+                          ]),
                         ),
                         Expanded(
                           child: TabBarView(
@@ -174,7 +180,11 @@ class EditorViewControllerState extends State<EditorViewController> {
                               CodePreview(file: editor!.openedFile as FileIDE)
                             ],
                           ),
-                        )
+                        ),
+                        for (int i = 0;
+                            i < widget.options.customViews.length;
+                            i++)
+                          widget.options.customViews[i]
                       ],
                     ))
                 : const Center(
