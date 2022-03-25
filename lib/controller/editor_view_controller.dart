@@ -180,14 +180,14 @@ class EditorViewControllerState extends State<EditorViewController> {
                               CodePreview(
                                 file: editor!.openedFile as FileIDE,
                                 customScript: widget.options.customScripts,
-                              )
+                              ),
+                              for (int i = 0;
+                                  i < widget.options.customViews.length;
+                                  i++)
+                                widget.options.customViews[i]
                             ],
                           ),
                         ),
-                        for (int i = 0;
-                            i < widget.options.customViews.length;
-                            i++)
-                          widget.options.customViews[i]
                       ],
                     ))
                 : const Center(
