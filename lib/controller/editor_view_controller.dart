@@ -171,10 +171,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                           child: TabBarView(
                             children: [
                               editor as Widget,
-                              CodePreview(
-                                filePath:
-                                    editor?.openedFile!.filePath as String,
-                              )
+                              CodePreview(file: editor!.openedFile as FileIDE)
                             ],
                           ),
                         )

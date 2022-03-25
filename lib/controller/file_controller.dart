@@ -40,7 +40,9 @@ class FileController {
     }
   }
 
-  static Future<void> createFile(String path, String name) async {
+  static Future<void> createFile(String name, [String? path]) async {
+    path ??= await returnRootPath();
+
     final File _file = File('$path/$name');
 
     if (!await _file.exists()) {
@@ -68,6 +70,12 @@ class FileController {
     final File _file = File(path);
 
     await _file.delete();
+  }
+
+  static Future<String> returnRootPath() async {
+    Directory dir = await getApplicationDocumentsDirectory();
+
+    return '${dir.path}/projects';
   }
 
   Future<bool> getDirectoryOpenClosedState(String directoryPath) async {
