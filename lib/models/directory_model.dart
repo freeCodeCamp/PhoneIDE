@@ -22,7 +22,7 @@ class DirectoryIDE extends StatefulWidget {
 
   final String directoryPath;
   final List directoryContent;
-  final FileExplorer fileExplorer;
+  final FileExplorer? fileExplorer;
 
   final List<String> recentlyOpenedFiles;
 
@@ -40,8 +40,10 @@ class DirectoryIDEState extends State<DirectoryIDE> {
 
     prefs.setString(widget.directoryPath, newState.toString());
 
-    widget.fileExplorer.controller.sink
-        .add(widget.fileExplorer.getInitialTree());
+    if (widget.fileExplorer != null) {
+      widget.fileExplorer!.controller.sink
+          .add(widget.fileExplorer!.getInitialTree());
+    }
   }
 
   @override
@@ -83,15 +85,17 @@ class DirectoryIDEState extends State<DirectoryIDE> {
               )
             : Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                          child: FileDirCreationWidget(
-                        dir: widget,
-                        fileExplorer: widget.fileExplorer,
-                      ))
-                    ],
-                  ),
+                  widget.fileExplorer != null
+                      ? Row(
+                          children: [
+                            Expanded(
+                                child: FileDirCreationWidget(
+                              dir: widget,
+                              fileExplorer: widget.fileExplorer as FileExplorer,
+                            ))
+                          ],
+                        )
+                      : Container(),
                   Row(
                     children: [
                       Expanded(
@@ -111,7 +115,7 @@ class DirectoryIDEState extends State<DirectoryIDE> {
                           tileColor: Colors.red,
                           onTap: () {
                             FileController.deleteDir(widget.directoryPath);
-                            widget.fileExplorer.updateTree();
+                            widget.fileExplorer!.updateTree();
                           },
                         ),
                       )

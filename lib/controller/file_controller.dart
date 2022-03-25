@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FileController {
   FileController({required this.fileExplorer});
 
-  FileExplorer fileExplorer;
+  FileExplorer? fileExplorer;
 
   Future<String> initProjectsDirectory() async {
     Directory appDocDir = await getApplicationDocumentsDirectory();

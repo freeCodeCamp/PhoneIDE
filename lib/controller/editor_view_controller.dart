@@ -135,7 +135,9 @@ class EditorViewControllerState extends State<EditorViewController> {
         length: 2,
         child: Scaffold(
             backgroundColor: widget.options.scaffoldBackgrounColor,
-            drawer: Drawer(child: FileExplorer()),
+            drawer: widget.options.useFileExplorer
+                ? Drawer(child: FileExplorer())
+                : null,
             appBar: AppBar(
               title: Text(widget.file?.parentDirectory ?? ''),
               leading: Builder(
