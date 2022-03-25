@@ -176,15 +176,15 @@ class EditorViewControllerState extends State<EditorViewController> {
                         Expanded(
                           child: TabBarView(
                             children: [
+                              for (int i = 0;
+                                  i < widget.options.customViews.length;
+                                  i++)
+                                widget.options.customViews[i],
                               editor as Widget,
                               CodePreview(
                                 file: editor!.openedFile as FileIDE,
                                 customScript: widget.options.customScripts,
                               ),
-                              for (int i = 0;
-                                  i < widget.options.customViews.length;
-                                  i++)
-                                widget.options.customViews[i]
                             ],
                           ),
                         ),
