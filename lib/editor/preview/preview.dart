@@ -5,9 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import 'package:html/parser.dart' show parse, parseFragment;
+import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
-import 'dart:developer' as dev;
 
 class CodePreview extends StatefulWidget {
   const CodePreview({

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/file_dir_creation_model.dart';
-import 'dart:developer' as dev;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
-import 'dart:developer' as dev;
 
 // ignore: must_be_immutable
 class FileExplorer extends StatefulWidget {
