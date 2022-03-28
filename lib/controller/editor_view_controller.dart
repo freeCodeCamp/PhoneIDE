@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
@@ -83,6 +82,10 @@ class EditorViewControllerState extends State<EditorViewController> {
   }
 
   Future<void> removeRecentlyOpenedFile(String fileToClose) async {
+    setState(() {
+      widget.recentlyOpenedFiles = [];
+    });
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String key = (widget.file?.parentDirectory as String) + '-recently-opened';
 
@@ -114,6 +117,15 @@ class EditorViewControllerState extends State<EditorViewController> {
 
   bool fileIsFocused(String fileName) {
     return fileName == widget.file?.fileName;
+  }
+
+  int getActualTabLength() {
+    int tabs = 1;
+    widget.options.codePreview ? tabs = tabs + 1 : tabs = tabs;
+
+    tabs = widget.options.customViews.length + tabs;
+
+    return tabs;
   }
 
   void pushNewView(FileIDE tappedFile) {
@@ -152,7 +164,7 @@ class EditorViewControllerState extends State<EditorViewController> {
             ),
             body: editor?.openedFile != null && widget.options.codePreview
                 ? DefaultTabController(
-                    length: 2,
+                    length: getActualTabLength(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -165,12 +177,12 @@ class EditorViewControllerState extends State<EditorViewController> {
                           height: 35,
                           color: widget.options.tabBarColor,
                           child: TabBar(tabs: <Text>[
-                            const Text('editor'),
-                            const Text('preview'),
                             for (int i = 0;
                                 i < widget.options.customViewNames.length;
                                 i++)
-                              widget.options.customViewNames[i]
+                              widget.options.customViewNames[i],
+                            const Text('editor'),
+                            const Text('preview'),
                           ]),
                         ),
                         Expanded(

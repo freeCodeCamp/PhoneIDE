@@ -3,6 +3,7 @@ import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/models/directory_model.dart';
 
+// ignore: must_be_immutable
 class FileDirCreationWidget extends StatefulWidget {
   FileDirCreationWidget(
       {Key? key, required this.dir, required this.fileExplorer})
