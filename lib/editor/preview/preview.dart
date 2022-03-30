@@ -77,7 +77,9 @@ class CodePreviewState extends State<CodePreview> {
       Document bodyNodes = parse(node);
 
       Node bodyNode =
-          bodyNodes.getElementsByTagName("BODY").first.children.first;
+          bodyNodes.getElementsByTagName("BODY").first.children.isNotEmpty
+              ? bodyNodes.getElementsByTagName("BODY").first.children.first
+              : bodyNodes.getElementsByTagName("HEAD").first.children.first;
 
       document.getElementsByTagName("BODY")[0].append(bodyNode);
     }
