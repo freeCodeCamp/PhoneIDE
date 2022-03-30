@@ -7,7 +7,8 @@ class EditorOptions {
     this.tabBarLineColor = Colors.white,
     this.customViews = const [],
     this.customViewNames = const [],
-    this.customScripts = const [],
+    this.importScripts = const [],
+    this.bodyScripts = const [],
     this.tabBarColor = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
     this.scaffoldBackgrounColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.minHeight = 1000,
@@ -31,7 +32,9 @@ class EditorOptions {
 
   final List<Text> customViewNames;
 
-  final List<String> customScripts;
+  final List<String> importScripts;
+
+  final List<String> bodyScripts;
 
   final double minHeight;
 

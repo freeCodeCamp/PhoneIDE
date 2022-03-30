@@ -66,16 +66,21 @@ class CodePreviewState extends State<CodePreview> {
 
     document.getElementsByTagName('HEAD')[0].append(meta);
 
-    for (String import in widget.options.customScripts) {
+    for (String import in widget.options.importScripts) {
       Document importDocument = parse(import);
 
       Node script = importDocument.getElementsByTagName('SCRIPT')[0];
       document.getElementsByTagName('HEAD')[0].append(script);
     }
 
-    _controller.loadUrl(Uri.dataFromString(document.outerHtml,
-            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-        .toString());
+    for (String node in widget.options.bodyScripts) {
+      Document bodyNodes = parse(node);
+
+      Node bodyNode =
+          bodyNodes.getElementsByTagName("BODY").first.children.first;
+
+      document.getElementsByTagName("BODY")[0].append(bodyNode);
+    }
   }
 
   @override
