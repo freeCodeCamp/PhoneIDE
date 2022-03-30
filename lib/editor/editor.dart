@@ -19,6 +19,7 @@ class Editor extends StatefulWidget with IEditor {
       required this.onChange,
       this.openedFile,
       this.options = const EditorOptions(),
+      required this.textStream,
       required this.language})
       : super(key: key);
 
@@ -45,6 +46,10 @@ class Editor extends StatefulWidget with IEditor {
   // options of the editor
 
   late EditorOptions options;
+
+  // a copy of the provided stream so it can be updated
+
+  StreamController textStream;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -183,6 +188,7 @@ class EditorState extends State<Editor> {
                     scrollController: scrollController,
                     onChanged: (String event) async {
                       handlePossibleExecutingEvents(event);
+                      widget.textStream.sink.add(event);
 
                       widget.onChange();
                     },

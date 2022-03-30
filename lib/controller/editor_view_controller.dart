@@ -28,6 +28,10 @@ class EditorViewController extends StatefulWidget {
 
   StreamController consoleStream = StreamController<dynamic>.broadcast();
 
+  // a stream of the latest text in the editor
+
+  StreamController editorTextStream = StreamController<String>.broadcast();
+
   @override
   State<StatefulWidget> createState() => EditorViewControllerState();
 }
@@ -41,6 +45,7 @@ class EditorViewControllerState extends State<EditorViewController> {
     editor = Editor(
       language: Language.html,
       openedFile: widget.file,
+      textStream: widget.editorTextStream,
       onChange: () {},
     );
 
