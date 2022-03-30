@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -13,6 +14,7 @@ class CodePreview extends StatefulWidget {
   const CodePreview({
     Key? key,
     required this.editor,
+    required this.consoleStream,
     this.options = const EditorOptions(),
     this.initialUrl = 'about:blank',
     this.allowJavaScript = true,
@@ -38,6 +40,11 @@ class CodePreview extends StatefulWidget {
   // an instance of the editor options
 
   final EditorOptions options;
+
+  // an instance of the console stream it needs to call when something happends
+  // in the console
+
+  final StreamController<dynamic> consoleStream;
 
   @override
   State<StatefulWidget> createState() => CodePreviewState();
@@ -81,7 +88,7 @@ class CodePreviewState extends State<CodePreview> {
         JavascriptChannel(
             name: 'first',
             onMessageReceived: (JavascriptMessage msg) {
-              widget.editor.consoleStream.sink.add(msg.message);
+              widget.consoleStream.sink.add(msg.message);
             })
       },
       initialUrl: widget.initialUrl,

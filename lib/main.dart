@@ -16,11 +16,9 @@ class App extends StatelessWidget {
       options: const EditorOptions(),
     );
 
-    if (controller.consoleStream != null) {
-      controller.consoleStream?.listen((event) {
-        dev.log(event.toString());
-      });
-    }
+    controller.consoleStream.stream.listen((event) {
+      dev.log(event.toString());
+    });
 
     return MaterialApp(
       home: controller,

@@ -42,10 +42,6 @@ class Editor extends StatefulWidget with IEditor {
 
   RawKeyEvent? lastKeyEvent;
 
-  // a stream of the javascript that is executed inside the code preview
-
-  StreamController consoleStream = StreamController<dynamic>.broadcast();
-
   // options of the editor
 
   late EditorOptions options;

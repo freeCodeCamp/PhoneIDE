@@ -24,7 +24,9 @@ class EditorViewController extends StatefulWidget {
   final FileIDE? file;
   final EditorOptions options;
 
-  Stream? consoleStream;
+  // a stream of the javascript that is executed inside the code preview
+
+  StreamController consoleStream = StreamController<dynamic>.broadcast();
 
   @override
   State<StatefulWidget> createState() => EditorViewControllerState();
@@ -41,8 +43,6 @@ class EditorViewControllerState extends State<EditorViewController> {
       openedFile: widget.file,
       onChange: () {},
     );
-
-    widget.consoleStream = editor!.consoleStream.stream;
 
     setRecentlyOpenedFilesInDir();
   }
@@ -200,8 +200,10 @@ class EditorViewControllerState extends State<EditorViewController> {
                                 widget.options.customViews[i],
                               editor as Widget,
                               CodePreview(
-                                  editor: editor as Editor,
-                                  options: widget.options),
+                                editor: editor as Editor,
+                                options: widget.options,
+                                consoleStream: widget.consoleStream,
+                              ),
                             ],
                           ),
                         ),
