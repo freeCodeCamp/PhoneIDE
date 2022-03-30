@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
@@ -138,6 +139,7 @@ class EditorViewControllerState extends State<EditorViewController> {
             pageBuilder: (context, animation1, animation2) =>
                 EditorViewController(
                   file: tappedFile,
+                  options: widget.options,
                 )));
   }
 
@@ -194,9 +196,8 @@ class EditorViewControllerState extends State<EditorViewController> {
                                 widget.options.customViews[i],
                               editor as Widget,
                               CodePreview(
-                                file: editor!.openedFile as FileIDE,
-                                customScript: widget.options.customScripts,
-                              ),
+                                  editor: editor as Editor,
+                                  options: widget.options),
                             ],
                           ),
                         ),

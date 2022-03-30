@@ -10,6 +10,11 @@ class EditorOptions {
     this.customScripts = const [],
     this.tabBarColor = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
     this.scaffoldBackgrounColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
+    this.minHeight = 1000,
+    this.minWidth = 1000,
+    this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
+    this.linebarTextColor = Colors.white,
   });
 
   final bool codePreview;
@@ -27,4 +32,14 @@ class EditorOptions {
   final List<Text> customViewNames;
 
   final List<String> customScripts;
+
+  final double minHeight;
+
+  final double minWidth;
+
+  final Color editorBackgroundColor;
+
+  final Color linebarColor;
+
+  final Color linebarTextColor;
 }

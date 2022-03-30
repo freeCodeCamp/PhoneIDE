@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_code_editor/controller/language_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/enums/language.dart';
 import 'package:flutter_code_editor/models/editor.dart';
+import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:rich_text_controller/rich_text_controller.dart';
 
@@ -13,44 +16,15 @@ import 'package:rich_text_controller/rich_text_controller.dart';
 class Editor extends StatefulWidget with IEditor {
   Editor(
       {Key? key,
-      this.minHeight = 1000,
-      this.minWidth = 1000,
-      this.color = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
-      this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
-      this.linebarTextColor = Colors.white,
-      this.content = '',
-      this.openedFile,
       required this.onChange,
+      this.openedFile,
+      this.options = const EditorOptions(),
       required this.language})
       : super(key: key);
-
-  // minimum height of the editor
-
-  final double minHeight;
-
-  // minimum width of the editor
-
-  final double minWidth;
-
-  // color of the editor
-
-  final Color color;
-
-  // Color of the linebar
-
-  final Color linebarColor;
-
-  // Color of the text in the linebar
-
-  final Color linebarTextColor;
 
   // the coding language in the editor
 
   final Language language;
-
-  // content inside the editor
-
-  final String content;
 
   // an instance of the current file
 
@@ -67,6 +41,14 @@ class Editor extends StatefulWidget with IEditor {
   // holds a copy of the last key events that happened
 
   RawKeyEvent? lastKeyEvent;
+
+  // a stream of the javascript that is executed inside the code preview
+
+  late StreamController consoleStream;
+
+  // options of the editor
+
+  late EditorOptions options;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -105,6 +87,10 @@ class EditorState extends State<Editor> {
         setNewLinebarState(widget.textController?.text ?? '');
       }));
     }
+
+    widget.options = const EditorOptions();
+
+    widget.consoleStream = StreamController<dynamic>.broadcast();
   }
 
   @override
@@ -139,7 +125,7 @@ class EditorState extends State<Editor> {
       TextPainter tp =
           TextPainter(text: span, textDirection: TextDirection.ltr);
       tp.layout(
-        maxWidth: widget.minWidth,
+        maxWidth: widget.options.minWidth,
       );
 
       List lines = tp.computeLineMetrics();
@@ -163,7 +149,7 @@ class EditorState extends State<Editor> {
     return Row(
       children: [
         Container(
-            color: widget.linebarColor,
+            color: widget.options.linebarColor,
             constraints: BoxConstraints(minWidth: 10, maxWidth: initialWidth),
             child: Padding(
               padding: const EdgeInsets.only(top: 20.0),
@@ -189,11 +175,11 @@ class EditorState extends State<Editor> {
         child: ListView(scrollDirection: Axis.horizontal, children: [
           SizedBox(
             height: MediaQuery.of(context).size.height,
-            width: widget.minHeight,
+            width: widget.options.minHeight,
             child: ListView(scrollDirection: Axis.horizontal, children: [
               SizedBox(
                 height: MediaQuery.of(context).size.height,
-                width: widget.minWidth,
+                width: widget.options.minWidth,
                 child: RawKeyboardListener(
                   focusNode: _focusNode,
                   onKey: handleKeyEvents,
@@ -210,7 +196,7 @@ class EditorState extends State<Editor> {
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
                     style: TextStyle(
-                      color: widget.linebarTextColor,
+                      color: widget.options.linebarTextColor,
                       fontSize: 18,
                     ),
                   ),

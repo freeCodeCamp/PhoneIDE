@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/models/file_model.dart';
+import 'package:flutter_code_editor/editor/editor.dart';
+import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:html/parser.dart' show parse;
@@ -11,11 +12,11 @@ import 'package:html/dom.dart';
 class CodePreview extends StatefulWidget {
   const CodePreview({
     Key? key,
-    required this.file,
+    required this.editor,
+    this.options = const EditorOptions(),
     this.initialUrl = 'about:blank',
     this.allowJavaScript = true,
     this.userAgent = 'random',
-    this.customScript = const [],
   }) : super(key: key);
 
   // the initialUrl the preview should go to before the actual view is loaded
@@ -30,13 +31,13 @@ class CodePreview extends StatefulWidget {
 
   final String userAgent;
 
-  // used to temporarly create file
+  // an instance of the editor that is calling the preview widget
 
-  final FileIDE file;
+  final Editor editor;
 
-  // custom javaScript to add in browser view
+  // an instance of the editor options
 
-  final List<String> customScript;
+  final EditorOptions options;
 
   @override
   State<StatefulWidget> createState() => CodePreviewState();
@@ -46,7 +47,7 @@ class CodePreviewState extends State<CodePreview> {
   late WebViewController _controller;
 
   Future<void> _loadCodeFromAssets() async {
-    String fileText = widget.file.fileContent;
+    String fileText = widget.editor.openedFile!.fileContent;
 
     Document document = parse(fileText);
 
@@ -58,7 +59,7 @@ class CodePreviewState extends State<CodePreview> {
 
     document.getElementsByTagName('HEAD')[0].append(meta);
 
-    for (String import in widget.customScript) {
+    for (String import in widget.options.customScripts) {
       Document importDocument = parse(import);
 
       Node script = importDocument.getElementsByTagName('SCRIPT')[0];
@@ -76,6 +77,13 @@ class CodePreviewState extends State<CodePreview> {
       javascriptMode: widget.allowJavaScript
           ? JavascriptMode.unrestricted
           : JavascriptMode.disabled,
+      javascriptChannels: {
+        JavascriptChannel(
+            name: 'first',
+            onMessageReceived: (JavascriptMessage msg) {
+              widget.editor.consoleStream.sink.add(msg.message);
+            })
+      },
       initialUrl: widget.initialUrl,
       userAgent: widget.userAgent,
       onWebViewCreated: (WebViewController controller) {
