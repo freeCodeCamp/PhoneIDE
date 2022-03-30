@@ -81,6 +81,10 @@ class CodePreviewState extends State<CodePreview> {
 
       document.getElementsByTagName("BODY")[0].append(bodyNode);
     }
+
+    _controller.loadUrl(Uri.dataFromString(document.outerHtml,
+            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+        .toString());
   }
 
   @override
