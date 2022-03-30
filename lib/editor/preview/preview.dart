@@ -54,7 +54,7 @@ class CodePreviewState extends State<CodePreview> {
   late WebViewController _controller;
 
   Future<void> _loadCodeFromAssets() async {
-    String fileText = widget.editor.openedFile!.fileContent;
+    String fileText = widget.editor.textController!.text;
 
     Document document = parse(fileText);
 
