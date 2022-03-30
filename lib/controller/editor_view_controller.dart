@@ -24,6 +24,8 @@ class EditorViewController extends StatefulWidget {
   final FileIDE? file;
   final EditorOptions options;
 
+  Stream? consoleStream;
+
   @override
   State<StatefulWidget> createState() => EditorViewControllerState();
 }
@@ -39,6 +41,8 @@ class EditorViewControllerState extends State<EditorViewController> {
       openedFile: widget.file,
       onChange: () {},
     );
+
+    widget.consoleStream = editor!.consoleStream.stream;
 
     setRecentlyOpenedFilesInDir();
   }

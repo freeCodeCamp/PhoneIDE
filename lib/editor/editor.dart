@@ -44,7 +44,7 @@ class Editor extends StatefulWidget with IEditor {
 
   // a stream of the javascript that is executed inside the code preview
 
-  late StreamController consoleStream;
+  StreamController consoleStream = StreamController<dynamic>.broadcast();
 
   // options of the editor
 
@@ -89,8 +89,6 @@ class EditorState extends State<Editor> {
     }
 
     widget.options = const EditorOptions();
-
-    widget.consoleStream = StreamController<dynamic>.broadcast();
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/editor_view_controller.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
+import 'dart:developer' as dev;
 
 void main() {
   runApp(const App());
@@ -11,10 +12,18 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EditorViewController controller = EditorViewController(
+      options: const EditorOptions(),
+    );
+
+    if (controller.consoleStream != null) {
+      controller.consoleStream?.listen((event) {
+        dev.log(event.toString());
+      });
+    }
+
     return MaterialApp(
-      home: EditorViewController(
-        options: const EditorOptions(),
-      ),
+      home: controller,
       debugShowCheckedModeBanner: false,
     );
   }
