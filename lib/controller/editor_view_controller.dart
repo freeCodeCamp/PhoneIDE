@@ -52,46 +52,36 @@ class EditorViewControllerState extends State<EditorViewController> {
     setRecentlyOpenedFilesInDir();
   }
 
-  List<FileIDE> cachedFileStringToFile(List<String> stringFileList) {
-    List<FileIDE> files = [];
-
-    for (var file in stringFileList) {
-      var fileToJson = json.decode(file);
-
-      files.add(FileIDE.fromJSON(fileToJson));
-    }
-
-    return files;
+  FileIDE cachedFileStringToFile(String fileString) {
+    return FileIDE.fromJSON(json.decode(fileString));
   }
 
   Future<void> setRecentlyOpenedFilesInDir() async {
-    setState(() {
-      widget.recentlyOpenedFiles = [];
-    });
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
     if (widget.file == null) return;
 
     String key = (widget.file?.parentDirectory as String) + '-recently-opened';
 
-    List<String> recentlyOpenedFiles = [];
+    List<FileIDE> cache = prefs
+            .getStringList(key)
+            ?.map((file) => cachedFileStringToFile(file))
+            .toList() ??
+        [];
 
-    List<String>? cache = prefs.getStringList(key);
+    List<String> cachedFileNames = cache.map((file) => file.fileName).toList();
 
-    recentlyOpenedFiles
-        .add(json.encode(FileIDE.fileToMap(widget.file as FileIDE)));
+    if (!cachedFileNames.contains(widget.file?.fileName)) {
+      cache.add(widget.file as FileIDE);
+    }
 
-    cache?.forEach((file) {
-      if (!recentlyOpenedFiles.contains(file)) {
-        recentlyOpenedFiles.add(file);
-      }
-    });
+    List<String> cacheStringList = cache
+        .map((file) => json.encode(FileIDE.fileToMap(file)).toString())
+        .toList();
 
-    prefs.setStringList(key, recentlyOpenedFiles);
+    prefs.setStringList(key, cacheStringList);
 
     setState(() {
-      widget.recentlyOpenedFiles = cachedFileStringToFile(recentlyOpenedFiles);
+      widget.recentlyOpenedFiles = cache;
     });
   }
 
@@ -119,7 +109,9 @@ class EditorViewControllerState extends State<EditorViewController> {
           prefs.setStringList(key, fileStrings);
 
           setState(() {
-            widget.recentlyOpenedFiles = cachedFileStringToFile(fileStrings);
+            widget.recentlyOpenedFiles = fileStrings
+                .map((file) => cachedFileStringToFile(file))
+                .toList();
           });
 
           break;
@@ -244,6 +236,7 @@ class EditorViewControllerState extends State<EditorViewController> {
               border: fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
                   ? const Border(
                       right: BorderSide(width: 2, color: Colors.white),
+                      left: BorderSide(width: 2, color: Colors.white),
                       top: BorderSide(width: 2, color: Colors.white))
                   : const Border(
                       bottom: BorderSide(width: 2, color: Colors.white))),
@@ -270,7 +263,8 @@ class EditorViewControllerState extends State<EditorViewController> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                widget.recentlyOpenedFiles.length > 1
+                widget.recentlyOpenedFiles.length > 1 &&
+                        widget.options.canCloseFiles
                     ? IconButton(
                         onPressed: () {
                           removeRecentlyOpenedFile(

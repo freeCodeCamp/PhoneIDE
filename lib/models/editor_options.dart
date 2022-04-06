@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class EditorOptions {
   const EditorOptions({
     this.codePreview = true,
+    this.canCloseFiles = true,
     this.useFileExplorer = true,
     this.tabBarLineColor = Colors.white,
     this.customViews = const [],
@@ -19,6 +20,8 @@ class EditorOptions {
   });
 
   final bool codePreview;
+
+  final bool canCloseFiles;
 
   final Color tabBarColor;
 

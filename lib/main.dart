@@ -13,7 +13,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EditorViewController controller = EditorViewController(
-      options: const EditorOptions(),
+      options: const EditorOptions(canCloseFiles: false),
     );
 
     controller.consoleStream.stream.listen((event) {
