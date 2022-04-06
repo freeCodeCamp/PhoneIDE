@@ -65,6 +65,10 @@ class EditorViewControllerState extends State<EditorViewController> {
   }
 
   Future<void> setRecentlyOpenedFilesInDir() async {
+    setState(() {
+      widget.recentlyOpenedFiles = [];
+    });
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (widget.file == null) return;

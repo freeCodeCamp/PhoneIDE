@@ -99,7 +99,7 @@ class EditorState extends State<Editor> {
   }
 
   void handlePossibleExecutingEvents(String event) async {
-    if (widget.openedFile != null) {
+    if (widget.openedFile != null && widget.options.useFileExplorer) {
       await FileController.writeFile(
           widget.openedFile!.filePath, widget.textController!.text);
     }
