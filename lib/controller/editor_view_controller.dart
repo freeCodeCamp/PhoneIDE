@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
-import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,6 +52,7 @@ class EditorViewControllerState extends State<EditorViewController> {
     super.initState();
     editor = Editor(
       language: Syntax.HTML,
+      theme: SyntaxTheme.vscodeDark(),
       openedFile: widget.file,
       textStream: widget.editorTextStream,
       onChange: () {},

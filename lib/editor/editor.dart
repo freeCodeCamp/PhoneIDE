@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
-import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
@@ -20,12 +18,17 @@ class Editor extends StatefulWidget with IEditor {
       this.openedFile,
       this.options = const EditorOptions(),
       required this.textStream,
-      required this.language})
+      required this.language,
+      required this.theme})
       : super(key: key);
 
   // the coding language in the editor
 
   final Syntax language;
+
+  // the theme of the editor
+
+  final SyntaxTheme theme;
 
   // an instance of the current file
 
@@ -78,9 +81,10 @@ class EditorState extends State<Editor> {
     if (widget.openedFile != null) {
       Future.delayed(const Duration(seconds: 0), (() async {
         widget.textController = TextEditingControllerIDE(
-            syntax: Syntax.JAVASCRIPT,
-            theme: SyntaxTheme.vscodeDark(),
-            code: widget.openedFile?.fileContent ?? '');
+          syntax: widget.language,
+          theme: SyntaxTheme.vscodeDark(),
+        );
+        widget.textController?.text = widget.openedFile?.fileContent ?? '';
         setNewLinebarState(widget.textController?.text ?? '');
       }));
     }
