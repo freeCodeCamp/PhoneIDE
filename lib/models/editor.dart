@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:rich_text_controller/rich_text_controller.dart';
 import 'dart:math';
+
+import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 
 mixin IEditor {
   void returnEditorValue(String text) {}
 
   /// Takes a text controller and returns the current position of the cursor.
 
-  String getTextOnCurrentLine(RichTextController? controller) {
+  String getTextOnCurrentLine(TextEditingControllerIDE? controller) {
     return controller!.selection
         .textBefore(controller.value.text)
         .split("\n")
@@ -21,7 +22,8 @@ mixin IEditor {
     return match.toList();
   }
 
-  void replicateTags(List<String> match, RichTextController? controller) async {
+  void replicateTags(
+      List<String> match, TextEditingControllerIDE? controller) async {
     if (controller == null) return;
 
     List<RegExpMatch> matches = matchTags(controller.text);

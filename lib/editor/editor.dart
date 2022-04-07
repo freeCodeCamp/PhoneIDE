@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/controller/file_controller.dart';
-import 'package:flutter_code_editor/controller/language_controller.dart';
+import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
-import 'package:flutter_code_editor/enums/language.dart';
+import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
-import 'package:rich_text_controller/rich_text_controller.dart';
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
@@ -25,7 +25,7 @@ class Editor extends StatefulWidget with IEditor {
 
   // the coding language in the editor
 
-  final Language language;
+  final Syntax language;
 
   // an instance of the current file
 
@@ -33,7 +33,7 @@ class Editor extends StatefulWidget with IEditor {
 
   // controller of text
 
-  RichTextController? textController;
+  TextEditingControllerIDE? textController;
 
   // a function that executes when the state of the editor changes
 
@@ -75,16 +75,12 @@ class EditorState extends State<Editor> {
       linebarController.jumpTo(scrollController.offset);
     });
 
-    widget.textController = RichTextController(
-        onMatch: (List<String> matches) {
-          patternMatches = matches;
-        },
-        patternMatchMap:
-            LanguageController.provideLanguageMap(widget.language));
-
     if (widget.openedFile != null) {
       Future.delayed(const Duration(seconds: 0), (() async {
-        widget.textController?.text = widget.openedFile?.fileContent ?? '';
+        widget.textController = TextEditingControllerIDE(
+            syntax: Syntax.JAVASCRIPT,
+            theme: SyntaxTheme.vscodeDark(),
+            code: widget.openedFile?.fileContent ?? '');
         setNewLinebarState(widget.textController?.text ?? '');
       }));
     }
@@ -104,16 +100,16 @@ class EditorState extends State<Editor> {
           widget.openedFile!.filePath, widget.textController!.text);
     }
 
-    bool isTriggerKeyForHtmlDesktop = widget.language == Language.html &&
-        widget.lastKeyEvent!.isShiftPressed &&
-        widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.period;
+    // bool isTriggerKeyForHtmlDesktop = widget.language == Language.html &&
+    //     widget.lastKeyEvent!.isShiftPressed &&
+    //     widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.period;
 
-    bool isTriggerKeyForHtmlMobile = widget.language == Language.html &&
-        widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.greater;
+    // bool isTriggerKeyForHtmlMobile = widget.language == Language.html &&
+    //     widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.greater;
 
-    if (isTriggerKeyForHtmlDesktop || isTriggerKeyForHtmlMobile) {
-      widget.replicateTags(patternMatches, widget.textController);
-    }
+    // if (isTriggerKeyForHtmlDesktop || isTriggerKeyForHtmlMobile) {
+    //   widget.replicateTags(patternMatches, widget.textController);
+    // }
 
     setNewLinebarState(event);
   }
