@@ -34,6 +34,14 @@ class EditorViewController extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() => EditorViewControllerState();
+
+  Future<void> removeAllRecentlyOpenedFilesCache(String dirname) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (prefs.getStringList('$dirname-recently-opened') != null) {
+      prefs.remove('$dirname-recently-opened');
+    }
+  }
 }
 
 class EditorViewControllerState extends State<EditorViewController> {
