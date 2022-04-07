@@ -226,13 +226,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.3.0"
-  rich_text_controller:
-    dependency: "direct main"
-    description:
-      name: rich_text_controller
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.4.0"
   shared_preferences:
     dependency: "direct main"
     description:
