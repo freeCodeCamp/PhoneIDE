@@ -65,6 +65,8 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
     int lastLoopPosition = _scanner.position;
 
     while (!_scanner.isDone) {
+      _scanner.scan(RegExp(r'\s+'));
+
       if (_scanner.scan(RegExp(r'"[^"]*"'))) {
         _spans.add(HighlightSpan(HighlightType.string,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
@@ -80,8 +82,27 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
       if (_scanner.scan(RegExp(r'>'))) {
         _spans.add(HighlightSpan(HighlightType.keyword,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
-        dev.log('matched on ${_scanner.lastMatch!.group(0)}');
+        dev.log('matched on ${_scanner.lastMatch}');
         continue;
+      }
+
+      if (_scanner.scan(RegExp(r'([A-Za-z]*)='))) {
+        _spans.add(HighlightSpan(HighlightType.constant,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        dev.log('matched on ${_scanner.lastMatch}');
+        continue;
+      }
+
+      /// Words
+      if (_scanner.scan(RegExp(r'\w+'))) {
+        HighlightType? type;
+
+        String word = _scanner.lastMatch![0]!;
+
+        if (type != null) {
+          _spans.add(HighlightSpan(
+              type, _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        }
       }
 
       /// Check if this loop did anything
