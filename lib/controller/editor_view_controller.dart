@@ -11,18 +11,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class EditorViewController extends StatefulWidget {
-  EditorViewController({
-    Key? key,
-    this.title = '',
-    this.recentlyOpenedFiles = const [],
-    this.options = const EditorOptions(),
-    this.file,
-  }) : super(key: key);
+  EditorViewController(
+      {Key? key,
+      this.title = '',
+      this.recentlyOpenedFiles = const [],
+      this.options = const EditorOptions(),
+      this.file,
+      this.theme,
+      this.language})
+      : super(key: key);
 
   List<FileIDE> recentlyOpenedFiles;
   final String title;
   final FileIDE? file;
   final EditorOptions options;
+
+  final Syntax? language;
+  final SyntaxTheme? theme;
 
   // a stream of the javascript that is executed inside the code preview
 
@@ -51,8 +56,12 @@ class EditorViewControllerState extends State<EditorViewController> {
   void initState() {
     super.initState();
     editor = Editor(
-      language: Syntax.HTML,
-      theme: SyntaxTheme.vscodeDark(),
+      language: widget.language == null
+          ? Syntax.JAVASCRIPT
+          : widget.language as Syntax,
+      theme: widget.theme == null
+          ? SyntaxTheme.vscodeDark()
+          : widget.theme as SyntaxTheme,
       openedFile: widget.file,
       textStream: widget.editorTextStream,
       onChange: () {},
