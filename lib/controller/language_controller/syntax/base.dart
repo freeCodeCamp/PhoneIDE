@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/controller/language_controller/syntax/html.dart';
 
 import 'index.dart';
 
@@ -59,6 +60,8 @@ SyntaxBase getSyntax(Syntax syntax, SyntaxTheme? theme) {
       return JavaScriptSyntaxHighlighter(theme);
     case Syntax.YAML:
       return YamlSyntaxHighlighter(theme);
+    case Syntax.HTML:
+      return HTMLSyntaxHighlighter(theme);
     default:
       return DartSyntaxHighlighter(theme);
   }
