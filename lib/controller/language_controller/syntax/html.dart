@@ -70,31 +70,57 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
       if (_scanner.scan(RegExp(r'"[^"]*"'))) {
         _spans.add(HighlightSpan(HighlightType.string,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
-        dev.log('matched on ${_scanner.lastMatch!.group(0)}');
       }
 
       if (_scanner.scan(RegExp(r'<[^> \n]*'))) {
         _spans.add(HighlightSpan(HighlightType.keyword,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
-        dev.log('matched on ${_scanner.lastMatch!.group(0)}');
         continue;
       }
       if (_scanner.scan(RegExp(r'>'))) {
         _spans.add(HighlightSpan(HighlightType.keyword,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
-        dev.log('matched on ${_scanner.lastMatch}');
+        continue;
+      }
+
+      if (_scanner.scan(RegExp(r'{'))) {
+        _spans.add(HighlightSpan(HighlightType.punctuation,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        continue;
+      }
+
+      if (_scanner.scan(RegExp(r'}'))) {
+        _spans.add(HighlightSpan(HighlightType.punctuation,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        continue;
+      }
+
+      if (_scanner.scan(RegExp(r';'))) {
+        _spans.add(HighlightSpan(HighlightType.punctuation,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
       }
 
       if (_scanner.scan(RegExp(r'([A-Za-z]*)='))) {
         _spans.add(HighlightSpan(HighlightType.constant,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
-        dev.log('matched on ${_scanner.lastMatch}');
+        continue;
+      }
+
+      if (_scanner.scan(RegExp(r'([A-Za-z]*):'))) {
+        _spans.add(HighlightSpan(HighlightType.constant,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        continue;
+      }
+
+      if (_scanner.scan(RegExp(r'[\#\.\w\-\,\s\n\r\t:]+(?=\s*\{)'))) {
+        _spans.add(HighlightSpan(HighlightType.string,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
       }
 
       /// Words
-      if (_scanner.scan(RegExp(r'\w+'))) {
+      if (_scanner.scan(RegExp(r'[^<>/{}]*'))) {
         HighlightType? type;
 
         String word = _scanner.lastMatch![0]!;
