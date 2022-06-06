@@ -48,3 +48,6 @@ app.*.map.json
 # VS Code
 .vscode/
 .env*
+
+# Flutter version manager
+.fvm/
