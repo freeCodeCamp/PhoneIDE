@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:string_scanner/string_scanner.dart';
-import 'dart:developer' as dev;
 
 class HTMLSyntaxHighlighter extends SyntaxBase {
   HTMLSyntaxHighlighter([this.syntaxTheme]) {
