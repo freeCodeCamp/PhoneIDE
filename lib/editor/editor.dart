@@ -221,8 +221,7 @@ class EditorState extends State<Editor> {
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
                   if (i > 9) {
-                    SchedulerBinding.instance!
-                        .addPostFrameCallback((timeStamp) {
+                    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                       setState(() {
                         initialWidth = Linebar.calculateTextSize(i.toString(),
                             style: const TextStyle(
