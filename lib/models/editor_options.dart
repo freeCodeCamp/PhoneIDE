@@ -6,6 +6,7 @@ class EditorOptions {
     this.canCloseFiles = true,
     this.useFileExplorer = true,
     this.tabBarLineColor = Colors.white,
+    this.showTabBar = true,
     this.showAppBar = true,
     this.customViews = const [],
     this.customViewNames = const [],
@@ -27,6 +28,8 @@ class EditorOptions {
   final Color tabBarColor;
 
   final Color tabBarLineColor;
+
+  final bool showTabBar;
 
   final Color scaffoldBackgrounColor;
 

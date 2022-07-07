@@ -212,22 +212,23 @@ class EditorViewControllerState extends State<EditorViewController> {
                             const Text('preview'),
                           ]),
                         ),
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              for (int i = 0;
-                                  i < widget.options.customViews.length;
-                                  i++)
-                                widget.options.customViews[i],
-                              editor as Widget,
-                              CodePreview(
-                                editor: editor as Editor,
-                                options: widget.options,
-                                consoleStream: widget.consoleStream,
-                              ),
-                            ],
+                        if (widget.options.showTabBar)
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                for (int i = 0;
+                                    i < widget.options.customViews.length;
+                                    i++)
+                                  widget.options.customViews[i],
+                                editor as Widget,
+                                CodePreview(
+                                  editor: editor as Editor,
+                                  options: widget.options,
+                                  consoleStream: widget.consoleStream,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
                       ],
                     ))
                 : const Center(
