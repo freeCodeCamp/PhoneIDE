@@ -175,18 +175,20 @@ class EditorViewControllerState extends State<EditorViewController> {
             drawer: widget.options.useFileExplorer
                 ? Drawer(child: FileExplorer())
                 : null,
-            appBar: AppBar(
-              title: Text(widget.file?.parentDirectory ?? ''),
-              leading: Builder(
-                builder: (BuildContext context) => IconButton(
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                    icon: const Icon(Icons.folder)),
-              ),
-              backgroundColor: widget.options.tabBarColor,
-              toolbarHeight: 50,
-            ),
+            appBar: widget.options.showAppBar
+                ? AppBar(
+                    title: Text(widget.file?.parentDirectory ?? ''),
+                    leading: Builder(
+                      builder: (BuildContext context) => IconButton(
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                          icon: const Icon(Icons.folder)),
+                    ),
+                    backgroundColor: widget.options.tabBarColor,
+                    toolbarHeight: 50,
+                  )
+                : null,
             body: editor?.openedFile != null && widget.options.codePreview
                 ? DefaultTabController(
                     length: getActualTabLength(),
