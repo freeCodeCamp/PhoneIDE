@@ -168,76 +168,71 @@ class EditorViewControllerState extends State<EditorViewController> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-        length: 2,
-        child: Scaffold(
-            backgroundColor: widget.options.scaffoldBackgrounColor,
-            drawer: widget.options.useFileExplorer
-                ? Drawer(child: FileExplorer())
-                : null,
-            appBar: widget.options.showAppBar
-                ? AppBar(
-                    title: Text(widget.file?.parentDirectory ?? ''),
-                    leading: Builder(
-                      builder: (BuildContext context) => IconButton(
-                          onPressed: () {
-                            Scaffold.of(context).openDrawer();
-                          },
-                          icon: const Icon(Icons.folder)),
-                    ),
-                    backgroundColor: widget.options.tabBarColor,
-                    toolbarHeight: 50,
-                  )
-                : null,
-            body: editor?.openedFile != null && widget.options.codePreview
-                ? DefaultTabController(
+    return widget.options.showAppBar || widget.options.showTabBar
+        ? DefaultTabController(
+            length: 2,
+            child: Scaffold(
+                backgroundColor: widget.options.scaffoldBackgrounColor,
+                drawer: widget.options.useFileExplorer
+                    ? Drawer(child: FileExplorer())
+                    : null,
+                appBar: widget.options.showAppBar
+                    ? AppBar(
+                        title: Text(widget.file?.parentDirectory ?? ''),
+                        leading: Builder(
+                          builder: (BuildContext context) => IconButton(
+                              onPressed: () {
+                                Scaffold.of(context).openDrawer();
+                              },
+                              icon: const Icon(Icons.folder)),
+                        ),
+                        backgroundColor: widget.options.tabBarColor,
+                        toolbarHeight: 50,
+                      )
+                    : null,
+                body: DefaultTabController(
                     length: getActualTabLength(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (widget.options.showTabBar)
-                          Container(
-                            color: widget.options.tabBarColor,
-                            height: 50,
-                            child: fileTabBar(),
-                          ),
-                        if (widget.options.showTabBar)
-                          Container(
-                            height: 35,
-                            color: widget.options.tabBarColor,
-                            child: TabBar(tabs: <Text>[
+                        Container(
+                          color: widget.options.tabBarColor,
+                          height: 50,
+                          child: fileTabBar(),
+                        ),
+                        Container(
+                          height: 35,
+                          color: widget.options.tabBarColor,
+                          child: TabBar(tabs: <Text>[
+                            for (int i = 0;
+                                i < widget.options.customViewNames.length;
+                                i++)
+                              widget.options.customViewNames[i],
+                            const Text('editor'),
+                            const Text('preview'),
+                          ]),
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
                               for (int i = 0;
-                                  i < widget.options.customViewNames.length;
+                                  i < widget.options.customViews.length;
                                   i++)
-                                widget.options.customViewNames[i],
-                              const Text('editor'),
-                              const Text('preview'),
-                            ]),
-                          )
-                        else
-                          editor as Widget,
-                        if (widget.options.showTabBar)
-                          Expanded(
-                            child: TabBarView(
-                              children: [
-                                for (int i = 0;
-                                    i < widget.options.customViews.length;
-                                    i++)
-                                  widget.options.customViews[i],
-                                editor as Widget,
-                                CodePreview(
-                                  editor: editor as Editor,
-                                  options: widget.options,
-                                  consoleStream: widget.consoleStream,
-                                ),
-                              ],
-                            ),
+                                widget.options.customViews[i],
+                              editor as Widget,
+                              CodePreview(
+                                editor: editor as Editor,
+                                options: widget.options,
+                                consoleStream: widget.consoleStream,
+                              ),
+                            ],
                           ),
+                        ),
                       ],
-                    ))
-                : const Center(
-                    child: Text('open file'),
-                  )));
+                    ))))
+        : Scaffold(
+            body: editor as Widget,
+          );
   }
 
   ListView fileTabBar() {
