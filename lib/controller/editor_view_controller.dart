@@ -14,6 +14,7 @@ class EditorViewController extends StatefulWidget {
   EditorViewController(
       {Key? key,
       this.title = '',
+      this.onChange,
       this.recentlyOpenedFiles = const [],
       this.options = const EditorOptions(),
       this.file,
@@ -25,6 +26,7 @@ class EditorViewController extends StatefulWidget {
   final String title;
   final FileIDE? file;
   final EditorOptions options;
+  final Function()? onChange;
 
   final Syntax? language;
   final SyntaxTheme? theme;
@@ -64,7 +66,7 @@ class EditorViewControllerState extends State<EditorViewController> {
           : widget.theme as SyntaxTheme,
       openedFile: widget.file,
       textStream: widget.editorTextStream,
-      onChange: () {},
+      onChange: widget.onChange ?? () {},
     );
 
     setRecentlyOpenedFilesInDir();
