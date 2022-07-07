@@ -195,23 +195,25 @@ class EditorViewControllerState extends State<EditorViewController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Container(
-                          color: widget.options.tabBarColor,
-                          height: 50,
-                          child: fileTabBar(),
-                        ),
-                        Container(
-                          height: 35,
-                          color: widget.options.tabBarColor,
-                          child: TabBar(tabs: <Text>[
-                            for (int i = 0;
-                                i < widget.options.customViewNames.length;
-                                i++)
-                              widget.options.customViewNames[i],
-                            const Text('editor'),
-                            const Text('preview'),
-                          ]),
-                        ),
+                        if (widget.options.showTabBar)
+                          Container(
+                            color: widget.options.tabBarColor,
+                            height: 50,
+                            child: fileTabBar(),
+                          ),
+                        if (widget.options.showTabBar)
+                          Container(
+                            height: 35,
+                            color: widget.options.tabBarColor,
+                            child: TabBar(tabs: <Text>[
+                              for (int i = 0;
+                                  i < widget.options.customViewNames.length;
+                                  i++)
+                                widget.options.customViewNames[i],
+                              const Text('editor'),
+                              const Text('preview'),
+                            ]),
+                          ),
                         if (widget.options.showTabBar)
                           Expanded(
                             child: TabBarView(
