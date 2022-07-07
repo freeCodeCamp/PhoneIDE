@@ -213,7 +213,9 @@ class EditorViewControllerState extends State<EditorViewController> {
                               const Text('editor'),
                               const Text('preview'),
                             ]),
-                          ),
+                          )
+                        else
+                          editor as Widget,
                         if (widget.options.showTabBar)
                           Expanded(
                             child: TabBarView(
