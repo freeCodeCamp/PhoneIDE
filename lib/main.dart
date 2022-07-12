@@ -12,8 +12,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EditorViewController controller = EditorViewController(
-      options: const EditorOptions(
-          canCloseFiles: false, showAppBar: false, showTabBar: false),
+      options: const EditorOptions(canCloseFiles: false),
     );
 
     return MaterialApp(
