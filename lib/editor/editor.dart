@@ -60,8 +60,10 @@ class Editor extends StatefulWidget with IEditor {
 
 class EditorState extends State<Editor> {
   InputDecoration decoration = const InputDecoration(
-      contentPadding: EdgeInsets.only(top: 20.0, left: 10, right: 10),
-      border: InputBorder.none);
+      filled: true,
+      fillColor: Colors.black,
+      border: InputBorder.none,
+      contentPadding: EdgeInsets.all(10));
 
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
@@ -149,16 +151,11 @@ class EditorState extends State<Editor> {
       children: [
         Container(
             color: widget.options.linebarColor,
-            constraints: BoxConstraints(minWidth: 10, maxWidth: initialWidth),
+            constraints: BoxConstraints(minWidth: 1, maxWidth: initialWidth),
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0),
+              padding: const EdgeInsets.only(top: 10),
               child: linecountBar(),
             )),
-        Container(
-          color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
-          width: 5,
-          height: MediaQuery.of(context).size.height,
-        ),
         IEdtorView(context),
       ],
     );
@@ -171,45 +168,51 @@ class EditorState extends State<Editor> {
         color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
         height: MediaQuery.of(context).size.height,
         width: 1000,
-        child: ListView(scrollDirection: Axis.horizontal, children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: widget.options.minHeight,
-            child: ListView(scrollDirection: Axis.horizontal, children: [
+        child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            children: [
               SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: widget.options.minWidth,
-                child: RawKeyboardListener(
-                  focusNode: _focusNode,
-                  onKey: handleKeyEvents,
-                  child: TextField(
-                    controller: widget.textController,
-                    decoration: decoration,
-                    scrollController: scrollController,
-                    onChanged: (String event) async {
-                      handlePossibleExecutingEvents(event);
-                      widget.textStream.sink.add(event);
-
-                      widget.onChange();
-                    },
-                    expands: true,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    style: TextStyle(
-                      color: widget.options.linebarTextColor,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
+                height: 300,
+                width: widget.options.minHeight,
+                child: ListView(
+                    padding: EdgeInsets.zero,
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      SizedBox(
+                        height: 300,
+                        width: widget.options.minWidth,
+                        child: RawKeyboardListener(
+                          focusNode: _focusNode,
+                          onKey: handleKeyEvents,
+                          child: TextField(
+                            scrollPadding: EdgeInsets.zero,
+                            controller: widget.textController,
+                            decoration: decoration,
+                            scrollController: scrollController,
+                            expands: true,
+                            onChanged: (String event) async {
+                              handlePossibleExecutingEvents(event);
+                              widget.textStream.sink.add(event);
+                              widget.onChange();
+                            },
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                            style: TextStyle(
+                              color: widget.options.linebarTextColor,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]),
               ),
             ]),
-          ),
-        ]),
       ),
     );
   }
 
-  Column linecountBar() {
+  linecountBar() {
     return Column(
       children: [
         Flexible(
@@ -217,7 +220,7 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: numLines,
+            itemCount: numLines == 0 ? 1 : numLines,
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
                   if (i > 9) {
@@ -232,9 +235,12 @@ class EditorState extends State<Editor> {
                   }
                 },
                 child: Text(
-                  i.toString(),
+                  i == 0 ? (1).toString() : (i + 1).toString(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
                 )),
           ),
         )

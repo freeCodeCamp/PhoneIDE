@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:developer' as dev;
 
 class Linebar extends StatefulWidget {
   final Widget child;
@@ -24,7 +23,6 @@ class Linebar extends StatefulWidget {
       textDirection: textDirection,
       textScaleFactor: textScaleFactor,
     )..layout(minWidth: minWidth, maxWidth: maxWidth);
-    dev.log(textPainter.size.width.toString());
     return textPainter.size.width;
   }
 

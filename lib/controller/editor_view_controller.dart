@@ -174,6 +174,7 @@ class EditorViewControllerState extends State<EditorViewController> {
         ? DefaultTabController(
             length: 2,
             child: Scaffold(
+                extendBodyBehindAppBar: false,
                 backgroundColor: widget.options.scaffoldBackgrounColor,
                 drawer: widget.options.useFileExplorer
                     ? Drawer(child: FileExplorer())
@@ -233,7 +234,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                       ],
                     ))))
         : Scaffold(
-            body: editor as Widget,
+            body: SafeArea(child: editor as Widget),
           );
   }
 
