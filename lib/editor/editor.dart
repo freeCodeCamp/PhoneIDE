@@ -60,10 +60,7 @@ class Editor extends StatefulWidget with IEditor {
 
 class EditorState extends State<Editor> {
   InputDecoration decoration = const InputDecoration(
-      filled: true,
-      fillColor: Colors.black,
-      border: InputBorder.none,
-      contentPadding: EdgeInsets.all(10));
+      border: InputBorder.none, contentPadding: EdgeInsets.all(10));
 
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
