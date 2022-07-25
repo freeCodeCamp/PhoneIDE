@@ -59,9 +59,6 @@ class Editor extends StatefulWidget with IEditor {
 }
 
 class EditorState extends State<Editor> {
-  InputDecoration decoration = const InputDecoration(
-      border: InputBorder.none, contentPadding: EdgeInsets.all(10));
-
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
 
@@ -185,7 +182,13 @@ class EditorState extends State<Editor> {
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
                             controller: widget.textController,
-                            decoration: decoration,
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.only(
+                                    left: 10,
+                                    top:
+                                        MediaQuery.of(context).viewPadding.top +
+                                            10)),
                             scrollController: scrollController,
                             expands: true,
                             onChanged: (String event) async {

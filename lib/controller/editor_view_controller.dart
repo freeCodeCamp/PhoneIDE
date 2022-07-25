@@ -234,7 +234,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                       ],
                     ))))
         : Scaffold(
-            body: SafeArea(child: editor as Widget),
+            body: editor as Widget,
           );
   }
 
