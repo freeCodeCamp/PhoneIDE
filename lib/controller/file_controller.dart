@@ -53,9 +53,7 @@ class FileController {
   static Future<void> writeFile(String filePath, String content) async {
     final File file = File(filePath);
 
-    if (!file.existsSync()) {
-      throw Error();
-    } else {
+    if (file.existsSync()) {
       file.writeAsString(content);
     }
   }
