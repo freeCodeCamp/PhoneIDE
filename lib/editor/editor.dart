@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -84,6 +85,13 @@ class EditorState extends State<Editor> {
         setNewLinebarState(widget.textController?.text ?? '');
       }));
     }
+
+    widget.textStream.stream.listen((data) {
+      setState(() {
+        widget.textController?.text = data;
+        setNewLinebarState(data);
+      });
+    });
 
     widget.options = const EditorOptions();
   }
