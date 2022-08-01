@@ -226,9 +226,12 @@ class EditorState extends State<Editor> {
                   if (i > 9) {
                     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                       setState(() {
-                        initialWidth = Linebar.calculateTextSize(i.toString(),
+                        initialWidth = Linebar.calculateTextSize(
+                            (i + 1).toString(),
                             style: const TextStyle(
-                                fontSize: 18, color: Colors.white),
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontFamily: 'RobotoMono'),
                             context: context);
                       });
                     });
