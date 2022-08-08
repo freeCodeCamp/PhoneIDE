@@ -66,6 +66,12 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
     while (!_scanner.isDone) {
       _scanner.scan(RegExp(r'\s+'));
 
+      if (_scanner.scan(RegExp(r'<!--(?:(?!<!--)[\s\S])*?-->'))) {
+        _spans.add(HighlightSpan(HighlightType.comment,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        continue;
+      }
+
       if (_scanner.scan(RegExp(r'"[^"]*"'))) {
         _spans.add(HighlightSpan(HighlightType.string,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
@@ -76,7 +82,8 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
       }
-      if (_scanner.scan(RegExp(r'>'))) {
+
+      if (_scanner.scan(RegExp(r'\/?>'))) {
         _spans.add(HighlightSpan(HighlightType.keyword,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
@@ -100,13 +107,13 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
         continue;
       }
 
-      if (_scanner.scan(RegExp(r'([A-Za-z]*)='))) {
+      if (_scanner.scan(RegExp(r'(\s*[A-Za-z]*)='))) {
         _spans.add(HighlightSpan(HighlightType.constant,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
       }
 
-      if (_scanner.scan(RegExp(r'([A-Za-z]*):'))) {
+      if (_scanner.scan(RegExp(r'([\-A-Za-z]*):'))) {
         _spans.add(HighlightSpan(HighlightType.constant,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
@@ -138,7 +145,6 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
 
       lastLoopPosition = _scanner.position;
     }
-
     _simplify();
     return true;
   }
