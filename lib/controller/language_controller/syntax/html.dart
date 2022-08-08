@@ -126,7 +126,7 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
       }
 
       /// Words
-      if (_scanner.scan(RegExp(r'[^<>/{}]*'))) {
+      if (_scanner.scan(RegExp(r'[^<>/{}\n]*'))) {
         HighlightType? type;
 
         String word = _scanner.lastMatch![0]!;
