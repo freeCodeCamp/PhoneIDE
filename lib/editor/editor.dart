@@ -12,7 +12,6 @@ import 'package:flutter_code_editor/models/file_model.dart';
 class Editor extends StatefulWidget with IEditor {
   Editor({
     Key? key,
-    this.onChange,
     this.openedFile,
     this.options = const EditorOptions(),
     required this.language,
@@ -28,11 +27,11 @@ class Editor extends StatefulWidget with IEditor {
 
   // A stream where the text in the editor is changable
 
-  StreamController<String> textStream = StreamController<String>.broadcast();
+  StreamController<String> fileTextStream =
+      StreamController<String>.broadcast();
 
-  // a function that executes when the state of the editor changes
-
-  Function()? onChange;
+  // A stream where you can listen to the changes made in the editor
+  StreamController<String> onTextChange = StreamController<String>.broadcast();
 
   // holds a copy of the last key events that happened
 
@@ -41,12 +40,6 @@ class Editor extends StatefulWidget with IEditor {
   // options of the editor
 
   EditorOptions options;
-
-  // number of lines on the line count bar
-  int _numLines = 1;
-
-  // the initial width of the line count bar
-  double _initialWidth = 21;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -60,6 +53,12 @@ class EditorState extends State<Editor> {
     syntax: Syntax.HTML,
     theme: SyntaxTheme.vscodeDark(),
   );
+
+  // number of lines on the line count bar
+  int _numLines = 1;
+
+  // the initial width of the line count bar
+  double _initialWidth = 21;
 
   final FocusNode _focusNode = FocusNode();
 
@@ -116,7 +115,7 @@ class EditorState extends State<Editor> {
 
       List lines = tp.computeLineMetrics();
 
-      widget._numLines = lines.length;
+      _numLines = lines.length;
     });
     linebarController.jumpTo(linebarController.position.maxScrollExtent);
   }
@@ -129,7 +128,7 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.textStream.stream.listen((newText) {
+    widget.fileTextStream.stream.listen((newText) {
       textController.text = newText;
       setNewLinebarState(newText);
     });
@@ -138,8 +137,7 @@ class EditorState extends State<Editor> {
       children: [
         Container(
             color: widget.options.linebarColor,
-            constraints:
-                BoxConstraints(minWidth: 1, maxWidth: widget._initialWidth),
+            constraints: BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
             child: Padding(
               padding: const EdgeInsets.only(top: 10),
               child: linecountBar(),
@@ -187,10 +185,7 @@ class EditorState extends State<Editor> {
                             expands: true,
                             onChanged: (String event) async {
                               handlePossibleExecutingEvents(event);
-                              //widget.textStream.add('hi');
-                              if (widget.onChange != null) {
-                                widget.onChange!();
-                              }
+                              widget.onTextChange.add(event);
                             },
                             maxLines: null,
                             keyboardType: TextInputType.multiline,
@@ -216,13 +211,13 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: widget._numLines == 0 ? 1 : widget._numLines,
+            itemCount: _numLines == 0 ? 1 : _numLines,
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
                   if (i + 1 > 9) {
                     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                       setState(() {
-                        widget._initialWidth = Linebar.calculateTextSize(
+                        _initialWidth = Linebar.calculateTextSize(
                             (i + 1).toString(),
                             style: const TextStyle(
                                 fontSize: 18,
