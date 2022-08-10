@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:string_scanner/string_scanner.dart';
@@ -67,6 +69,12 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
       _scanner.scan(RegExp(r'\s+'));
 
       if (_scanner.scan(RegExp(r'<!--(?:(?!<!--)[\s\S])*?-->'))) {
+        _spans.add(HighlightSpan(HighlightType.comment,
+            _scanner.lastMatch!.start, _scanner.lastMatch!.end));
+        continue;
+      }
+
+      if (_scanner.scan(RegExp(r'\/\*[^*]*\*+([^\/*][^*]*\*+)*\/'))) {
         _spans.add(HighlightSpan(HighlightType.comment,
             _scanner.lastMatch!.start, _scanner.lastMatch!.end));
         continue;
