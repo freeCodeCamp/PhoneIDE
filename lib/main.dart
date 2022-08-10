@@ -1,6 +1,11 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/editor_view_controller.dart';
+import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
+import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
+import 'package:flutter_code_editor/models/file_model.dart';
 
 void main() {
   runApp(const App());
@@ -11,13 +16,36 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EditorViewController controller = EditorViewController(
-      options: const EditorOptions(
-          canCloseFiles: false, showAppBar: false, showTabBar: false),
+    Editor editor = Editor(
+      language: Syntax.HTML,
+      openedFile: FileIDE(
+        fileContent: 'hello',
+        fileExplorer: null,
+        fileName: '',
+        filePath: '',
+        parentDirectory: '',
+      ),
     );
 
+    EditorViewController controller = EditorViewController(
+        options: const EditorOptions(
+          canCloseFiles: false,
+          showAppBar: false,
+          showTabBar: false,
+        ),
+        editor: editor);
+
     return MaterialApp(
-      home: controller,
+      home: Row(
+        children: [
+          Expanded(child: controller),
+          TextButton(
+              onPressed: () {
+                editor.textStream.sink.add('this clearly work fine');
+              },
+              child: const Text('change text'))
+        ],
+      ),
       debugShowCheckedModeBanner: false,
     );
   }

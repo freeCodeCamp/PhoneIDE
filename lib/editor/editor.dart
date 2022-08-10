@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
-import 'package:flutter_code_editor/controller/file_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/models/editor.dart';
@@ -12,35 +10,29 @@ import 'package:flutter_code_editor/models/file_model.dart';
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
-  Editor(
-      {Key? key,
-      required this.onChange,
-      this.openedFile,
-      this.options = const EditorOptions(),
-      required this.textStream,
-      required this.language,
-      required this.theme})
-      : super(key: key);
+  Editor({
+    Key? key,
+    this.onChange,
+    this.openedFile,
+    this.options = const EditorOptions(),
+    required this.language,
+  }) : super(key: key);
 
   // the coding language in the editor
 
-  final Syntax language;
-
-  // the theme of the editor
-
-  final SyntaxTheme theme;
+  Syntax language;
 
   // an instance of the current file
 
-  final FileIDE? openedFile;
+  FileIDE? openedFile;
 
-  // controller of text
+  // A stream where the text in the editor is changable
 
-  TextEditingControllerIDE? textController;
+  StreamController<String> textStream = StreamController<String>.broadcast();
 
   // a function that executes when the state of the editor changes
 
-  Function() onChange;
+  Function()? onChange;
 
   // holds a copy of the last key events that happened
 
@@ -48,11 +40,13 @@ class Editor extends StatefulWidget with IEditor {
 
   // options of the editor
 
-  late EditorOptions options;
+  EditorOptions options;
 
-  // a copy of the provided stream so it can be updated
+  // number of lines on the line count bar
+  int _numLines = 1;
 
-  StreamController textStream;
+  // the initial width of the line count bar
+  double _initialWidth = 21;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -61,6 +55,11 @@ class Editor extends StatefulWidget with IEditor {
 class EditorState extends State<Editor> {
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
+
+  TextEditingControllerIDE textController = TextEditingControllerIDE(
+    syntax: Syntax.HTML,
+    theme: SyntaxTheme.vscodeDark(),
+  );
 
   final FocusNode _focusNode = FocusNode();
 
@@ -74,18 +73,10 @@ class EditorState extends State<Editor> {
       linebarController.jumpTo(scrollController.offset);
     });
 
-    if (widget.openedFile != null) {
-      Future.delayed(const Duration(seconds: 0), (() async {
-        widget.textController = TextEditingControllerIDE(
-          syntax: widget.language,
-          theme: SyntaxTheme.vscodeDark(),
-        );
-        widget.textController?.text = widget.openedFile?.fileContent ?? '';
-        setNewLinebarState(widget.textController?.text ?? '');
-      }));
-    }
-
-    widget.options = const EditorOptions();
+    Future.delayed(Duration.zero, (() async {
+      textController.text = widget.openedFile?.fileContent ?? '';
+      setNewLinebarState(textController.text);
+    }));
   }
 
   @override
@@ -95,10 +86,10 @@ class EditorState extends State<Editor> {
   }
 
   void handlePossibleExecutingEvents(String event) async {
-    if (widget.openedFile != null && widget.options.useFileExplorer) {
-      await FileController.writeFile(
-          widget.openedFile!.filePath, widget.textController!.text);
-    }
+    // if (widget.openedFile != null && widget.options.useFileExplorer) {
+    //   await FileController.writeFile(
+    //       widget.openedFile!.filePath, widget.textController!.text);
+    // }
 
     // bool isTriggerKeyForHtmlDesktop = widget.language == Language.html &&
     //     widget.lastKeyEvent!.isShiftPressed &&
@@ -125,7 +116,7 @@ class EditorState extends State<Editor> {
 
       List lines = tp.computeLineMetrics();
 
-      numLines = lines.length;
+      widget._numLines = lines.length;
     });
     linebarController.jumpTo(linebarController.position.maxScrollExtent);
   }
@@ -136,16 +127,19 @@ class EditorState extends State<Editor> {
     });
   }
 
-  int numLines = 1;
-  double initialWidth = 21;
-
   @override
   Widget build(BuildContext context) {
+    widget.textStream.stream.listen((newText) {
+      textController.text = newText;
+      setNewLinebarState(newText);
+    });
+
     return Row(
       children: [
         Container(
             color: widget.options.linebarColor,
-            constraints: BoxConstraints(minWidth: 1, maxWidth: initialWidth),
+            constraints:
+                BoxConstraints(minWidth: 1, maxWidth: widget._initialWidth),
             child: Padding(
               padding: const EdgeInsets.only(top: 10),
               child: linecountBar(),
@@ -181,7 +175,7 @@ class EditorState extends State<Editor> {
                           onKey: handleKeyEvents,
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
-                            controller: widget.textController,
+                            controller: textController,
                             decoration: InputDecoration(
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.only(
@@ -193,8 +187,10 @@ class EditorState extends State<Editor> {
                             expands: true,
                             onChanged: (String event) async {
                               handlePossibleExecutingEvents(event);
-                              widget.textStream.sink.add(event);
-                              widget.onChange();
+                              //widget.textStream.add('hi');
+                              if (widget.onChange != null) {
+                                widget.onChange!();
+                              }
                             },
                             maxLines: null,
                             keyboardType: TextInputType.multiline,
@@ -220,13 +216,13 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: numLines == 0 ? 1 : numLines,
+            itemCount: widget._numLines == 0 ? 1 : widget._numLines,
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
-                  if (i > 9) {
+                  if (i + 1 > 9) {
                     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                       setState(() {
-                        initialWidth = Linebar.calculateTextSize(
+                        widget._initialWidth = Linebar.calculateTextSize(
                             (i + 1).toString(),
                             style: const TextStyle(
                                 fontSize: 18,
