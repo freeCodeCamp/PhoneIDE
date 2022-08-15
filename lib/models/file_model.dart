@@ -64,17 +64,17 @@ class FileIDEState extends State<FileIDE> {
                   });
                 },
                 onTap: () {
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
 
-                  Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                          transitionDuration: Duration.zero,
-                          pageBuilder: (context, animation1, animation2) =>
-                              EditorViewController(
-                                file: widget,
-                                title: widget.fileName,
-                              )));
+                  // Navigator.pushReplacement(
+                  //     context,
+                  //     PageRouteBuilder(
+                  //         transitionDuration: Duration.zero,
+                  //         pageBuilder: (context, animation1, animation2) =>
+                  //             EditorViewController(
+                  //               file: widget,
+
+                  //             )));
                 })
             : Column(
                 children: [

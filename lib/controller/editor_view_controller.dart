@@ -13,8 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class EditorViewController extends StatefulWidget {
   EditorViewController(
       {Key? key,
-      this.title = '',
-      this.onChange,
+      required this.editor,
       this.recentlyOpenedFiles = const [],
       this.options = const EditorOptions(),
       this.file,
@@ -23,21 +22,13 @@ class EditorViewController extends StatefulWidget {
       : super(key: key);
 
   List<FileIDE> recentlyOpenedFiles;
-  final String title;
-  final FileIDE? file;
+  FileIDE? file;
   final EditorOptions options;
-  final Function()? onChange;
 
   final Syntax? language;
   final SyntaxTheme? theme;
 
-  // a stream of the javascript that is executed inside the code preview
-
-  StreamController consoleStream = StreamController<dynamic>.broadcast();
-
-  // a stream of the latest text in the editor
-
-  StreamController editorTextStream = StreamController<String>.broadcast();
+  Editor editor;
 
   @override
   State<StatefulWidget> createState() => EditorViewControllerState();
@@ -52,22 +43,9 @@ class EditorViewController extends StatefulWidget {
 }
 
 class EditorViewControllerState extends State<EditorViewController> {
-  Editor? editor;
-
   @override
   void initState() {
     super.initState();
-    editor = Editor(
-      language: widget.language == null
-          ? Syntax.JAVASCRIPT
-          : widget.language as Syntax,
-      theme: widget.theme == null
-          ? SyntaxTheme.vscodeDark()
-          : widget.theme as SyntaxTheme,
-      openedFile: widget.file,
-      textStream: widget.editorTextStream,
-      onChange: widget.onChange ?? () {},
-    );
 
     setRecentlyOpenedFilesInDir();
   }
@@ -164,6 +142,7 @@ class EditorViewControllerState extends State<EditorViewController> {
             pageBuilder: (context, animation1, animation2) =>
                 EditorViewController(
                   file: tappedFile,
+                  editor: widget.editor,
                   options: widget.options,
                 )));
   }
@@ -222,11 +201,11 @@ class EditorViewControllerState extends State<EditorViewController> {
                                   i < widget.options.customViews.length;
                                   i++)
                                 widget.options.customViews[i],
-                              editor as Widget,
+                              widget.editor,
                               CodePreview(
-                                editor: editor as Editor,
+                                editor: widget.editor,
                                 options: widget.options,
-                                consoleStream: widget.consoleStream,
+                                //consoleStream: widget.consoleStream,
                               ),
                             ],
                           ),
@@ -234,7 +213,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                       ],
                     ))))
         : Scaffold(
-            body: editor as Widget,
+            body: widget.editor,
           );
   }
 
