@@ -39,11 +39,6 @@ class App extends StatelessWidget {
       home: Row(
         children: [
           Expanded(child: controller),
-          TextButton(
-              onPressed: () {
-                editor.textStream.sink.add('this clearly work fine');
-              },
-              child: const Text('change text'))
         ],
       ),
       debugShowCheckedModeBanner: false,
