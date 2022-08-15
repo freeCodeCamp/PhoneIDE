@@ -117,7 +117,6 @@ class EditorState extends State<Editor> {
 
       _numLines = lines.length;
     });
-    linebarController.jumpTo(linebarController.position.maxScrollExtent);
   }
 
   void handleKeyEvents(RawKeyEvent event) {
