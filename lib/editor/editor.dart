@@ -70,8 +70,7 @@ class EditorState extends State<Editor> {
     theme: SyntaxTheme.vscodeDark(),
   );
 
-  // initial number of lines in the editor
-  int _initalNumLines = 1;
+  final FocusNode _focusNode = FocusNode();
 
   // current amount of lines in the eidtor
 
@@ -83,6 +82,9 @@ class EditorState extends State<Editor> {
   double _editableRegionHeight = 10;
 
   int newEditableRegionLines = 0;
+  int lastTotalLines = 0;
+
+  int lastEditableRegionIndex = 0;
 
   String lastEditableRegionLine = '';
 
@@ -100,6 +102,7 @@ class EditorState extends State<Editor> {
       textController.text = widget.openedFile?.fileContent ?? '';
       setInitialLineState(textController.text);
       setInitalLastReqionLine(textController.text);
+      setLastTotalLines(textController.text);
       calculateEditableRegionHeight();
     }));
   }
@@ -107,9 +110,11 @@ class EditorState extends State<Editor> {
   @override
   void dispose() {
     super.dispose();
+    _focusNode.dispose();
   }
 
-  void handlePossibleExecutingEvents(String event) async {
+  void handlePossibleExecutingEvents(
+      String event, TextEditingControllerIDE textController) async {
     // if (widget.openedFile != null && widget.options.useFileExplorer) {
     //   await FileController.writeFile(
     //       widget.openedFile!.filePath, widget.textController!.text);
@@ -127,7 +132,7 @@ class EditorState extends State<Editor> {
     // }
 
     setCurrentLineState(event);
-    setNewAmountOfEditableReqionLines(event);
+    setNewAmountOfEditableReqionLines(textController);
     calculateEditableRegionHeight();
   }
 
@@ -157,8 +162,13 @@ class EditorState extends State<Editor> {
 
       List lines = tp.computeLineMetrics();
 
-      _initalNumLines = lines.length;
       _currNumLines = lines.length;
+    });
+  }
+
+  void setLastTotalLines(String editorText) {
+    setState(() {
+      lastTotalLines = editorText.split('\n').length;
     });
   }
 
@@ -174,18 +184,48 @@ class EditorState extends State<Editor> {
           getLastLineTextInRegion(editorText, widget.regionEnd! - 1);
     });
 
-    log(lastEditableRegionLine);
+    setState(() {
+      lastEditableRegionIndex = widget.regionEnd! - 1;
+    });
   }
 
-  void setNewAmountOfEditableReqionLines(String editorText) {
+  void setNewAmountOfEditableReqionLines(TextEditingControllerIDE controller) {
     // the last line in the editable region
-    String line = getLastLineTextInRegion(editorText, widget.regionEnd! - 1);
+    String line =
+        getLastLineTextInRegion(controller.text, lastEditableRegionIndex);
+    int newTotalLines = controller.text.split('\n').length;
 
-    if (line != lastEditableRegionLine) {
+    if (line.isEmpty && lastEditableRegionLine.isEmpty) {
+      if (lastTotalLines < newTotalLines) {
+        setState(() {
+          newEditableRegionLines++;
+        });
+      }
+
+      if (lastTotalLines > newTotalLines) {
+        setState(() {
+          newEditableRegionLines--;
+        });
+      }
+    }
+
+    if (line != lastEditableRegionLine && lastTotalLines < newTotalLines) {
       setState(() {
         newEditableRegionLines++;
+        lastEditableRegionIndex++;
       });
     }
+
+    if (line != lastEditableRegionLine && lastTotalLines > newTotalLines) {
+      setState(() {
+        newEditableRegionLines--;
+        lastEditableRegionIndex--;
+      });
+    }
+
+    setState(() {
+      lastTotalLines = newTotalLines;
+    });
   }
 
   void calculateEditableRegionHeight() {
@@ -287,39 +327,44 @@ class EditorState extends State<Editor> {
             SizedBox(
               height: 300,
               width: widget.options.minHeight,
-              child: ListView(
-                  padding: EdgeInsets.zero,
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    SizedBox(
-                      height: 300,
-                      width: widget.options.minWidth,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            left: 10,
-                            top: MediaQuery.of(context).viewPadding.top + 10),
-                        child: TextField(
-                          scrollPadding: EdgeInsets.zero,
-                          controller: textController,
-                          decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero),
-                          scrollController: scrollController,
-                          expands: true,
-                          onChanged: (String event) async {
-                            handlePossibleExecutingEvents(event);
-                            widget.onTextChange.add(event);
-                          },
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          style: TextStyle(
-                            color: widget.options.linebarTextColor,
-                            fontSize: 18,
+              child: RawKeyboardListener(
+                focusNode: _focusNode,
+                onKey: handleKeyEvents,
+                child: ListView(
+                    padding: EdgeInsets.zero,
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      SizedBox(
+                        height: 300,
+                        width: widget.options.minWidth,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              left: 10,
+                              top: MediaQuery.of(context).viewPadding.top + 10),
+                          child: TextField(
+                            scrollPadding: EdgeInsets.zero,
+                            controller: textController,
+                            decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero),
+                            scrollController: scrollController,
+                            expands: true,
+                            onChanged: (String event) async {
+                              handlePossibleExecutingEvents(
+                                  event, textController);
+                              widget.onTextChange.add(event);
+                            },
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                            style: TextStyle(
+                              color: widget.options.linebarTextColor,
+                              fontSize: 18,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ]),
+                    ]),
+              ),
             ),
           ]),
     );
