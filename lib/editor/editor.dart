@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
@@ -80,7 +82,9 @@ class EditorState extends State<Editor> {
 
   double _editableRegionHeight = 10;
 
-  final FocusNode _focusNode = FocusNode();
+  int newEditableRegionLines = 0;
+
+  String lastEditableRegionLine = '';
 
   List<String> patternMatches = [];
 
@@ -95,13 +99,13 @@ class EditorState extends State<Editor> {
     Future.delayed(Duration.zero, (() async {
       textController.text = widget.openedFile?.fileContent ?? '';
       setInitialLineState(textController.text);
+      setInitalLastReqionLine(textController.text);
       calculateEditableRegionHeight();
     }));
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -123,6 +127,7 @@ class EditorState extends State<Editor> {
     // }
 
     setCurrentLineState(event);
+    setNewAmountOfEditableReqionLines(event);
     calculateEditableRegionHeight();
   }
 
@@ -157,14 +162,36 @@ class EditorState extends State<Editor> {
     });
   }
 
+  String getLastLineTextInRegion(String editorText, int index) {
+    List indecies = editorText.split('\n');
+
+    return indecies[index] ?? '';
+  }
+
+  void setInitalLastReqionLine(String editorText) {
+    setState(() {
+      lastEditableRegionLine =
+          getLastLineTextInRegion(editorText, widget.regionEnd! - 1);
+    });
+
+    log(lastEditableRegionLine);
+  }
+
+  void setNewAmountOfEditableReqionLines(String editorText) {
+    // the last line in the editable region
+    String line = getLastLineTextInRegion(editorText, widget.regionEnd! - 1);
+
+    if (line != lastEditableRegionLine) {
+      setState(() {
+        newEditableRegionLines++;
+      });
+    }
+  }
+
   void calculateEditableRegionHeight() {
     int handleNumLines = _currNumLines == 0
         ? 1
-        : widget.regionEnd! +
-            1 -
-            widget.regionStart! +
-            _currNumLines -
-            _initalNumLines;
+        : widget.regionEnd! + 1 - widget.regionStart! + newEditableRegionLines;
 
     setState(() {
       _editableRegionHeight = Linebar.calculateTextSize('1',
@@ -206,6 +233,7 @@ class EditorState extends State<Editor> {
   Widget build(BuildContext context) {
     widget.fileTextStream.stream.listen((newText) {
       textController.text = newText;
+
       setCurrentLineState(newText);
     });
 
@@ -266,31 +294,27 @@ class EditorState extends State<Editor> {
                     SizedBox(
                       height: 300,
                       width: widget.options.minWidth,
-                      child: RawKeyboardListener(
-                        focusNode: _focusNode,
-                        onKey: handleKeyEvents,
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              left: 10,
-                              top: MediaQuery.of(context).viewPadding.top + 10),
-                          child: TextField(
-                            scrollPadding: EdgeInsets.zero,
-                            controller: textController,
-                            decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero),
-                            scrollController: scrollController,
-                            expands: true,
-                            onChanged: (String event) async {
-                              handlePossibleExecutingEvents(event);
-                              widget.onTextChange.add(event);
-                            },
-                            maxLines: null,
-                            keyboardType: TextInputType.multiline,
-                            style: TextStyle(
-                              color: widget.options.linebarTextColor,
-                              fontSize: 18,
-                            ),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 10,
+                            top: MediaQuery.of(context).viewPadding.top + 10),
+                        child: TextField(
+                          scrollPadding: EdgeInsets.zero,
+                          controller: textController,
+                          decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero),
+                          scrollController: scrollController,
+                          expands: true,
+                          onChanged: (String event) async {
+                            handlePossibleExecutingEvents(event);
+                            widget.onTextChange.add(event);
+                          },
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            color: widget.options.linebarTextColor,
+                            fontSize: 18,
                           ),
                         ),
                       ),
