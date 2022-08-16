@@ -51,6 +51,10 @@ class Editor extends StatefulWidget with IEditor {
 
   int? regionEnd;
 
+  // condition
+
+  bool? condition;
+
   @override
   State<StatefulWidget> createState() => EditorState();
 }
@@ -215,7 +219,14 @@ class EditorState extends State<Editor> {
                       padding: EdgeInsets.only(
                           top: calculateEditableRegionStart(context)),
                       child: Container(
-                        color: const Color.fromRGBO(0x0a, 0x0a, 32, 1),
+                        decoration: BoxDecoration(
+                            color: const Color.fromRGBO(0x0a, 0x0a, 32, 1),
+                            border: Border(
+                                left: BorderSide(
+                                    width: 27,
+                                    color: widget.condition ?? false
+                                        ? Colors.green
+                                        : Colors.grey))),
                         height: _editableRegionHeight,
                         width: widget.options.minWidth,
                       ),

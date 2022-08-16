@@ -21,19 +21,14 @@ class App extends StatelessWidget {
       regionStart: 3,
       regionEnd: 6,
       openedFile: FileIDE(
-        fileContent: '''<!DOCTYPE html>
-<html>
-<body>
-
-<h1>This is heading 1</h1>
-<h2>This is heading 2</h2>
-<h3>This is heading 3</h3>
-<h4>This is heading 4</h4>
-<h5>This is heading 5</h5>
-<h6>This is heading 6</h6>
-
-</body>
-</html> ''',
+        fileContent: '''<html>
+  <body>
+    <h1>CatPhotoApp</h1>
+    <h2>Cat Photos</h2>
+    <!-- TODO: Add link to cat photos -->
+    <p>Click here to view more cat photos.</p>
+  </body>
+</html>''',
         fileExplorer: null,
         fileName: '',
         filePath: '',
