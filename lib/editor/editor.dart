@@ -14,6 +14,8 @@ class Editor extends StatefulWidget with IEditor {
     Key? key,
     this.openedFile,
     this.options = const EditorOptions(),
+    this.regionStart = 1,
+    this.regionEnd = 2,
     required this.language,
   }) : super(key: key);
 
@@ -41,6 +43,14 @@ class Editor extends StatefulWidget with IEditor {
 
   EditorOptions options;
 
+  // start of the editable region
+
+  int? regionStart;
+
+  // end of the editable region
+
+  int? regionEnd;
+
   @override
   State<StatefulWidget> createState() => EditorState();
 }
@@ -60,6 +70,8 @@ class EditorState extends State<Editor> {
   // the initial width of the line count bar
   double _initialWidth = 21;
 
+  double _editableRegionHeight = 10;
+
   final FocusNode _focusNode = FocusNode();
 
   List<String> patternMatches = [];
@@ -75,6 +87,7 @@ class EditorState extends State<Editor> {
     Future.delayed(Duration.zero, (() async {
       textController.text = widget.openedFile?.fileContent ?? '';
       setNewLinebarState(textController.text);
+      calculateEditableRegionHeight();
     }));
   }
 
@@ -102,6 +115,7 @@ class EditorState extends State<Editor> {
     // }
 
     setNewLinebarState(event);
+    calculateEditableRegionHeight();
   }
 
   void setNewLinebarState(String event) {
@@ -119,6 +133,34 @@ class EditorState extends State<Editor> {
     });
   }
 
+  void calculateEditableRegionHeight() {
+    int handleNumLines = _numLines == 0
+        ? 1
+        : _numLines - widget.regionStart! + widget.regionEnd!;
+
+    setState(() {
+      _editableRegionHeight = Linebar.calculateTextSize('1',
+                  style: TextStyle(
+                    color: widget.options.linebarTextColor,
+                    fontSize: 18,
+                  ),
+                  context: context)
+              .height *
+          handleNumLines;
+    });
+  }
+
+  double calculateEditableRegionStart(context) {
+    double viewInset = MediaQuery.of(context).viewPadding.top + 10;
+    int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
+
+    if (widget.regionStart != null) {
+      return handleRegion * _editableRegionHeight / _numLines + viewInset;
+    }
+
+    return viewInset;
+  }
+
   void handleKeyEvents(RawKeyEvent event) {
     setState(() {
       widget.lastKeyEvent = event;
@@ -134,52 +176,67 @@ class EditorState extends State<Editor> {
 
     return Row(
       children: [
-        Container(
-            color: widget.options.linebarColor,
-            constraints: BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: linecountBar(),
-            )),
-        IEdtorView(context),
+        Expanded(
+          child: Stack(
+            children: [
+              widget.options.hasEditableRegion
+                  ? Padding(
+                      padding: EdgeInsets.only(
+                          top: calculateEditableRegionStart(context)),
+                      child: Container(
+                        color: const Color.fromRGBO(0x0a, 0x0a, 32, 1),
+                        height: _editableRegionHeight,
+                        width: widget.options.minWidth,
+                      ),
+                    )
+                  : Container(),
+              Padding(
+                padding: EdgeInsets.only(left: _initialWidth + 5),
+                child: IEdtorView(context),
+              ),
+              Container(
+                  color: widget.options.linebarColor,
+                  width: _initialWidth,
+                  child: linecountBar()),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   // ignore: non_constant_identifier_names
   Widget IEdtorView(BuildContext context) {
-    return Expanded(
-      child: Container(
-        color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
-        height: MediaQuery.of(context).size.height,
-        width: 1000,
-        child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.zero,
-            children: [
-              SizedBox(
-                height: 300,
-                width: widget.options.minHeight,
-                child: ListView(
-                    padding: EdgeInsets.zero,
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      SizedBox(
-                        height: 300,
-                        width: widget.options.minWidth,
-                        child: RawKeyboardListener(
-                          focusNode: _focusNode,
-                          onKey: handleKeyEvents,
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: 1000,
+      child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.zero,
+          children: [
+            SizedBox(
+              height: 300,
+              width: widget.options.minHeight,
+              child: ListView(
+                  padding: EdgeInsets.zero,
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    SizedBox(
+                      height: 300,
+                      width: widget.options.minWidth,
+                      child: RawKeyboardListener(
+                        focusNode: _focusNode,
+                        onKey: handleKeyEvents,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              left: 10,
+                              top: MediaQuery.of(context).viewPadding.top + 10),
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
                             controller: textController,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.only(
-                                    left: 10,
-                                    top:
-                                        MediaQuery.of(context).viewPadding.top +
-                                            10)),
+                                contentPadding: EdgeInsets.zero),
                             scrollController: scrollController,
                             expands: true,
                             onChanged: (String event) async {
@@ -195,18 +252,21 @@ class EditorState extends State<Editor> {
                           ),
                         ),
                       ),
-                    ]),
-              ),
-            ]),
-      ),
+                    ),
+                  ]),
+            ),
+          ]),
     );
   }
 
   linecountBar() {
     return Column(
       children: [
+        SizedBox(
+            width: 10, height: MediaQuery.of(context).viewPadding.top + 10),
         Flexible(
           child: ListView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
@@ -217,12 +277,13 @@ class EditorState extends State<Editor> {
                     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                       setState(() {
                         _initialWidth = Linebar.calculateTextSize(
-                            (i + 1).toString(),
-                            style: const TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                                fontFamily: 'RobotoMono'),
-                            context: context);
+                                (i + 1).toString(),
+                                style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontFamily: 'RobotoMono'),
+                                context: context)
+                            .width;
                       });
                     });
                   }
@@ -230,10 +291,10 @@ class EditorState extends State<Editor> {
                 child: Text(
                   i == 0 ? (1).toString() : (i + 1).toString(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: widget.options.linebarTextColor),
                 )),
           ),
         )

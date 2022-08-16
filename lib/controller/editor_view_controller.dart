@@ -214,6 +214,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                     ))))
         : Scaffold(
             body: widget.editor,
+            backgroundColor: widget.options.scaffoldBackgrounColor,
           );
   }
 
