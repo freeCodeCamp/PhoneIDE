@@ -64,8 +64,12 @@ class EditorState extends State<Editor> {
     theme: SyntaxTheme.vscodeDark(),
   );
 
-  // number of lines on the line count bar
-  int _numLines = 1;
+  // initial number of lines in the editor
+  int _initalNumLines = 1;
+
+  // current amount of lines in the eidtor
+
+  int _currNumLines = 1;
 
   // the initial width of the line count bar
   double _initialWidth = 21;
@@ -86,7 +90,7 @@ class EditorState extends State<Editor> {
 
     Future.delayed(Duration.zero, (() async {
       textController.text = widget.openedFile?.fileContent ?? '';
-      setNewLinebarState(textController.text);
+      setInitialLineState(textController.text);
       calculateEditableRegionHeight();
     }));
   }
@@ -114,11 +118,11 @@ class EditorState extends State<Editor> {
     //   widget.replicateTags(patternMatches, widget.textController);
     // }
 
-    setNewLinebarState(event);
+    setCurrentLineState(event);
     calculateEditableRegionHeight();
   }
 
-  void setNewLinebarState(String event) {
+  void setCurrentLineState(String event) {
     setState(() {
       TextSpan span = TextSpan(text: event);
       TextPainter tp =
@@ -129,14 +133,34 @@ class EditorState extends State<Editor> {
 
       List lines = tp.computeLineMetrics();
 
-      _numLines = lines.length;
+      _currNumLines = lines.length;
+    });
+  }
+
+  void setInitialLineState(String event) {
+    setState(() {
+      TextSpan span = TextSpan(text: event);
+      TextPainter tp =
+          TextPainter(text: span, textDirection: TextDirection.ltr);
+      tp.layout(
+        maxWidth: widget.options.minWidth,
+      );
+
+      List lines = tp.computeLineMetrics();
+
+      _initalNumLines = lines.length;
+      _currNumLines = lines.length;
     });
   }
 
   void calculateEditableRegionHeight() {
-    int handleNumLines = _numLines == 0
+    int handleNumLines = _currNumLines == 0
         ? 1
-        : _numLines - widget.regionStart! + widget.regionEnd!;
+        : widget.regionEnd! +
+            1 -
+            widget.regionStart! +
+            _currNumLines -
+            _initalNumLines;
 
     setState(() {
       _editableRegionHeight = Linebar.calculateTextSize('1',
@@ -153,9 +177,16 @@ class EditorState extends State<Editor> {
   double calculateEditableRegionStart(context) {
     double viewInset = MediaQuery.of(context).viewPadding.top + 10;
     int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
+    double size = Linebar.calculateTextSize('1',
+            style: TextStyle(
+              color: widget.options.linebarTextColor,
+              fontSize: 18,
+            ),
+            context: context)
+        .height;
 
     if (widget.regionStart != null) {
-      return handleRegion * _editableRegionHeight / _numLines + viewInset;
+      return handleRegion * size + viewInset;
     }
 
     return viewInset;
@@ -171,7 +202,7 @@ class EditorState extends State<Editor> {
   Widget build(BuildContext context) {
     widget.fileTextStream.stream.listen((newText) {
       textController.text = newText;
-      setNewLinebarState(newText);
+      setCurrentLineState(newText);
     });
 
     return Row(
@@ -270,7 +301,7 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _numLines == 0 ? 1 : _numLines,
+            itemCount: _currNumLines == 0 ? 1 : _currNumLines,
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
                   if (i + 1 > 9) {
