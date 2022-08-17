@@ -90,6 +90,8 @@ class EditorState extends State<Editor> {
 
   double startRegionPadding = 0;
 
+  Timer? editableRegionUpdateTimer;
+
   List<String> patternMatches = [];
 
   @override
@@ -254,6 +256,30 @@ class EditorState extends State<Editor> {
     });
   }
 
+  void startEditableRegionUpdateTimer() {
+    const mil = Duration(milliseconds: 500);
+
+    void setActualTimer() {
+      editableRegionUpdateTimer = Timer(mil, () {
+        calculateEditableRegionStart(scrollController.offset);
+
+        if (_editableRegionHeight == 0) {
+          calculateEditableRegionHeight();
+        }
+
+        if (startRegionPadding == 0) {
+          removeEditableRegon();
+        }
+      });
+    }
+
+    if (editableRegionUpdateTimer == null) {
+      setActualTimer();
+    } else if (!editableRegionUpdateTimer!.isActive) {
+      setActualTimer();
+    }
+  }
+
   void calculateEditableRegionStart([double? scrollOfset = 0]) {
     double viewInset = MediaQuery.of(context).viewPadding.top + 10;
     int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
@@ -290,14 +316,7 @@ class EditorState extends State<Editor> {
     });
 
     scrollController.addListener(() {
-      void handleTimeout() {
-        calculateEditableRegionStart(scrollController.offset);
-        if (startRegionPadding == 0) {
-          removeEditableRegon();
-        }
-      }
-
-      Timer(const Duration(milliseconds: 500), handleTimeout);
+      startEditableRegionUpdateTimer();
     });
 
     return Row(
