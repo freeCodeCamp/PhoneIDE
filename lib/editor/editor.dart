@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
@@ -84,7 +84,7 @@ class EditorState extends State<Editor> {
   int newEditableRegionLines = 0;
   int lastTotalLines = 0;
 
-  int lastEditableRegionIndex = 0;
+  int lastEditableRegionIndex = 1;
 
   String lastEditableRegionLine = '';
 
@@ -199,6 +199,7 @@ class EditorState extends State<Editor> {
     String line =
         getLastLineTextInRegion(controller.text, lastEditableRegionIndex);
     int newTotalLines = controller.text.split('\n').length;
+    List newLines = controller.text.split('\n');
 
     if (line.isEmpty && lastEditableRegionLine.isEmpty) {
       if (lastTotalLines < newTotalLines) {
@@ -228,9 +229,25 @@ class EditorState extends State<Editor> {
       });
     }
 
+    if (newLines[lastEditableRegionIndex + 1] == '') {
+      setState(() {
+        newEditableRegionLines++;
+        lastEditableRegionIndex++;
+      });
+    }
+
     setState(() {
       lastTotalLines = newTotalLines;
     });
+    // log('-----');
+    // log(newLines[lastEditableRegionIndex] ?? 'nothing on this line');
+    // log('lastTotal Lines: ' +
+    //     lastTotalLines.toString() +
+    //     ' newTotal Lines: ' +
+    //     newTotalLines.toString());
+    // log(newLines.toString());
+    // log('index:' + lastEditableRegionIndex.toString());
+    log('line after editable region: ' + newLines[lastEditableRegionIndex + 1]);
   }
 
   void calculateEditableRegionHeight() {
