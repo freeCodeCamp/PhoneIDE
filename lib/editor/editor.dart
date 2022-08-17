@@ -88,6 +88,8 @@ class EditorState extends State<Editor> {
 
   String lastEditableRegionLine = '';
 
+  double startRegionPadding = 0;
+
   List<String> patternMatches = [];
 
   @override
@@ -100,6 +102,7 @@ class EditorState extends State<Editor> {
 
     Future.delayed(Duration.zero, (() async {
       textController.text = widget.openedFile?.fileContent ?? '';
+      calculateEditableRegionStart();
       setInitialLineState(textController.text);
       setInitalLastReqionLine(textController.text);
       setLastTotalLines(textController.text);
@@ -245,7 +248,13 @@ class EditorState extends State<Editor> {
     });
   }
 
-  double calculateEditableRegionStart(context) {
+  void removeEditableRegon() {
+    setState(() {
+      _editableRegionHeight = 0;
+    });
+  }
+
+  void calculateEditableRegionStart([double? scrollOfset = 0]) {
     double viewInset = MediaQuery.of(context).viewPadding.top + 10;
     int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
     double size = Linebar.calculateTextSize('1',
@@ -256,11 +265,14 @@ class EditorState extends State<Editor> {
             context: context)
         .height;
 
-    if (widget.regionStart != null) {
-      return handleRegion * size + viewInset;
-    }
+    double newRegionPadding =
+        handleRegion * size + viewInset - (scrollOfset ?? 0);
 
-    return viewInset;
+    if (widget.regionStart != null) {
+      setState(() {
+        startRegionPadding = newRegionPadding < 0 ? 0 : newRegionPadding;
+      });
+    }
   }
 
   void handleKeyEvents(RawKeyEvent event) {
@@ -277,6 +289,17 @@ class EditorState extends State<Editor> {
       setCurrentLineState(newText);
     });
 
+    scrollController.addListener(() {
+      void handleTimeout() {
+        calculateEditableRegionStart(scrollController.offset);
+        if (startRegionPadding == 0) {
+          removeEditableRegon();
+        }
+      }
+
+      Timer(const Duration(milliseconds: 500), handleTimeout);
+    });
+
     return Row(
       children: [
         Expanded(
@@ -284,8 +307,7 @@ class EditorState extends State<Editor> {
             children: [
               widget.options.hasEditableRegion
                   ? Padding(
-                      padding: EdgeInsets.only(
-                          top: calculateEditableRegionStart(context)),
+                      padding: EdgeInsets.only(top: startRegionPadding),
                       child: Container(
                         decoration: BoxDecoration(
                             color: const Color.fromRGBO(0x0a, 0x0a, 32, 1),
