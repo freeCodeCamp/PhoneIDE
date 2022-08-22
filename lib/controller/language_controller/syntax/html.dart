@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
+import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:string_scanner/string_scanner.dart';
+import 'package:highlight/highlight.dart' show highlight, Node;
 
 class HTMLSyntaxHighlighter extends SyntaxBase {
   HTMLSyntaxHighlighter([this.syntaxTheme]) {
@@ -18,6 +20,41 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
   late StringScanner _scanner;
 
   late List<HighlightSpan> _spans;
+
+  List<TextSpan> _convert(List<Node> nodes) {
+    List<TextSpan> spans = [];
+    var currentSpans = spans;
+    List<List<TextSpan>> stack = [];
+
+    _traverse(Node node) {
+      if (node.value != null) {
+        currentSpans.add(node.className == null
+            ? TextSpan(text: node.value)
+            : TextSpan(
+                text: node.value,
+                style: atomOneDarkReasonableTheme[node.className!]));
+      } else if (node.children != null) {
+        List<TextSpan> tmp = [];
+        currentSpans.add(TextSpan(
+            children: tmp, style: atomOneDarkReasonableTheme[node.className!]));
+        stack.add(currentSpans);
+        currentSpans = tmp;
+
+        for (var n in node.children!) {
+          _traverse(n);
+          if (n == node.children!.last) {
+            currentSpans = stack.isEmpty ? spans : stack.removeLast();
+          }
+        }
+      }
+    }
+
+    for (var node in nodes) {
+      _traverse(node);
+    }
+
+    return spans;
+  }
 
   @override
   TextSpan format(String src) {
@@ -53,10 +90,14 @@ class HTMLSyntaxHighlighter extends SyntaxBase {
         ));
       }
 
-      return TextSpan(style: syntaxTheme!.baseStyle, children: formattedText);
+      return TextSpan(
+        children: _convert(highlight.parse(_src, language: 'html').nodes!),
+      );
     } else {
       /// Parsing failed, return with only basic formatting
-      return TextSpan(style: syntaxTheme!.baseStyle, text: src);
+      return TextSpan(
+        children: _convert(highlight.parse(_src, language: 'css').nodes!),
+      );
     }
   }
 

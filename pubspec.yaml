@@ -39,6 +39,8 @@ dependencies:
   property_change_notifier: ^0.3.0
   shared_preferences: ^2.0.13
   html: ^0.15.0
+  highlight: ^0.7.0
+  flutter_highlight: ^0.7.0
 
 
 dev_dependencies:
