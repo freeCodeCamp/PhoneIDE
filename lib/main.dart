@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/controller/editor_view_controller.dart';
-import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
+import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 

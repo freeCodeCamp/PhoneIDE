@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
-import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
+import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
@@ -49,9 +50,8 @@ class EditorState extends State<Editor> {
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
 
-  TextEditingControllerIDE textController = TextEditingControllerIDE(
-    syntax: Syntax.HTML,
-    theme: SyntaxTheme.vscodeDark(),
+  late TextEditingControllerIDE textController = TextEditingControllerIDE(
+    syntax: widget.language,
   );
 
   // number of lines on the line count bar
@@ -67,6 +67,7 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
+    log('${widget.language}');
 
     scrollController.addListener(() {
       linebarController.jumpTo(scrollController.offset);

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
+import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +17,6 @@ class EditorViewController extends StatefulWidget {
       this.recentlyOpenedFiles = const [],
       this.options = const EditorOptions(),
       this.file,
-      this.theme,
       this.language})
       : super(key: key);
 
@@ -26,7 +25,6 @@ class EditorViewController extends StatefulWidget {
   final EditorOptions options;
 
   final Syntax? language;
-  final SyntaxTheme? theme;
 
   Editor editor;
 
