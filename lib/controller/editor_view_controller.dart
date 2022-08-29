@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/controller/language_controller/syntax/index.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 import 'package:flutter_code_editor/editor/preview/preview.dart';
@@ -11,22 +10,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class EditorViewController extends StatefulWidget {
-  EditorViewController(
-      {Key? key,
-      required this.editor,
-      this.recentlyOpenedFiles = const [],
-      this.options = const EditorOptions(),
-      this.file,
-      this.theme,
-      this.language})
-      : super(key: key);
+  EditorViewController({
+    Key? key,
+    required this.editor,
+    this.recentlyOpenedFiles = const [],
+    this.options = const EditorOptions(),
+    this.file,
+  }) : super(key: key);
 
   List<FileIDE> recentlyOpenedFiles;
   FileIDE? file;
   final EditorOptions options;
-
-  final Syntax? language;
-  final SyntaxTheme? theme;
 
   Editor editor;
 
