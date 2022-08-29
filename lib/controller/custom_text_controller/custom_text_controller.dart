@@ -1,18 +1,12 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/enums/syntax.dart';
-import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
 
-// import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
-// import 'package:flutter_highlight/themes/monokai.dart';
-
 class TextEditingControllerIDE extends TextEditingController {
-  TextEditingControllerIDE({Key? key, required this.syntax, this.font});
+  TextEditingControllerIDE({Key? key, this.font});
 
-  final Syntax syntax;
-  // final SyntaxTheme theme;
+  static String language = 'HTML';
   final TextStyle? font;
 
   List<TextSpan> _convert(List<Node> nodes) {
@@ -27,7 +21,7 @@ class TextEditingControllerIDE extends TextEditingController {
               ? TextSpan(text: node.value)
               : TextSpan(
                   text: node.value,
-                  style: monokaiSublimeTheme[node.className!],
+                  style: atomOneDarkReasonableTheme[node.className!],
                 ),
         );
       } else if (node.children != null) {
@@ -35,7 +29,7 @@ class TextEditingControllerIDE extends TextEditingController {
         currentSpans.add(
           TextSpan(
             children: tmp,
-            style: monokaiSublimeTheme[node.className!],
+            style: atomOneDarkReasonableTheme[node.className!],
           ),
         );
         stack.add(currentSpans);
@@ -62,7 +56,8 @@ class TextEditingControllerIDE extends TextEditingController {
       {required BuildContext context,
       TextStyle? style,
       required bool withComposing}) {
-    log('language: ${syntax.name.toLowerCase()}');
+    Syntax syntax =
+        Syntax.values.firstWhere((s) => s.name == language.toUpperCase());
     var nodes =
         highlight.parse(text, language: syntax.name.toLowerCase()).nodes!;
     return TextSpan(style: style, children: _convert(nodes));

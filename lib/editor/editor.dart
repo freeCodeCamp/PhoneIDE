@@ -1,13 +1,18 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
-import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
+
+class FileStreamEvent {
+  final String ext;
+  final String content;
+
+  FileStreamEvent({required this.ext, required this.content});
+}
 
 // ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
@@ -20,7 +25,7 @@ class Editor extends StatefulWidget with IEditor {
 
   // the coding language in the editor
 
-  Syntax language;
+  String language;
 
   // an instance of the current file
 
@@ -28,8 +33,8 @@ class Editor extends StatefulWidget with IEditor {
 
   // A stream where the text in the editor is changable
 
-  StreamController<String> fileTextStream =
-      StreamController<String>.broadcast();
+  StreamController<FileStreamEvent> fileTextStream =
+      StreamController<FileStreamEvent>.broadcast();
 
   // A stream where you can listen to the changes made in the editor
   StreamController<String> onTextChange = StreamController<String>.broadcast();
@@ -50,9 +55,7 @@ class EditorState extends State<Editor> {
   ScrollController scrollController = ScrollController();
   ScrollController linebarController = ScrollController();
 
-  late TextEditingControllerIDE textController = TextEditingControllerIDE(
-    syntax: widget.language,
-  );
+  TextEditingControllerIDE textController = TextEditingControllerIDE();
 
   // number of lines on the line count bar
   int _numLines = 1;
@@ -67,7 +70,7 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
-    log('${widget.language}');
+    TextEditingControllerIDE.language = widget.language;
 
     scrollController.addListener(() {
       linebarController.jumpTo(scrollController.offset);
@@ -128,9 +131,10 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.fileTextStream.stream.listen((newText) {
-      textController.text = newText;
-      setNewLinebarState(newText);
+    widget.fileTextStream.stream.listen((event) {
+      textController.text = event.content;
+      setNewLinebarState(event.content);
+      TextEditingControllerIDE.language = event.ext;
     });
 
     return Row(
