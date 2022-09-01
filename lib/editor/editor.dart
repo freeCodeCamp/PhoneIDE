@@ -85,7 +85,6 @@ class EditorState extends State<Editor> {
   int lastTotalLines = 0;
 
   int lastEditableRegionIndex = 1;
-
   String lastEditableRegionLine = '';
 
   double startRegionPadding = 0;
@@ -104,9 +103,9 @@ class EditorState extends State<Editor> {
 
     Future.delayed(Duration.zero, (() async {
       textController.text = widget.openedFile?.fileContent ?? '';
-      calculateEditableRegionStart();
+      calculateEditableRegionPadding();
       setInitialLineState(textController.text);
-      setInitalLastReqionLine(textController.text);
+      setInitalReqionLines(textController.text);
       setLastTotalLines(textController.text);
       calculateEditableRegionHeight();
     }));
@@ -120,22 +119,6 @@ class EditorState extends State<Editor> {
 
   void handlePossibleExecutingEvents(
       String event, TextEditingControllerIDE textController) async {
-    // if (widget.openedFile != null && widget.options.useFileExplorer) {
-    //   await FileController.writeFile(
-    //       widget.openedFile!.filePath, widget.textController!.text);
-    // }
-
-    // bool isTriggerKeyForHtmlDesktop = widget.language == Language.html &&
-    //     widget.lastKeyEvent!.isShiftPressed &&
-    //     widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.period;
-
-    // bool isTriggerKeyForHtmlMobile = widget.language == Language.html &&
-    //     widget.lastKeyEvent!.logicalKey == LogicalKeyboardKey.greater;
-
-    // if (isTriggerKeyForHtmlDesktop || isTriggerKeyForHtmlMobile) {
-    //   widget.replicateTags(patternMatches, widget.textController);
-    // }
-
     setCurrentLineState(event);
     setNewAmountOfEditableReqionLines(textController);
     calculateEditableRegionHeight();
@@ -177,31 +160,29 @@ class EditorState extends State<Editor> {
     });
   }
 
-  String getLastLineTextInRegion(String editorText, int index) {
+  String getLineInRegion(String editorText, int index) {
     List indecies = editorText.split('\n');
 
     return indecies[index] ?? '';
   }
 
-  void setInitalLastReqionLine(String editorText) {
+  void setInitalReqionLines(String editorText) {
     setState(() {
       lastEditableRegionLine =
-          getLastLineTextInRegion(editorText, widget.regionEnd! - 1);
-    });
-
-    setState(() {
+          getLineInRegion(editorText, widget.regionEnd! - 1);
       lastEditableRegionIndex = widget.regionEnd! - 1;
     });
   }
 
   void setNewAmountOfEditableReqionLines(TextEditingControllerIDE controller) {
-    // the last line in the editable region
-    String line =
-        getLastLineTextInRegion(controller.text, lastEditableRegionIndex);
+    // first line after the editable region
+    String firstLineAfter =
+        getLineInRegion(controller.text, lastEditableRegionIndex);
+
     int newTotalLines = controller.text.split('\n').length;
     List newLines = controller.text.split('\n');
 
-    if (line.isEmpty && lastEditableRegionLine.isEmpty) {
+    if (firstLineAfter.isEmpty && lastEditableRegionLine.isEmpty) {
       if (lastTotalLines < newTotalLines) {
         setState(() {
           newEditableRegionLines++;
@@ -215,14 +196,16 @@ class EditorState extends State<Editor> {
       }
     }
 
-    if (line != lastEditableRegionLine && lastTotalLines < newTotalLines) {
+    if (firstLineAfter != lastEditableRegionLine &&
+        lastTotalLines < newTotalLines) {
       setState(() {
         newEditableRegionLines++;
         lastEditableRegionIndex++;
       });
     }
 
-    if (line != lastEditableRegionLine && lastTotalLines > newTotalLines) {
+    if (firstLineAfter != lastEditableRegionLine &&
+        lastTotalLines > newTotalLines) {
       setState(() {
         newEditableRegionLines--;
         lastEditableRegionIndex--;
@@ -239,15 +222,6 @@ class EditorState extends State<Editor> {
     setState(() {
       lastTotalLines = newTotalLines;
     });
-    // log('-----');
-    // log(newLines[lastEditableRegionIndex] ?? 'nothing on this line');
-    // log('lastTotal Lines: ' +
-    //     lastTotalLines.toString() +
-    //     ' newTotal Lines: ' +
-    //     newTotalLines.toString());
-    // log(newLines.toString());
-    // log('index:' + lastEditableRegionIndex.toString());
-    log('line after editable region: ' + newLines[lastEditableRegionIndex + 1]);
   }
 
   void calculateEditableRegionHeight() {
@@ -278,7 +252,7 @@ class EditorState extends State<Editor> {
 
     void setActualTimer() {
       editableRegionUpdateTimer = Timer(mil, () {
-        calculateEditableRegionStart(scrollController.offset);
+        calculateEditableRegionPadding(scrollController.offset);
 
         if (_editableRegionHeight == 0) {
           calculateEditableRegionHeight();
@@ -297,7 +271,7 @@ class EditorState extends State<Editor> {
     }
   }
 
-  void calculateEditableRegionStart([double? scrollOfset = 0]) {
+  void calculateEditableRegionPadding([double? scrollOfset = 0]) {
     double viewInset = MediaQuery.of(context).viewPadding.top + 10;
     int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
     double size = Linebar.calculateTextSize('1',
