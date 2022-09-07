@@ -7,7 +7,8 @@ enum Syntax {
   JAVA,
   KOTLIN,
   SWIFT,
-  JAVASCRIPT,
+  JS,
   YAML,
   HTML,
+  CSS,
 }
