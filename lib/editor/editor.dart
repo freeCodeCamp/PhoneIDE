@@ -304,10 +304,10 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.fileTextStream.stream.listen((newText) {
+    widget.fileTextStream.stream.listen((event) {
       textController.text = event.content;
       TextEditingControllerIDE.language = event.ext;
-      setCurrentLineState(newText);
+      setCurrentLineState(event.content);
     });
 
     scrollController.addListener(() {
