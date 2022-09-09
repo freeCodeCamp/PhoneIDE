@@ -107,11 +107,13 @@ class EditorState extends State<Editor> {
 
     Future.delayed(Duration.zero, (() async {
       textController.text = widget.openedFile?.fileContent ?? '';
-      calculateEditableRegionPadding();
       setInitialLineState(textController.text);
-      setInitalReqionLines(textController.text);
       setLastTotalLines(textController.text);
-      calculateEditableRegionHeight();
+      if (widget.options.hasEditableRegion) {
+        calculateEditableRegionPadding();
+        setInitalReqionLines(textController.text);
+        calculateEditableRegionHeight();
+      }
     }));
   }
 
@@ -337,7 +339,9 @@ class EditorState extends State<Editor> {
                     )
                   : Container(),
               Padding(
-                padding: EdgeInsets.only(left: _initialWidth + 5),
+                padding: EdgeInsets.only(
+                    left: _initialWidth +
+                        (widget.options.hasEditableRegion ? 5 : 0)),
                 child: IEdtorView(context),
               ),
               Container(
@@ -353,7 +357,10 @@ class EditorState extends State<Editor> {
 
   // ignore: non_constant_identifier_names
   Widget IEdtorView(BuildContext context) {
-    return SizedBox(
+    return Container(
+      color: widget.options.hasEditableRegion
+          ? Colors.transparent
+          : const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
       height: MediaQuery.of(context).size.height,
       width: 1000,
       child: ListView(
@@ -393,7 +400,9 @@ class EditorState extends State<Editor> {
                             maxLines: null,
                             keyboardType: TextInputType.multiline,
                             style: TextStyle(
-                              color: widget.options.linebarTextColor,
+                              color: widget.options.hasEditableRegion
+                                  ? widget.options.linebarTextColor
+                                  : Colors.white,
                               fontSize: 18,
                             ),
                           ),
