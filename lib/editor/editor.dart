@@ -234,7 +234,7 @@ class EditorState extends State<Editor> {
                                 fontSize: 18,
                                 color: Colors.white,
                                 fontFamily: 'RobotoMono'),
-                            context: context);
+                            context: context) + 2;
                       });
                     });
                   }
@@ -244,7 +244,7 @@ class EditorState extends State<Editor> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
+                    color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
                   ),
                 )),
           ),
