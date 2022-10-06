@@ -185,13 +185,10 @@ class EditorState extends State<Editor> {
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
                             controller: textController,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.only(
-                                    left: 10,
-                                    top:
-                                        MediaQuery.of(context).viewPadding.top +
-                                            10)),
+                                contentPadding:
+                                    EdgeInsets.only(left: 10, top: 10)),
                             scrollController: scrollController,
                             expands: true,
                             onChanged: (String event) async {
@@ -219,6 +216,7 @@ class EditorState extends State<Editor> {
       children: [
         Flexible(
           child: ListView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
