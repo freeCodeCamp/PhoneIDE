@@ -23,6 +23,7 @@ class Editor extends StatefulWidget with IEditor {
     required this.options,
     this.regionStart = 1,
     this.regionEnd = 2,
+    this.condition,
     required this.language,
   }) : super(key: key);
 
@@ -90,6 +91,7 @@ class EditorState extends State<Editor> {
   String lastEditableRegionLine = '';
 
   double startRegionPadding = 0;
+  double highestInset = 0;
 
   Timer? editableRegionUpdateTimer;
 
@@ -235,12 +237,13 @@ class EditorState extends State<Editor> {
   void calculateEditableRegionHeight() {
     int handleNumLines = _currNumLines == 0
         ? 1
-        : widget.regionEnd! + 1 - widget.regionStart! + newEditableRegionLines;
+        : widget.regionEnd! - widget.regionStart! + newEditableRegionLines - 1;
 
     setState(() {
       _editableRegionHeight = Linebar.calculateTextSize('1',
                   style: TextStyle(
                     color: widget.options.linebarTextColor,
+                    fontFamily: 'RobotoMono',
                     fontSize: 18,
                   ),
                   context: context)
@@ -280,18 +283,23 @@ class EditorState extends State<Editor> {
   }
 
   void calculateEditableRegionPadding([double? scrollOfset = 0]) {
-    double viewInset = MediaQuery.of(context).viewPadding.top + 10;
-    int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
+    double viewInset = MediaQuery.of(context).viewPadding.top;
+    int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 2;
     double size = Linebar.calculateTextSize('1',
             style: TextStyle(
               color: widget.options.linebarTextColor,
+              fontFamily: 'RobotoMono',
               fontSize: 18,
             ),
             context: context)
         .height;
 
+    if (viewInset >= highestInset) {
+      highestInset = viewInset;
+    }
+
     double newRegionPadding =
-        handleRegion * size + viewInset - (scrollOfset ?? 0);
+        handleRegion * size + highestInset - (scrollOfset ?? 0) + 10;
 
     if (widget.regionStart != null) {
       setState(() {
@@ -383,9 +391,7 @@ class EditorState extends State<Editor> {
                         height: 300,
                         width: widget.options.minWidth,
                         child: Padding(
-                          padding: EdgeInsets.only(
-                              left: 10,
-                              top: MediaQuery.of(context).viewPadding.top + 10),
+                          padding: EdgeInsets.only(left: 10, top: 10),
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
                             controller: textController,
@@ -420,8 +426,6 @@ class EditorState extends State<Editor> {
   linecountBar() {
     return Column(
       children: [
-        SizedBox(
-            width: 10, height: MediaQuery.of(context).viewPadding.top + 10),
         Flexible(
           child: ListView.builder(
             padding: EdgeInsets.zero,

@@ -23,6 +23,7 @@ class App extends StatelessWidget {
     );
 
     Editor editor = Editor(
+      condition: true,
       regionStart: 3,
       regionEnd: 5,
       language: 'html',
