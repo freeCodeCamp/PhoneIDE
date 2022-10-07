@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class EditorOptions {
-  const EditorOptions(
+  EditorOptions(
       {this.codePreview = true,
       this.canCloseFiles = true,
       this.useFileExplorer = true,
@@ -21,39 +21,39 @@ class EditorOptions {
       this.linebarTextColor = const Color.fromRGBO(0x88, 0x88, 0x88, 1),
       this.hasEditableRegion = false});
 
-  final bool codePreview;
+  bool codePreview;
 
-  final bool canCloseFiles;
+  bool canCloseFiles;
 
-  final Color tabBarColor;
+  Color tabBarColor;
 
-  final Color tabBarLineColor;
+  Color tabBarLineColor;
 
-  final bool showTabBar;
+  bool showTabBar;
 
-  final Color scaffoldBackgrounColor;
+  Color scaffoldBackgrounColor;
 
-  final bool useFileExplorer;
+  bool useFileExplorer;
 
-  final List<Widget> customViews;
+  List<Widget> customViews;
 
-  final List<Text> customViewNames;
+  List<Text> customViewNames;
 
-  final List<String> importScripts;
+  List<String> importScripts;
 
-  final List<String> bodyScripts;
+  List<String> bodyScripts;
 
-  final double minHeight;
+  double minHeight;
 
-  final double minWidth;
+  double minWidth;
 
-  final Color editorBackgroundColor;
+  Color editorBackgroundColor;
 
-  final Color linebarColor;
+  Color linebarColor;
 
-  final Color linebarTextColor;
+  Color linebarTextColor;
 
-  final bool showAppBar;
+  bool showAppBar;
 
-  final bool hasEditableRegion;
+  bool hasEditableRegion;
 }

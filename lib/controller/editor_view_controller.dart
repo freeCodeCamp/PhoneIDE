@@ -14,13 +14,13 @@ class EditorViewController extends StatefulWidget {
     Key? key,
     required this.editor,
     this.recentlyOpenedFiles = const [],
-    this.options = const EditorOptions(),
+    this.options,
     this.file,
   }) : super(key: key);
 
   List<FileIDE> recentlyOpenedFiles;
   FileIDE? file;
-  final EditorOptions options;
+  EditorOptions? options;
 
   Editor editor;
 
@@ -40,7 +40,7 @@ class EditorViewControllerState extends State<EditorViewController> {
   @override
   void initState() {
     super.initState();
-
+    widget.options ??= EditorOptions();
     setRecentlyOpenedFilesInDir();
   }
 
@@ -119,9 +119,9 @@ class EditorViewControllerState extends State<EditorViewController> {
 
   int getActualTabLength() {
     int tabs = 1;
-    widget.options.codePreview ? tabs = tabs + 1 : tabs = tabs;
+    widget.options!.codePreview ? tabs = tabs + 1 : tabs = tabs;
 
-    tabs = widget.options.customViews.length + tabs;
+    tabs = widget.options!.customViews.length + tabs;
 
     return tabs;
   }
@@ -143,16 +143,16 @@ class EditorViewControllerState extends State<EditorViewController> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.options.showAppBar || widget.options.showTabBar
+    return widget.options!.showAppBar || widget.options!.showTabBar
         ? DefaultTabController(
             length: 2,
             child: Scaffold(
                 extendBodyBehindAppBar: false,
-                backgroundColor: widget.options.scaffoldBackgrounColor,
-                drawer: widget.options.useFileExplorer
+                backgroundColor: widget.options!.scaffoldBackgrounColor,
+                drawer: widget.options!.useFileExplorer
                     ? Drawer(child: FileExplorer())
                     : null,
-                appBar: widget.options.showAppBar
+                appBar: widget.options!.showAppBar
                     ? AppBar(
                         title: Text(widget.file?.parentDirectory ?? ''),
                         leading: Builder(
@@ -162,7 +162,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                               },
                               icon: const Icon(Icons.folder)),
                         ),
-                        backgroundColor: widget.options.tabBarColor,
+                        backgroundColor: widget.options!.tabBarColor,
                         toolbarHeight: 50,
                       )
                     : null,
@@ -172,18 +172,18 @@ class EditorViewControllerState extends State<EditorViewController> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Container(
-                          color: widget.options.tabBarColor,
+                          color: widget.options!.tabBarColor,
                           height: 50,
                           child: fileTabBar(),
                         ),
                         Container(
                           height: 35,
-                          color: widget.options.tabBarColor,
+                          color: widget.options!.tabBarColor,
                           child: TabBar(tabs: <Text>[
                             for (int i = 0;
-                                i < widget.options.customViewNames.length;
+                                i < widget.options!.customViewNames.length;
                                 i++)
-                              widget.options.customViewNames[i],
+                              widget.options!.customViewNames[i],
                             const Text('editor'),
                             const Text('preview'),
                           ]),
@@ -192,13 +192,13 @@ class EditorViewControllerState extends State<EditorViewController> {
                           child: TabBarView(
                             children: [
                               for (int i = 0;
-                                  i < widget.options.customViews.length;
+                                  i < widget.options!.customViews.length;
                                   i++)
-                                widget.options.customViews[i],
+                                widget.options!.customViews[i],
                               widget.editor,
                               CodePreview(
                                 editor: widget.editor,
-                                options: widget.options,
+                                options: widget.options!,
                                 //consoleStream: widget.consoleStream,
                               ),
                             ],
@@ -208,7 +208,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                     ))))
         : Scaffold(
             body: widget.editor,
-            backgroundColor: widget.options.scaffoldBackgrounColor,
+            backgroundColor: widget.options!.scaffoldBackgrounColor,
           );
   }
 
@@ -244,8 +244,8 @@ class EditorViewControllerState extends State<EditorViewController> {
             style: TextButton.styleFrom(
                 backgroundColor:
                     !fileIsFocused(widget.recentlyOpenedFiles[index].fileName)
-                        ? widget.options.scaffoldBackgrounColor
-                        : widget.options.tabBarColor,
+                        ? widget.options!.scaffoldBackgrounColor
+                        : widget.options!.tabBarColor,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.zero),
                 )),
@@ -261,7 +261,7 @@ class EditorViewControllerState extends State<EditorViewController> {
                   ),
                 ),
                 widget.recentlyOpenedFiles.length > 1 &&
-                        widget.options.canCloseFiles
+                        widget.options!.canCloseFiles
                     ? IconButton(
                         onPressed: () {
                           removeRecentlyOpenedFile(

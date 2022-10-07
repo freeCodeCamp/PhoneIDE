@@ -15,9 +15,18 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EditorOptions options = EditorOptions(
+      hasEditableRegion: true,
+      canCloseFiles: false,
+      showAppBar: false,
+      showTabBar: false,
+    );
+
     Editor editor = Editor(
       regionStart: 3,
+      regionEnd: 5,
       language: 'html',
+      options: options,
       openedFile: FileIDE(
         fileContent: '''<html>
   <body>
@@ -34,13 +43,8 @@ class App extends StatelessWidget {
       ),
     );
 
-    EditorViewController controller = EditorViewController(
-        options: const EditorOptions(
-          canCloseFiles: false,
-          showAppBar: false,
-          showTabBar: false,
-        ),
-        editor: editor);
+    EditorViewController controller =
+        EditorViewController(options: options, editor: editor);
 
     return MaterialApp(
       home: Row(

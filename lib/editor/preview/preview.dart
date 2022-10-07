@@ -1,21 +1,14 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import 'package:html/parser.dart' show parse;
-import 'package:html/dom.dart';
-
 class CodePreview extends StatefulWidget {
   const CodePreview({
     Key? key,
     required this.editor,
-    //required this.consoleStream,
-    this.options = const EditorOptions(),
+    required this.options,
     this.initialUrl = 'about:blank',
     this.allowJavaScript = true,
     this.userAgent = 'random',

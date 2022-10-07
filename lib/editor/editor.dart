@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -21,7 +20,7 @@ class Editor extends StatefulWidget with IEditor {
   Editor({
     Key? key,
     this.openedFile,
-    this.options = const EditorOptions(),
+    required this.options,
     this.regionStart = 1,
     this.regionEnd = 2,
     required this.language,
@@ -49,7 +48,7 @@ class Editor extends StatefulWidget with IEditor {
 
   // options of the editor
 
-  EditorOptions options;
+  EditorOptions options = EditorOptions();
 
   // start of the editable region
 
@@ -99,6 +98,7 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
+
     TextEditingControllerIDE.language = widget.language;
 
     scrollController.addListener(() {
@@ -182,8 +182,10 @@ class EditorState extends State<Editor> {
 
   void setNewAmountOfEditableReqionLines(TextEditingControllerIDE controller) {
     // first line after the editable region
-    String firstLineAfter =
-        getLineInRegion(controller.text, lastEditableRegionIndex);
+    String firstLineAfter = getLineInRegion(
+      controller.text,
+      lastEditableRegionIndex,
+    );
 
     int newTotalLines = controller.text.split('\n').length;
     List newLines = controller.text.split('\n');
