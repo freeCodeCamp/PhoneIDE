@@ -43,10 +43,6 @@ class Editor extends StatefulWidget with IEditor {
   // A stream where you can listen to the changes made in the editor
   StreamController<String> onTextChange = StreamController<String>.broadcast();
 
-  // holds a copy of the last key events that happened
-
-  RawKeyEvent? lastKeyEvent;
-
   // options of the editor
 
   EditorOptions options = EditorOptions();
@@ -309,12 +305,6 @@ class EditorState extends State<Editor> {
     }
   }
 
-  void handleKeyEvents(RawKeyEvent event) {
-    setState(() {
-      widget.lastKeyEvent = event;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     widget.fileTextStream.stream.listen((event) {
@@ -329,41 +319,47 @@ class EditorState extends State<Editor> {
 
     return Row(
       children: [
+        Container(
+          constraints: BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
+          decoration: BoxDecoration(
+            color: widget.options.linebarColor,
+            border: const Border(
+              right: BorderSide(
+                color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              top: 10,
+            ),
+            child: linecountBar(),
+          ),
+        ),
         Expanded(
           child: Stack(
             children: [
-              widget.options.hasEditableRegion
-                  ? Padding(
-                      padding: EdgeInsets.only(top: startRegionPadding),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: const Color.fromRGBO(0x0a, 0x0a, 32, 1),
-                            border: Border(
-                                left: BorderSide(
-                                    width: 27,
-                                    color: widget.condition ?? false
-                                        ? Colors.green
-                                        : Colors.grey))),
-                        height: _editableRegionHeight,
-                        width: widget.options.minWidth,
-                      ),
-                    )
-                  : Container(),
-              Container(
-                  constraints:
-                      BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
-                  decoration: BoxDecoration(
-                    color: widget.options.linebarColor,
-                    border: const Border(
-                      right: BorderSide(
-                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+              if (widget.options.hasEditableRegion)
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: startRegionPadding,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(0x0a, 0x0a, 32, 1),
+                      border: Border(
+                        left: BorderSide(
+                          width: 5,
+                          color: widget.condition ?? false
+                              ? Colors.green
+                              : Colors.grey,
+                        ),
                       ),
                     ),
+                    height: _editableRegionHeight,
+                    width: widget.options.minWidth,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: linecountBar(),
-                  )),
+                ),
               IEdtorView(context),
             ],
           ),
@@ -381,53 +377,53 @@ class EditorState extends State<Editor> {
       height: MediaQuery.of(context).size.height,
       width: 1000,
       child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
-          children: [
-            SizedBox(
-              height: 300,
-              width: widget.options.minHeight,
-              child: RawKeyboardListener(
-                focusNode: _focusNode,
-                onKey: handleKeyEvents,
-                child: ListView(
-                    padding: EdgeInsets.zero,
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      SizedBox(
-                        height: 300,
-                        width: widget.options.minWidth,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: _initialWidth + 5),
-                          child: TextField(
-                            scrollPadding: EdgeInsets.zero,
-                            controller: textController,
-                            decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding:
-                                    EdgeInsets.only(left: 10, top: 10)),
-                            scrollController: scrollController,
-                            expands: true,
-                            onChanged: (String event) async {
-                              handlePossibleExecutingEvents(
-                                  event, textController);
-                              widget.onTextChange.add(event);
-                            },
-                            maxLines: null,
-                            keyboardType: TextInputType.multiline,
-                            style: TextStyle(
-                              color: widget.options.hasEditableRegion
-                                  ? widget.options.linebarTextColor
-                                  : Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          SizedBox(
+            height: 300,
+            width: widget.options.minHeight,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              scrollDirection: Axis.horizontal,
+              children: [
+                SizedBox(
+                  height: 300,
+                  width: widget.options.minWidth,
+                  child: TextField(
+                    scrollPadding: EdgeInsets.zero,
+                    controller: textController,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.only(
+                        left: 10,
+                        top: 10,
                       ),
-                    ]),
-              ),
+                    ),
+                    scrollController: scrollController,
+                    expands: true,
+                    onChanged: (String event) async {
+                      handlePossibleExecutingEvents(
+                        event,
+                        textController,
+                      );
+                      widget.onTextChange.add(event);
+                    },
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    style: TextStyle(
+                      color: widget.options.hasEditableRegion
+                          ? widget.options.linebarTextColor
+                          : Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ]),
+          ),
+        ],
+      ),
     );
   }
 
@@ -444,27 +440,31 @@ class EditorState extends State<Editor> {
             itemBuilder: (_, i) => Linebar(
                 calculateBarWidth: () {
                   if (i + 1 > 9) {
-                    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-                      setState(() {
-                        _initialWidth = Linebar.calculateTextSize(
-                                    (i + 1).toString(),
-                                    style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                        fontFamily: 'RobotoMono'),
-                                    context: context)
-                                .height +
-                            2;
-                      });
-                    });
+                    SchedulerBinding.instance.addPostFrameCallback(
+                      (timeStamp) {
+                        setState(() {
+                          _initialWidth =
+                              Linebar.calculateTextSize((i + 1).toString(),
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            color: Colors.white,
+                                            fontFamily: 'RobotoMono',
+                                          ),
+                                          context: context)
+                                      .height +
+                                  2;
+                        });
+                      },
+                    );
                   }
                 },
                 child: Text(
                   i == 0 ? (1).toString() : (i + 1).toString(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
-                    color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                    fontWeight: FontWeight.w500,
+                    color: widget.options.linebarTextColor,
                   ),
                 )),
           ),
