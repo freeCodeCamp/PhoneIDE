@@ -80,7 +80,7 @@ class EditorState extends State<Editor> {
   int _currNumLines = 1;
 
   // the initial width of the line count bar
-  double _initialWidth = 21;
+  double _initialWidth = 28;
 
   double _editableRegionHeight = 10;
 
@@ -349,16 +349,22 @@ class EditorState extends State<Editor> {
                       ),
                     )
                   : Container(),
-              Padding(
-                padding: EdgeInsets.only(
-                    left: _initialWidth +
-                        (widget.options.hasEditableRegion ? 5 : 0)),
-                child: IEdtorView(context),
-              ),
               Container(
-                  color: widget.options.linebarColor,
-                  width: _initialWidth,
-                  child: linecountBar()),
+                  constraints:
+                      BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
+                  decoration: BoxDecoration(
+                    color: widget.options.linebarColor,
+                    border: const Border(
+                      right: BorderSide(
+                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: linecountBar(),
+                  )),
+              IEdtorView(context),
             ],
           ),
         ),
@@ -392,13 +398,14 @@ class EditorState extends State<Editor> {
                         height: 300,
                         width: widget.options.minWidth,
                         child: Padding(
-                          padding: EdgeInsets.only(left: 10, top: 10),
+                          padding: EdgeInsets.only(left: _initialWidth + 5),
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
                             controller: textController,
                             decoration: const InputDecoration(
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero),
+                                contentPadding:
+                                    EdgeInsets.only(left: 10, top: 10)),
                             scrollController: scrollController,
                             expands: true,
                             onChanged: (String event) async {
@@ -440,13 +447,14 @@ class EditorState extends State<Editor> {
                     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
                       setState(() {
                         _initialWidth = Linebar.calculateTextSize(
-                                (i + 1).toString(),
-                                style: const TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontFamily: 'RobotoMono'),
-                                context: context)
-                            .width;
+                                    (i + 1).toString(),
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontFamily: 'RobotoMono'),
+                                    context: context)
+                                .height +
+                            2;
                       });
                     });
                   }
@@ -454,10 +462,10 @@ class EditorState extends State<Editor> {
                 child: Text(
                   i == 0 ? (1).toString() : (i + 1).toString(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: widget.options.linebarTextColor),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                  ),
                 )),
           ),
         )

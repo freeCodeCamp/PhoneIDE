@@ -18,7 +18,7 @@ class EditorOptions {
       this.minWidth = 2500,
       this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
       this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
-      this.linebarTextColor = const Color.fromRGBO(0x88, 0x88, 0x88, 1),
+      this.linebarTextColor = Colors.white,
       this.hasEditableRegion = false});
 
   bool codePreview;
