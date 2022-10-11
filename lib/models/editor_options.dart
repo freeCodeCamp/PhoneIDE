@@ -17,7 +17,7 @@ class EditorOptions {
     this.minHeight = 2500,
     this.minWidth = 2500,
     this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
-    this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
+    this.linebarColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
     this.linebarTextColor = Colors.white,
   });
 

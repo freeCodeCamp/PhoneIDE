@@ -61,7 +61,7 @@ class EditorState extends State<Editor> {
   int _numLines = 1;
 
   // the initial width of the line count bar
-  double _initialWidth = 21;
+  double _initialWidth = 28;
 
   final FocusNode _focusNode = FocusNode();
 
@@ -140,8 +140,15 @@ class EditorState extends State<Editor> {
     return Row(
       children: [
         Container(
-            color: widget.options.linebarColor,
             constraints: BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
+            decoration: BoxDecoration(
+              color: widget.options.linebarColor,
+              border: const Border(
+                right: BorderSide(
+                  color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                ),
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.only(top: 10),
               child: linecountBar(),
@@ -155,7 +162,7 @@ class EditorState extends State<Editor> {
   Widget IEdtorView(BuildContext context) {
     return Expanded(
       child: Container(
-        color: const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
+        color: widget.options.linebarColor,
         height: MediaQuery.of(context).size.height,
         width: 1000,
         child: ListView(
@@ -178,13 +185,10 @@ class EditorState extends State<Editor> {
                           child: TextField(
                             scrollPadding: EdgeInsets.zero,
                             controller: textController,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.only(
-                                    left: 10,
-                                    top:
-                                        MediaQuery.of(context).viewPadding.top +
-                                            10)),
+                                contentPadding:
+                                    EdgeInsets.only(left: 10, top: 10)),
                             scrollController: scrollController,
                             expands: true,
                             onChanged: (String event) async {
@@ -212,6 +216,7 @@ class EditorState extends State<Editor> {
       children: [
         Flexible(
           child: ListView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
@@ -227,7 +232,7 @@ class EditorState extends State<Editor> {
                                 fontSize: 18,
                                 color: Colors.white,
                                 fontFamily: 'RobotoMono'),
-                            context: context);
+                            context: context) + 2;
                       });
                     });
                   }
@@ -237,7 +242,7 @@ class EditorState extends State<Editor> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
+                    color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
                   ),
                 )),
           ),
