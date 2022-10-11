@@ -192,30 +192,30 @@ class EditorState extends State<Editor> {
     int newTotalLines = controller.text.split('\n').length;
     List newLines = controller.text.split('\n');
 
-    if (firstLineAfter.isEmpty && lastEditableRegionLine.isEmpty) {
-      if (lastTotalLines < newTotalLines) {
-        setState(() {
-          newEditableRegionLines++;
-        });
-      }
+    bool linesAreSame = firstLineAfter != lastEditableRegionLine;
 
-      if (lastTotalLines > newTotalLines) {
-        setState(() {
-          newEditableRegionLines--;
-        });
-      }
+    int linesInEditableRegion =
+        widget.regionEnd! - widget.regionStart! + newEditableRegionLines - 1;
+
+    // If the linecount is one and the last total lines is bigger than new total lines
+    // then we should ignore the request to update the editable region
+    if (linesInEditableRegion <= 1 && lastTotalLines > newTotalLines) {
+      return;
     }
 
-    if (firstLineAfter != lastEditableRegionLine &&
-        lastTotalLines < newTotalLines) {
+    // If the first line after the editable region is different from the last line in the editable
+    // region then we should update the editable region wit an extra line
+    if (linesAreSame && lastTotalLines < newTotalLines) {
       setState(() {
         newEditableRegionLines++;
         lastEditableRegionIndex++;
       });
     }
 
-    if (firstLineAfter != lastEditableRegionLine &&
-        lastTotalLines > newTotalLines) {
+    // If the first line after the editable region is different from the last line in the editable
+    // region and the last total lines is bigger than the new total lines then we should remove a
+    // line from the editable region
+    if (linesAreSame && lastTotalLines > newTotalLines) {
       setState(() {
         newEditableRegionLines--;
         lastEditableRegionIndex--;
@@ -239,17 +239,16 @@ class EditorState extends State<Editor> {
         ? 1
         : widget.regionEnd! - widget.regionStart! + newEditableRegionLines - 1;
 
-    setState(() {
-      _editableRegionHeight = Linebar.calculateTextSize('1',
-                  style: TextStyle(
-                    color: widget.options.linebarTextColor,
-                    fontFamily: 'RobotoMono',
-                    fontSize: 18,
-                  ),
-                  context: context)
-              .height *
-          handleNumLines;
-    });
+    setState(() {});
+    _editableRegionHeight = Linebar.calculateTextSize('1',
+                style: TextStyle(
+                  color: widget.options.linebarTextColor,
+                  fontFamily: 'RobotoMono',
+                  fontSize: 18,
+                ),
+                context: context)
+            .height *
+        handleNumLines;
   }
 
   void removeEditableRegon() {
@@ -282,10 +281,12 @@ class EditorState extends State<Editor> {
     }
   }
 
-  void calculateEditableRegionPadding([double? scrollOfset = 0]) {
+  void calculateEditableRegionPadding([
+    double? scrollOfset = 0,
+  ]) {
     double viewInset = MediaQuery.of(context).viewPadding.top;
-    int handleRegion = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 2;
-    double size = Linebar.calculateTextSize('1',
+    int regionStart = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
+    double textSize = Linebar.calculateTextSize('1',
             style: TextStyle(
               color: widget.options.linebarTextColor,
               fontFamily: 'RobotoMono',
@@ -299,7 +300,7 @@ class EditorState extends State<Editor> {
     }
 
     double newRegionPadding =
-        handleRegion * size + highestInset - (scrollOfset ?? 0) + 10;
+        regionStart * textSize + highestInset - (scrollOfset ?? 0) + 10;
 
     if (widget.regionStart != null) {
       setState(() {
