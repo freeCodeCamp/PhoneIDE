@@ -83,8 +83,10 @@ class EditorState extends State<Editor> {
   int newEditableRegionLines = 0;
   int lastTotalLines = 0;
 
-  int lastEditableRegionIndex = 1;
+  int lastEditableRegionIndex = 0;
   String lastEditableRegionLine = '';
+
+  int linesBeforeEditableRegion = 0;
 
   double startRegionPadding = 0;
   double highestInset = 0;
@@ -111,6 +113,18 @@ class EditorState extends State<Editor> {
         calculateEditableRegionPadding();
         setInitalReqionLines(textController.text);
         calculateEditableRegionHeight();
+
+        double offset = textController.text
+                .split('\n')
+                .sublist(0, widget.regionStart! - 1)
+                .length *
+            returnTextHeight();
+
+        scrollController.animateTo(
+          offset,
+          duration: Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
       }
     }));
   }
@@ -146,8 +160,12 @@ class EditorState extends State<Editor> {
   void setInitialLineState(String event) {
     setState(() {
       TextSpan span = TextSpan(text: event);
-      TextPainter tp =
-          TextPainter(text: span, textDirection: TextDirection.ltr);
+
+      TextPainter tp = TextPainter(
+        text: span,
+        textDirection: TextDirection.ltr,
+      );
+
       tp.layout(
         maxWidth: widget.options.minWidth,
       );
@@ -165,15 +183,17 @@ class EditorState extends State<Editor> {
   }
 
   String getLineInRegion(String editorText, int index) {
-    List indecies = editorText.split('\n');
+    List lines = editorText.split('\n');
 
-    return indecies[index] ?? '';
+    return lines.length > index ? lines[index] : '';
   }
 
   void setInitalReqionLines(String editorText) {
     setState(() {
-      lastEditableRegionLine =
-          getLineInRegion(editorText, widget.regionEnd! - 1);
+      lastEditableRegionLine = getLineInRegion(
+        editorText,
+        widget.regionEnd! - 1,
+      );
       lastEditableRegionIndex = widget.regionEnd! - 1;
     });
   }
@@ -188,20 +208,22 @@ class EditorState extends State<Editor> {
     int newTotalLines = controller.text.split('\n').length;
     List newLines = controller.text.split('\n');
 
-    bool linesAreSame = firstLineAfter != lastEditableRegionLine;
+    // Check if the first line after the editable region has changed
+    bool lineAreDiff = firstLineAfter != lastEditableRegionLine;
 
-    int linesInEditableRegion =
-        widget.regionEnd! - widget.regionStart! + newEditableRegionLines - 1;
+    // Handle editable region old and new
+    int oldEditableRegion = widget.regionEnd! - widget.regionStart! - 1;
+    int newEditableRegion = oldEditableRegion + newEditableRegionLines;
 
     // If the linecount is one and the last total lines is bigger than new total lines
     // then we should ignore the request to update the editable region
-    if (linesInEditableRegion <= 1 && lastTotalLines > newTotalLines) {
+    if (newEditableRegion <= 1 && lastTotalLines > newTotalLines) {
       return;
     }
 
     // If the first line after the editable region is different from the last line in the editable
     // region then we should update the editable region wit an extra line
-    if (linesAreSame && lastTotalLines < newTotalLines) {
+    if (lineAreDiff && lastTotalLines < newTotalLines) {
       setState(() {
         newEditableRegionLines++;
         lastEditableRegionIndex++;
@@ -211,40 +233,54 @@ class EditorState extends State<Editor> {
     // If the first line after the editable region is different from the last line in the editable
     // region and the last total lines is bigger than the new total lines then we should remove a
     // line from the editable region
-    if (linesAreSame && lastTotalLines > newTotalLines) {
+    if (lineAreDiff && lastTotalLines > newTotalLines) {
       setState(() {
         newEditableRegionLines--;
         lastEditableRegionIndex--;
       });
     }
 
-    if (newLines[lastEditableRegionIndex + 1] == '') {
+    if (!lineAreDiff && lastTotalLines > newTotalLines) {
+      setState(() {
+        newEditableRegionLines--;
+        lastEditableRegionIndex--;
+      });
+    }
+
+    // If the line after editable region is empty after pressing enter then we should add a line.
+    // This is to cover all missed cases...
+    if (newLines.length > lastEditableRegionIndex + 1
+        ? newLines[lastEditableRegionIndex + 1] == ''
+        : newLines[0] == '') {
       setState(() {
         newEditableRegionLines++;
         lastEditableRegionIndex++;
       });
     }
 
+    // Set the last total lines to the new total lines
     setState(() {
       lastTotalLines = newTotalLines;
     });
   }
 
-  void calculateEditableRegionHeight() {
-    int handleNumLines = _currNumLines == 0
-        ? 1
-        : widget.regionEnd! - widget.regionStart! + newEditableRegionLines - 1;
+  double returnTextHeight() {
+    return Linebar.calculateTextSize('1',
+            style: TextStyle(
+              color: widget.options.linebarTextColor,
+              fontFamily: 'RobotoMono',
+              fontSize: 18,
+            ),
+            context: context)
+        .height;
+  }
 
-    setState(() {});
-    _editableRegionHeight = Linebar.calculateTextSize('1',
-                style: TextStyle(
-                  color: widget.options.linebarTextColor,
-                  fontFamily: 'RobotoMono',
-                  fontSize: 18,
-                ),
-                context: context)
-            .height *
-        handleNumLines;
+  void calculateEditableRegionHeight() {
+    // Handle editable region old and new
+    int oldEditableRegion = widget.regionEnd! - widget.regionStart! - 1;
+    int newEditableRegion = oldEditableRegion + newEditableRegionLines;
+
+    _editableRegionHeight = returnTextHeight() * newEditableRegion;
   }
 
   void removeEditableRegon() {
@@ -281,15 +317,8 @@ class EditorState extends State<Editor> {
     double? scrollOfset = 0,
   ]) {
     double viewInset = MediaQuery.of(context).viewPadding.top;
-    int regionStart = widget.regionStart! <= 1 ? 1 : widget.regionStart! - 1;
-    double textSize = Linebar.calculateTextSize('1',
-            style: TextStyle(
-              color: widget.options.linebarTextColor,
-              fontFamily: 'RobotoMono',
-              fontSize: 18,
-            ),
-            context: context)
-        .height;
+    int regionStart = widget.regionStart! - 1;
+    double textSize = returnTextHeight();
 
     if (viewInset >= highestInset) {
       highestInset = viewInset;
@@ -320,7 +349,10 @@ class EditorState extends State<Editor> {
     return Row(
       children: [
         Container(
-          constraints: BoxConstraints(minWidth: 1, maxWidth: _initialWidth),
+          constraints: BoxConstraints(
+            minWidth: 1,
+            maxWidth: _initialWidth,
+          ),
           decoration: BoxDecoration(
             color: widget.options.linebarColor,
             border: const Border(
@@ -443,16 +475,7 @@ class EditorState extends State<Editor> {
                     SchedulerBinding.instance.addPostFrameCallback(
                       (timeStamp) {
                         setState(() {
-                          _initialWidth =
-                              Linebar.calculateTextSize((i + 1).toString(),
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.white,
-                                            fontFamily: 'RobotoMono',
-                                          ),
-                                          context: context)
-                                      .height +
-                                  2;
+                          _initialWidth = returnTextHeight() + 2;
                         });
                       },
                     );
