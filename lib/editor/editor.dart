@@ -7,6 +7,7 @@ import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FileStreamEvent {
   final String ext;
@@ -315,13 +316,23 @@ class EditorState extends State<Editor> {
 
   void calculateEditableRegionPadding([
     double? scrollOfset = 0,
-  ]) {
+  ]) async {
     double viewInset = MediaQuery.of(context).viewPadding.top;
     int regionStart = widget.regionStart! - 1;
     double textSize = returnTextHeight();
 
     if (viewInset >= highestInset) {
-      highestInset = viewInset;
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      if (prefs.getInt('highestInset') == null) {
+        prefs.setInt('highestInset', viewInset.toInt());
+      } else {
+        if (prefs.getInt('highestInset')! < viewInset.toInt()) {
+          prefs.setInt('highestInset', viewInset.toInt());
+        }
+      }
+
+      highestInset = prefs.getInt('highestInset')!.toDouble();
     }
 
     double newRegionPadding =
