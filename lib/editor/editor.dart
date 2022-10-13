@@ -113,7 +113,7 @@ class EditorState extends State<Editor> {
       if (widget.options.hasEditableRegion) {
         calculateEditableRegionPadding();
         setInitalReqionLines(textController.text);
-        calculateEditableRegionHeight();
+        calculateEditableRegionHeight(textController.text);
 
         double offset = textController.text
                 .split('\n')
@@ -143,7 +143,7 @@ class EditorState extends State<Editor> {
     setCurrentLineState(event);
     if (widget.options.hasEditableRegion) {
       setNewAmountOfEditableReqionLines(textController);
-      calculateEditableRegionHeight();
+      calculateEditableRegionHeight(textController.text);
     }
   }
 
@@ -280,12 +280,20 @@ class EditorState extends State<Editor> {
         .height;
   }
 
-  void calculateEditableRegionHeight() {
+  void calculateEditableRegionHeight(String text, [double scrollOfset = 0]) {
     // Handle editable region old and new
     int oldEditableRegion = widget.regionEnd! - widget.regionStart! - 1;
     int newEditableRegion = oldEditableRegion + newEditableRegionLines;
 
-    _editableRegionHeight = returnTextHeight() * newEditableRegion;
+    List<String> lines = text.split('\n');
+    int linesBefore = lines.sublist(0, widget.regionStart!).length;
+
+    double paddingEnd = linesBefore * returnTextHeight() + 10;
+
+    double reduceSize = scrollOfset < paddingEnd ? 0 : scrollOfset - paddingEnd;
+    double newHeight = newEditableRegion * returnTextHeight() - reduceSize;
+
+    _editableRegionHeight = newHeight <= 0 ? 1 : newHeight;
   }
 
   void removeEditableRegon() {
@@ -294,20 +302,19 @@ class EditorState extends State<Editor> {
     });
   }
 
-  void startEditableRegionUpdateTimer() {
-    const mil = Duration(milliseconds: 500);
+  void startEditableRegionUpdateTimer(
+    String text, [
+    double? scrollOfset = 0,
+  ]) {
+    const mil = Duration(milliseconds: 250);
 
     void setActualTimer() {
       editableRegionUpdateTimer = Timer(mil, () {
-        calculateEditableRegionPadding(scrollController.offset);
+        double offset = scrollController.offset;
 
-        if (_editableRegionHeight == 0) {
-          calculateEditableRegionHeight();
-        }
+        calculateEditableRegionPadding(offset);
 
-        if (startRegionPadding == 0) {
-          removeEditableRegon();
-        }
+        calculateEditableRegionHeight(text, offset);
       });
     }
 
@@ -362,7 +369,10 @@ class EditorState extends State<Editor> {
     });
 
     scrollController.addListener(() {
-      startEditableRegionUpdateTimer();
+      startEditableRegionUpdateTimer(
+        textController.text,
+        scrollController.offset,
+      );
     });
 
     return Row(
