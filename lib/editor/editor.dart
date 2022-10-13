@@ -361,11 +361,9 @@ class EditorState extends State<Editor> {
       setCurrentLineState(event.content);
     });
 
-    if (widget.options.hasEditableRegion) {
-      scrollController.addListener(() {
-        startEditableRegionUpdateTimer();
-      });
-    }
+    scrollController.addListener(() {
+      startEditableRegionUpdateTimer();
+    });
 
     return Row(
       children: [
