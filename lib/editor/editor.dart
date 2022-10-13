@@ -137,10 +137,14 @@ class EditorState extends State<Editor> {
   }
 
   void handlePossibleExecutingEvents(
-      String event, TextEditingControllerIDE textController) async {
+    String event,
+    TextEditingControllerIDE textController,
+  ) async {
     setCurrentLineState(event);
-    setNewAmountOfEditableReqionLines(textController);
-    calculateEditableRegionHeight();
+    if (widget.options.hasEditableRegion) {
+      setNewAmountOfEditableReqionLines(textController);
+      calculateEditableRegionHeight();
+    }
   }
 
   void setCurrentLineState(String event) {
@@ -307,6 +311,10 @@ class EditorState extends State<Editor> {
       });
     }
 
+    if (widget.regionStart == null && widget.regionEnd == null) {
+      return;
+    }
+
     if (editableRegionUpdateTimer == null) {
       setActualTimer();
     } else if (!editableRegionUpdateTimer!.isActive) {
@@ -353,9 +361,11 @@ class EditorState extends State<Editor> {
       setCurrentLineState(event.content);
     });
 
-    scrollController.addListener(() {
-      startEditableRegionUpdateTimer();
-    });
+    if (widget.options.hasEditableRegion) {
+      scrollController.addListener(() {
+        startEditableRegionUpdateTimer();
+      });
+    }
 
     return Row(
       children: [
