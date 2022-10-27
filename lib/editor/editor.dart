@@ -94,6 +94,9 @@ class EditorState extends State<Editor> {
 
   Timer? editableRegionUpdateTimer;
 
+  List<String> lastEditableRegionLinesArr = [];
+  List<String> newEditableRegionLinesArr = [];
+
   List<String> patternMatches = [];
 
   @override
@@ -150,8 +153,12 @@ class EditorState extends State<Editor> {
   void setCurrentLineState(String event) {
     setState(() {
       TextSpan span = TextSpan(text: event);
-      TextPainter tp =
-          TextPainter(text: span, textDirection: TextDirection.ltr);
+
+      TextPainter tp = TextPainter(
+        text: span,
+        textDirection: TextDirection.ltr,
+      );
+
       tp.layout(
         maxWidth: widget.options.minWidth,
       );
@@ -200,73 +207,93 @@ class EditorState extends State<Editor> {
         widget.regionEnd! - 1,
       );
       lastEditableRegionIndex = widget.regionEnd! - 1;
+      lastEditableRegionLinesArr = editorText
+          .split('\n')
+          .sublist(widget.regionStart!, widget.regionEnd! - 1);
+      for (var i = 0; i < lastEditableRegionLinesArr.length; i++) {
+        lastEditableRegionLinesArr[i] = lastEditableRegionLinesArr[i].trim();
+      }
     });
   }
 
   void setNewAmountOfEditableReqionLines(TextEditingControllerIDE controller) {
-    // first line after the editable region
-    String firstLineAfter = getLineInRegion(
-      controller.text,
-      lastEditableRegionIndex,
-    );
+    bool changeInEditableRegion = false;
 
-    int newTotalLines = controller.text.split('\n').length;
-    List newLines = controller.text.split('\n');
-
-    // Check if the first line after the editable region has changed
-    bool lineAreDiff = firstLineAfter != lastEditableRegionLine;
-
-    // Handle editable region old and new
-    int oldEditableRegion = widget.regionEnd! - widget.regionStart! - 1;
-    int newEditableRegion = oldEditableRegion + newEditableRegionLines;
-
-    // If the linecount is one and the last total lines is bigger than new total lines
-    // then we should ignore the request to update the editable region
-    if (newEditableRegion <= 1 && lastTotalLines > newTotalLines) {
-      return;
-    }
-
-    // If the first line after the editable region is different from the last line in the editable
-    // region then we should update the editable region wit an extra line
-    if (lineAreDiff && lastTotalLines < newTotalLines) {
-      setState(() {
-        newEditableRegionLines++;
-        lastEditableRegionIndex++;
-      });
-    }
-
-    // If the first line after the editable region is different from the last line in the editable
-    // region and the last total lines is bigger than the new total lines then we should remove a
-    // line from the editable region
-    if (lineAreDiff && lastTotalLines > newTotalLines) {
-      setState(() {
-        newEditableRegionLines--;
-        lastEditableRegionIndex--;
-      });
-    }
-
-    if (!lineAreDiff && lastTotalLines > newTotalLines) {
-      setState(() {
-        newEditableRegionLines--;
-        lastEditableRegionIndex--;
-      });
-    }
-
-    // If the line after editable region is empty after pressing enter then we should add a line.
-    // This is to cover all missed cases...
-    if (newLines.length > lastEditableRegionIndex + 1
-        ? newLines[lastEditableRegionIndex + 1] == ''
-        : newLines[0] == '') {
-      setState(() {
-        newEditableRegionLines++;
-        lastEditableRegionIndex++;
-      });
-    }
-
-    // Set the last total lines to the new total lines
-    setState(() {
-      lastTotalLines = newTotalLines;
+    controller.text
+        .split('\n')
+        .sublist(widget.regionStart!, lastEditableRegionIndex)
+        .forEach((element) {
+      if (!lastEditableRegionLinesArr.contains(element.trim())) {
+        changeInEditableRegion = true;
+      }
     });
+
+    // Expand the region only if changes are done in editable region
+    if (changeInEditableRegion) {
+      // first line after the editable region
+      String firstLineAfter = getLineInRegion(
+        controller.text,
+        lastEditableRegionIndex,
+      );
+
+      int newTotalLines = controller.text.split('\n').length;
+      List newLines = controller.text.split('\n');
+
+      // Check if the first line after the editable region has changed
+      bool lineAreDiff = firstLineAfter != lastEditableRegionLine;
+
+      // Handle editable region old and new
+      int oldEditableRegion = widget.regionEnd! - widget.regionStart! - 1;
+      int newEditableRegion = oldEditableRegion + newEditableRegionLines;
+
+      // If the linecount is one and the last total lines is bigger than new total lines
+      // then we should ignore the request to update the editable region
+      if (newEditableRegion <= 1 && lastTotalLines > newTotalLines) {
+        return;
+      }
+
+      // If the first line after the editable region is different from the last line in the editable
+      // region then we should update the editable region wit an extra line
+      if (lineAreDiff && lastTotalLines < newTotalLines) {
+        setState(() {
+          newEditableRegionLines++;
+          lastEditableRegionIndex++;
+        });
+      }
+
+      // If the first line after the editable region is different from the last line in the editable
+      // region and the last total lines is bigger than the new total lines then we should remove a
+      // line from the editable region
+      if (lineAreDiff && lastTotalLines > newTotalLines) {
+        setState(() {
+          newEditableRegionLines--;
+          lastEditableRegionIndex--;
+        });
+      }
+
+      if (!lineAreDiff && lastTotalLines > newTotalLines) {
+        setState(() {
+          newEditableRegionLines--;
+          lastEditableRegionIndex--;
+        });
+      }
+
+      // If the line after editable region is empty after pressing enter then we should add a line.
+      // This is to cover all missed cases...
+      if (newLines.length > lastEditableRegionIndex + 1
+          ? newLines[lastEditableRegionIndex + 1] == ''
+          : newLines[0] == '') {
+        setState(() {
+          newEditableRegionLines++;
+          lastEditableRegionIndex++;
+        });
+      }
+
+      // Set the last total lines to the new total lines
+      setState(() {
+        lastTotalLines = newTotalLines;
+      });
+    }
   }
 
   double returnTextHeight() {
