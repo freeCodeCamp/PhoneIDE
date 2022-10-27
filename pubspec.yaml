@@ -40,8 +40,11 @@ dependencies:
   shared_preferences: ^2.0.13
   html: ^0.15.0
   highlight: ^0.7.0
-  flutter_highlight: ^0.7.0
-
+  flutter_highlight:
+      git:
+        url: https://github.com/sembauke/highlight.dart
+        ref: master
+        path: ./flutter_highlight 
 
 dev_dependencies:
   flutter_test:
