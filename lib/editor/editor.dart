@@ -115,7 +115,7 @@ class EditorState extends State<Editor> {
       setLastTotalLines(textController.text);
       if (widget.options.hasEditableRegion) {
         calculateEditableRegionPadding();
-        setInitalReqionLines(textController.text);
+        setInitialRegionLines(textController.text);
         calculateEditableRegionHeight(textController.text);
 
         double offset = textController.text
@@ -145,7 +145,7 @@ class EditorState extends State<Editor> {
   ) async {
     setCurrentLineState(event);
     if (widget.options.hasEditableRegion) {
-      setNewAmountOfEditableReqionLines(textController);
+      setNewAmountOfEditableRegionLines(textController);
       calculateEditableRegionHeight(textController.text);
     }
   }
@@ -200,7 +200,7 @@ class EditorState extends State<Editor> {
     return lines.length > index ? lines[index] : '';
   }
 
-  void setInitalReqionLines(String editorText) {
+  void setInitialRegionLines(String editorText) {
     setState(() {
       lastEditableRegionLine = getLineInRegion(
         editorText,
@@ -216,7 +216,7 @@ class EditorState extends State<Editor> {
     });
   }
 
-  void setNewAmountOfEditableReqionLines(TextEditingControllerIDE controller) {
+  void setNewAmountOfEditableRegionLines(TextEditingControllerIDE controller) {
     bool changeInEditableRegion = false;
 
     controller.text
