@@ -1,57 +1,59 @@
 import 'package:flutter/material.dart';
 
 class EditorOptions {
-  const EditorOptions({
-    this.codePreview = true,
-    this.canCloseFiles = true,
-    this.useFileExplorer = true,
-    this.tabBarLineColor = Colors.white,
-    this.showTabBar = true,
-    this.showAppBar = true,
-    this.customViews = const [],
-    this.customViewNames = const [],
-    this.importScripts = const [],
-    this.bodyScripts = const [],
-    this.tabBarColor = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
-    this.scaffoldBackgrounColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
-    this.minHeight = 2500,
-    this.minWidth = 2500,
-    this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
-    this.linebarColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
-    this.linebarTextColor = Colors.white,
-  });
+  EditorOptions(
+      {this.codePreview = true,
+      this.canCloseFiles = true,
+      this.useFileExplorer = true,
+      this.tabBarLineColor = Colors.white,
+      this.showTabBar = true,
+      this.showAppBar = true,
+      this.customViews = const [],
+      this.customViewNames = const [],
+      this.importScripts = const [],
+      this.bodyScripts = const [],
+      this.tabBarColor = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
+      this.scaffoldBackgrounColor = const Color.fromRGBO(0x1b, 0x1b, 0x32, 1),
+      this.minHeight = 2500,
+      this.minWidth = 2500,
+      this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+      this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
+      this.linebarTextColor = Colors.white,
+      this.hasEditableRegion = false});
 
-  final bool codePreview;
+  bool codePreview;
 
-  final bool canCloseFiles;
+  bool canCloseFiles;
 
-  final Color tabBarColor;
+  Color tabBarColor;
 
-  final Color tabBarLineColor;
+  Color tabBarLineColor;
 
-  final bool showTabBar;
+  bool showTabBar;
 
-  final Color scaffoldBackgrounColor;
+  Color scaffoldBackgrounColor;
 
-  final bool useFileExplorer;
+  bool useFileExplorer;
 
-  final List<Widget> customViews;
+  List<Widget> customViews;
 
-  final List<Text> customViewNames;
+  List<Text> customViewNames;
 
-  final List<String> importScripts;
+  List<String> importScripts;
 
-  final List<String> bodyScripts;
+  List<String> bodyScripts;
 
-  final double minHeight;
+  double minHeight;
 
-  final double minWidth;
+  double minWidth;
 
-  final Color editorBackgroundColor;
+  Color editorBackgroundColor;
 
-  final Color linebarColor;
+  Color linebarColor;
 
-  final Color linebarTextColor;
+  Color linebarTextColor;
 
-  final bool showAppBar;
+  bool showAppBar;
+
+  bool hasEditableRegion;
 }

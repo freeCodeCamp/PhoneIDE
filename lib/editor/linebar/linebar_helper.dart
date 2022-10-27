@@ -8,7 +8,7 @@ class Linebar extends StatefulWidget {
       {Key? key, required this.calculateBarWidth, required this.child})
       : super(key: key);
 
-  static double calculateTextSize(
+  static Size calculateTextSize(
     String text, {
     required TextStyle style,
     required BuildContext context,
@@ -23,7 +23,7 @@ class Linebar extends StatefulWidget {
       textDirection: textDirection,
       textScaleFactor: textScaleFactor,
     )..layout(minWidth: minWidth, maxWidth: maxWidth);
-    return textPainter.size.width;
+    return textPainter.size;
   }
 
   @override

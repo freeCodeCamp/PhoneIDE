@@ -15,10 +15,28 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    EditorOptions options = EditorOptions(
+      hasEditableRegion: true,
+      canCloseFiles: false,
+      showAppBar: false,
+      showTabBar: false,
+    );
+
     Editor editor = Editor(
+      condition: true,
+      regionStart: 3,
+      regionEnd: 5,
       language: 'html',
+      options: options,
       openedFile: FileIDE(
-        fileContent: 'hello',
+        fileContent: '''<html>
+  <body>
+    <h1>CatPhotoApp</h1>
+    <h2>Cat Photos</h2>
+    <!-- TODO: Add link to cat photos -->
+    <p>Click here to view more cat photos.</p>
+  </body>
+</html>''',
         fileExplorer: null,
         fileName: '',
         filePath: '',
@@ -26,13 +44,8 @@ class App extends StatelessWidget {
       ),
     );
 
-    EditorViewController controller = EditorViewController(
-        options: const EditorOptions(
-          canCloseFiles: false,
-          showAppBar: false,
-          showTabBar: false,
-        ),
-        editor: editor);
+    EditorViewController controller =
+        EditorViewController(options: options, editor: editor);
 
     return MaterialApp(
       home: Row(
