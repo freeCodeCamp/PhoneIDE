@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
@@ -360,10 +360,10 @@ class EditorState extends State<Editor> {
     double? scrollOfset = 0,
   ]) async {
     double viewInset = MediaQuery.of(context).viewPadding.top;
-    int regionStart = widget.regionStart! - 1;
+    int regionStart = widget.regionStart!;
     double textSize = returnTextHeight();
 
-    if (viewInset >= highestInset) {
+    if (viewInset >= highestInset && Platform.isAndroid) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
       if (prefs.getInt('highestInset') == null) {
@@ -378,7 +378,7 @@ class EditorState extends State<Editor> {
     }
 
     double newRegionPadding =
-        regionStart * textSize + highestInset - (scrollOfset ?? 0) + 10;
+        regionStart * textSize + highestInset - (scrollOfset ?? 0) + 15;
 
     if (widget.regionStart != null) {
       setState(() {
