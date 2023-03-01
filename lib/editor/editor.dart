@@ -360,7 +360,7 @@ class EditorState extends State<Editor> {
     double? scrollOfset = 0,
   ]) async {
     double viewInset = MediaQuery.of(context).viewPadding.top;
-    int regionStart = widget.regionStart!;
+    int regionStart = widget.regionStart! - (Platform.isAndroid ? 1 : 0);
     double textSize = returnTextHeight();
 
     if (viewInset >= highestInset && Platform.isAndroid) {
