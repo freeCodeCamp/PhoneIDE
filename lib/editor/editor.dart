@@ -71,8 +71,6 @@ class EditorState extends State<Editor> {
 
   TextEditingControllerIDE textController = TextEditingControllerIDE();
 
-  final FocusNode _focusNode = FocusNode();
-
   // current amount of lines in the eidtor
 
   int _currNumLines = 1;
@@ -132,12 +130,6 @@ class EditorState extends State<Editor> {
         );
       }
     }));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _focusNode.dispose();
   }
 
   void handlePossibleExecutingEvents(
