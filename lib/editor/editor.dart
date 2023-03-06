@@ -8,6 +8,7 @@ import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer';
 
 class FileStreamEvent {
   final String ext;
@@ -126,7 +127,7 @@ class EditorState extends State<Editor> {
 
         scrollController.animateTo(
           offset,
-          duration: Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
       }
@@ -218,12 +219,14 @@ class EditorState extends State<Editor> {
 
   void setNewAmountOfEditableRegionLines(TextEditingControllerIDE controller) {
     bool changeInEditableRegion = false;
-
+    log('I am hitting this function :)');
     controller.text
         .split('\n')
         .sublist(widget.regionStart!, lastEditableRegionIndex)
         .forEach((element) {
-      if (!lastEditableRegionLinesArr.contains(element.trim())) {
+      if (!lastEditableRegionLinesArr.contains(
+        element.replaceAll(RegExp(r'(?<!\n)\s'), ''),
+      )) {
         changeInEditableRegion = true;
       }
     });
@@ -252,8 +255,10 @@ class EditorState extends State<Editor> {
         return;
       }
 
-      // If the first line after the editable region is different from the last line in the editable
-      // region then we should update the editable region wit an extra line
+      // If the first line after the editable region is different from the last
+      // line in the editable region then we should update the editable region with
+      // an extra line.
+
       if (lineAreDiff && lastTotalLines < newTotalLines) {
         setState(() {
           newEditableRegionLines++;
@@ -357,7 +362,7 @@ class EditorState extends State<Editor> {
   }
 
   void calculateEditableRegionPadding([
-    double? scrollOfset = 0,
+    double scrollOfset = 0,
   ]) async {
     double viewInset = MediaQuery.of(context).viewPadding.top;
     int regionStart = widget.regionStart! - (Platform.isAndroid ? 1 : 0);
@@ -376,9 +381,8 @@ class EditorState extends State<Editor> {
 
       highestInset = prefs.getInt('highestInset')!.toDouble();
     }
-
-    double newRegionPadding =
-        regionStart * textSize + highestInset - (scrollOfset ?? 0) + 15;
+    double totalTextSize = regionStart * textSize;
+    double newRegionPadding = totalTextSize + highestInset - scrollOfset + 15;
 
     if (widget.regionStart != null) {
       setState(() {
