@@ -87,7 +87,7 @@ class EditorState extends State<Editor> {
 
     String fileContent = widget.openedFile?.fileContent ?? '';
 
-    if (fileContent != '') {
+    if (fileContent != '' && widget.options.hasEditableRegion) {
       String beforeEditableRegionText =
           fileContent.split("\n").sublist(0, widget.regionStart!).join("\n");
 
@@ -104,24 +104,26 @@ class EditorState extends State<Editor> {
       beforeController.text = beforeEditableRegionText;
       inController.text = inEditableRegionText;
       afterController.text = afterEditableRegionText;
-
-      _currNumLines = fileContent.split("\n").length;
-
-      Future.delayed(const Duration(seconds: 0), () {
-        double offset =
-            fileContent.split('\n').sublist(0, widget.regionStart! - 1).length *
-                getTextHeight();
-        scrollController.animateTo(
-          offset,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-
-        scrollController.addListener(() {
-          linebarController.jumpTo(scrollController.offset);
-        });
-      });
+    } else {
+      inController.text = fileContent;
     }
+
+    _currNumLines = fileContent.split("\n").length;
+
+    Future.delayed(const Duration(seconds: 0), () {
+      double offset =
+          fileContent.split('\n').sublist(0, widget.regionStart! - 1).length *
+              getTextHeight();
+      scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+
+      scrollController.addListener(() {
+        linebarController.jumpTo(scrollController.offset);
+      });
+    });
 
     TextEditingControllerIDE.language = widget.language;
   }
@@ -292,7 +294,7 @@ class EditorState extends State<Editor> {
                     fillColor: widget.options.editorBackgroundColor,
                     filled: true,
                     isDense: true,
-                    contentPadding: const EdgeInsets.only(left: 10),
+                    contentPadding: const EdgeInsets.only(left: 10, top: 10),
                   ),
                   onChanged: (String event) async {
                     handlePossibleExecutingEvents();
