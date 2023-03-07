@@ -74,7 +74,12 @@ class EditorState extends State<Editor> {
   TextEditingControllerIDE inController = TextEditingControllerIDE();
   TextEditingController afterController = TextEditingControllerIDE();
 
-  List<String> patternMatches = [];
+  // current amount of lines in the eidtor
+
+  int _currNumLines = 1;
+
+  // the initial width of the line count bar
+  double _initialWidth = 28;
 
   @override
   void initState() {
@@ -93,30 +98,84 @@ class EditorState extends State<Editor> {
 
       String afterEditableRegionText = fileContent
           .split("\n")
-          .sublist(widget.regionEnd! - 1, fileContent.split("\n").length - 1)
+          .sublist(widget.regionEnd! - 1, fileContent.split("\n").length)
           .join("\n");
 
       beforeController.text = beforeEditableRegionText;
       inController.text = inEditableRegionText;
       afterController.text = afterEditableRegionText;
+
+      _currNumLines = fileContent.split("\n").length;
     }
 
     TextEditingControllerIDE.language = widget.language;
   }
 
+  void handlePossibleExecutingEvents(
+    String event,
+    TextEditingControllerIDE textController,
+  ) async {
+    String lines =
+        beforeController.text + inController.text + afterController.text;
+
+    setState(() {
+      _currNumLines = lines.split('\n').length + 3;
+    });
+  }
+
+  double getTextHeight() {
+    double systemFonstSize = MediaQuery.of(context).textScaleFactor;
+
+    double fontSize = systemFonstSize > 1 ? 18 * systemFonstSize : 18;
+
+    Size textHeight = Linebar.calculateTextSize(
+      'L',
+      style: TextStyle(
+        color: widget.options.linebarTextColor,
+        fontSize: fontSize,
+      ),
+      context: context,
+    );
+
+    return textHeight.height;
+  }
+
   @override
   Widget build(BuildContext context) {
     widget.fileTextStream.stream.listen((event) {
-      // textController.text = event.content;
       TextEditingControllerIDE.language = event.ext;
-      // setCurrentLineState(event.content);
     });
 
-    return IEdtorView(context);
+    return Row(
+      children: [
+        Container(
+          constraints: BoxConstraints(
+            minWidth: 1,
+            maxWidth: _initialWidth,
+          ),
+          decoration: BoxDecoration(
+            color: widget.options.linebarColor,
+            border: const Border(
+              right: BorderSide(
+                color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              top: 10,
+            ),
+            child: linecountBar(),
+          ),
+        ),
+        Expanded(
+          child: editorView(context),
+        ),
+      ],
+    );
   }
 
-  // ignore: non_constant_identifier_names
-  Widget IEdtorView(BuildContext context) {
+  Widget editorView(BuildContext context) {
     return ListView(
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
@@ -137,10 +196,12 @@ class EditorState extends State<Editor> {
                     border: InputBorder.none,
                     fillColor: widget.options.editorBackgroundColor,
                     filled: true,
+                    contentPadding: const EdgeInsets.only(top: 10, left: 10),
                   ),
                   enabled: false,
                   maxLines: null,
                   style: const TextStyle(fontSize: 18),
+                  scrollPadding: const EdgeInsets.all(0),
                 ),
               ),
               SizedBox(
@@ -148,11 +209,20 @@ class EditorState extends State<Editor> {
                 child: TextField(
                   controller: inController,
                   decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.tabBarColor,
-                    filled: true,
-                  ),
+                      border: InputBorder.none,
+                      fillColor: widget.options.tabBarColor,
+                      filled: true,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.only(left: 10)),
+                  onChanged: (String event) async {
+                    handlePossibleExecutingEvents(
+                      event,
+                      inController,
+                    );
+                    widget.onTextChange.add(event);
+                  },
                   maxLines: null,
+                  scrollPadding: const EdgeInsets.all(0),
                   style: const TextStyle(fontSize: 18),
                 ),
               ),
@@ -161,13 +231,14 @@ class EditorState extends State<Editor> {
                 child: TextField(
                   controller: afterController,
                   decoration: InputDecoration(
-                    border: InputBorder.none,
-                    filled: true,
-                    fillColor: widget.options.editorBackgroundColor,
-                  ),
+                      border: InputBorder.none,
+                      filled: true,
+                      fillColor: widget.options.editorBackgroundColor,
+                      contentPadding: const EdgeInsets.only(left: 10)),
                   enabled: false,
                   maxLines: null,
                   style: const TextStyle(fontSize: 18),
+                  scrollPadding: const EdgeInsets.all(0),
                 ),
               ),
             ],
@@ -177,41 +248,41 @@ class EditorState extends State<Editor> {
     );
   }
 
-//   linecountBar() {
-//     return Column(
-//       children: [
-//         Flexible(
-//           child: ListView.builder(
-//             padding: EdgeInsets.zero,
-//             shrinkWrap: true,
-//             controller: linebarController,
-//             physics: const NeverScrollableScrollPhysics(),
-//             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
-//             itemBuilder: (_, i) => Linebar(
-//               calculateBarWidth: () {
-//                 if (i + 1 > 9) {
-//                   SchedulerBinding.instance.addPostFrameCallback(
-//                     (timeStamp) {
-//                       setState(() {
-//                         _initialWidth = returnTextHeight() + 2;
-//                       });
-//                     },
-//                   );
-//                 }
-//               },
-//               child: Text(
-//                 i == 0 ? (1).toString() : (i + 1).toString(),
-//                 textAlign: TextAlign.center,
-//                 style: TextStyle(
-//                   fontSize: 18,
-//                   fontWeight: FontWeight.w500,
-//                   color: widget.options.linebarTextColor,
-//                 ),
-//               ),
-//             ),
-//           ),
-//         )
-//       ],
-//     );
-//   }
+  linecountBar() {
+    return Column(
+      children: [
+        Flexible(
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            controller: linebarController,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _currNumLines == 0 ? 1 : _currNumLines,
+            itemBuilder: (_, i) => Linebar(
+              calculateBarWidth: () {
+                if (i + 1 > 9) {
+                  SchedulerBinding.instance.addPostFrameCallback(
+                    (timeStamp) {
+                      setState(() {
+                        _initialWidth = getTextHeight() + 2;
+                      });
+                    },
+                  );
+                }
+              },
+              child: Text(
+                i == 0 ? (1).toString() : (i + 1).toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: widget.options.linebarTextColor,
+                ),
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
 }
