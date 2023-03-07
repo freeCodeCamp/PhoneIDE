@@ -67,6 +67,7 @@ class Editor extends StatefulWidget with IEditor {
 
 class EditorState extends State<Editor> {
   ScrollController scrollController = ScrollController();
+  ScrollController horizontalController = ScrollController();
   ScrollController linebarController = ScrollController();
 
   TextEditingControllerIDE beforeController = TextEditingControllerIDE();
@@ -116,43 +117,62 @@ class EditorState extends State<Editor> {
 
   // ignore: non_constant_identifier_names
   Widget IEdtorView(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      controller: horizontalController,
+      shrinkWrap: true,
       children: [
-        TextField(
-          controller: beforeController,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            fillColor: widget.options.editorBackgroundColor,
-            filled: true,
+        SizedBox(
+          height: 1000,
+          width: widget.options.minHeight,
+          child: ListView(
+            controller: scrollController,
+            shrinkWrap: true,
+            children: [
+              SizedBox(
+                width: widget.options.minHeight,
+                child: TextField(
+                  controller: beforeController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    fillColor: widget.options.editorBackgroundColor,
+                    filled: true,
+                  ),
+                  enabled: false,
+                  maxLines: null,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              SizedBox(
+                width: widget.options.minHeight,
+                child: TextField(
+                  controller: inController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    fillColor: widget.options.tabBarColor,
+                    filled: true,
+                  ),
+                  maxLines: null,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              SizedBox(
+                width: widget.options.minHeight,
+                child: TextField(
+                  controller: afterController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: widget.options.editorBackgroundColor,
+                  ),
+                  enabled: false,
+                  maxLines: null,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
           ),
-          enabled: false,
-          maxLines: null,
-          style: const TextStyle(fontSize: 18),
-        ),
-        TextField(
-          controller: inController,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            fillColor: widget.options.tabBarColor,
-            filled: true,
-          ),
-          maxLines: null,
-          style: const TextStyle(fontSize: 18),
-        ),
-        Expanded(
-          child: TextField(
-            controller: afterController,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              filled: true,
-              fillColor: widget.options.editorBackgroundColor,
-            ),
-            enabled: false,
-            maxLines: null,
-            style: const TextStyle(fontSize: 18),
-          ),
-        ),
+        )
       ],
     );
   }
