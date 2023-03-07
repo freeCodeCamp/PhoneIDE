@@ -226,8 +226,18 @@ class EditorState extends State<Editor> {
                   scrollPadding: const EdgeInsets.all(0),
                 ),
               ),
-              SizedBox(
+              Container(
                 width: widget.options.minHeight,
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      width: 5,
+                      color: widget.condition ?? false
+                          ? Colors.green
+                          : Colors.grey,
+                    ),
+                  ),
+                ),
                 child: TextField(
                   controller: inController,
                   decoration: InputDecoration(
