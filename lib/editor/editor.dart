@@ -211,7 +211,6 @@ class EditorState extends State<Editor> {
 
   void setNewAmountOfEditableRegionLines(TextEditingControllerIDE controller) {
     bool changeInEditableRegion = false;
-    log('I am hitting this function :)');
     controller.text
         .split('\n')
         .sublist(widget.regionStart!, lastEditableRegionIndex)
@@ -276,7 +275,6 @@ class EditorState extends State<Editor> {
       }
 
       // If the line after editable region is empty after pressing enter then we should add a line.
-      // This is to cover all missed cases...
       if (newLines.length > lastEditableRegionIndex + 1
           ? newLines[lastEditableRegionIndex + 1] == ''
           : newLines[0] == '') {
@@ -294,14 +292,20 @@ class EditorState extends State<Editor> {
   }
 
   double returnTextHeight() {
-    return Linebar.calculateTextSize('1',
-            style: TextStyle(
-              color: widget.options.linebarTextColor,
-              fontFamily: 'RobotoMono',
-              fontSize: 18,
-            ),
-            context: context)
-        .height;
+    double systemFonstSize = MediaQuery.of(context).textScaleFactor;
+
+    double fontSize = systemFonstSize > 1 ? 18 * systemFonstSize : 18;
+
+    Size textHeight = Linebar.calculateTextSize(
+      'L',
+      style: TextStyle(
+        color: widget.options.linebarTextColor,
+        fontSize: fontSize,
+      ),
+      context: context,
+    );
+
+    return textHeight.height;
   }
 
   void calculateEditableRegionHeight(String text, [double scrollOfset = 0]) {
@@ -353,6 +357,22 @@ class EditorState extends State<Editor> {
     }
   }
 
+  void calculateInset(double topInset) async {
+    if (topInset >= highestInset && Platform.isAndroid) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      if (prefs.getInt('highestInset') == null) {
+        prefs.setInt('highestInset', topInset.toInt());
+      } else {
+        if (prefs.getInt('highestInset')! < topInset.toInt()) {
+          prefs.setInt('highestInset', topInset.toInt());
+        }
+      }
+
+      highestInset = prefs.getInt('highestInset')!.toDouble();
+    }
+  }
+
   void calculateEditableRegionPadding([
     double scrollOfset = 0,
   ]) async {
@@ -360,21 +380,8 @@ class EditorState extends State<Editor> {
     int regionStart = widget.regionStart! - (Platform.isAndroid ? 1 : 0);
     double textSize = returnTextHeight();
 
-    if (viewInset >= highestInset && Platform.isAndroid) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      if (prefs.getInt('highestInset') == null) {
-        prefs.setInt('highestInset', viewInset.toInt());
-      } else {
-        if (prefs.getInt('highestInset')! < viewInset.toInt()) {
-          prefs.setInt('highestInset', viewInset.toInt());
-        }
-      }
-
-      highestInset = prefs.getInt('highestInset')!.toDouble();
-    }
     double totalTextSize = regionStart * textSize;
-    double newRegionPadding = totalTextSize + highestInset - scrollOfset + 15;
+    double newRegionPadding = totalTextSize + highestInset - scrollOfset;
 
     if (widget.regionStart != null) {
       setState(() {
@@ -522,26 +529,27 @@ class EditorState extends State<Editor> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
             itemBuilder: (_, i) => Linebar(
-                calculateBarWidth: () {
-                  if (i + 1 > 9) {
-                    SchedulerBinding.instance.addPostFrameCallback(
-                      (timeStamp) {
-                        setState(() {
-                          _initialWidth = returnTextHeight() + 2;
-                        });
-                      },
-                    );
-                  }
-                },
-                child: Text(
-                  i == 0 ? (1).toString() : (i + 1).toString(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: widget.options.linebarTextColor,
-                  ),
-                )),
+              calculateBarWidth: () {
+                if (i + 1 > 9) {
+                  SchedulerBinding.instance.addPostFrameCallback(
+                    (timeStamp) {
+                      setState(() {
+                        _initialWidth = returnTextHeight() + 2;
+                      });
+                    },
+                  );
+                }
+              },
+              child: Text(
+                i == 0 ? (1).toString() : (i + 1).toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: widget.options.linebarTextColor,
+                ),
+              ),
+            ),
           ),
         )
       ],
