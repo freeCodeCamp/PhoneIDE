@@ -111,10 +111,7 @@ class EditorState extends State<Editor> {
     TextEditingControllerIDE.language = widget.language;
   }
 
-  void handlePossibleExecutingEvents(
-    String event,
-    TextEditingControllerIDE textController,
-  ) async {
+  void handlePossibleExecutingEvents() async {
     String lines =
         beforeController.text + inController.text + afterController.text;
 
@@ -215,11 +212,12 @@ class EditorState extends State<Editor> {
                       isDense: true,
                       contentPadding: const EdgeInsets.only(left: 10)),
                   onChanged: (String event) async {
-                    handlePossibleExecutingEvents(
-                      event,
-                      inController,
-                    );
-                    widget.onTextChange.add(event);
+                    handlePossibleExecutingEvents();
+
+                    String text =
+                        beforeController.text + event + afterController.text;
+
+                    widget.onTextChange.add(text);
                   },
                   maxLines: null,
                   scrollPadding: const EdgeInsets.all(0),
@@ -231,10 +229,11 @@ class EditorState extends State<Editor> {
                 child: TextField(
                   controller: afterController,
                   decoration: InputDecoration(
-                      border: InputBorder.none,
-                      filled: true,
-                      fillColor: widget.options.editorBackgroundColor,
-                      contentPadding: const EdgeInsets.only(left: 10)),
+                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: widget.options.editorBackgroundColor,
+                    contentPadding: const EdgeInsets.only(left: 10),
+                  ),
                   enabled: false,
                   maxLines: null,
                   style: const TextStyle(fontSize: 18),
