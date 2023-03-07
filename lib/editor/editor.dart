@@ -106,6 +106,21 @@ class EditorState extends State<Editor> {
       afterController.text = afterEditableRegionText;
 
       _currNumLines = fileContent.split("\n").length;
+
+      Future.delayed(const Duration(seconds: 0), () {
+        double offset =
+            fileContent.split('\n').sublist(0, widget.regionStart! - 1).length *
+                getTextHeight();
+        scrollController.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+
+        scrollController.addListener(() {
+          linebarController.jumpTo(scrollController.offset);
+        });
+      });
     }
 
     TextEditingControllerIDE.language = widget.language;
@@ -165,14 +180,21 @@ class EditorState extends State<Editor> {
             child: linecountBar(),
           ),
         ),
-        Expanded(
-          child: editorView(context),
-        ),
+        if (widget.options.hasEditableRegion)
+          Expanded(
+            child: editorViewWithRegion(context),
+          )
+        else
+          Expanded(
+            child: editorView(
+              context,
+            ),
+          )
       ],
     );
   }
 
-  Widget editorView(BuildContext context) {
+  Widget editorViewWithRegion(BuildContext context) {
     return ListView(
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
@@ -238,6 +260,50 @@ class EditorState extends State<Editor> {
                   maxLines: null,
                   style: const TextStyle(fontSize: 18),
                   scrollPadding: const EdgeInsets.all(0),
+                ),
+              ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget editorView(context) {
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      controller: horizontalController,
+      shrinkWrap: true,
+      children: [
+        SizedBox(
+          height: 1000,
+          width: widget.options.minHeight,
+          child: ListView(
+            controller: scrollController,
+            shrinkWrap: true,
+            children: [
+              SizedBox(
+                width: widget.options.minHeight,
+                child: TextField(
+                  controller: inController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    fillColor: widget.options.editorBackgroundColor,
+                    filled: true,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.only(left: 10),
+                  ),
+                  onChanged: (String event) async {
+                    handlePossibleExecutingEvents();
+
+                    String text =
+                        beforeController.text + event + afterController.text;
+
+                    widget.onTextChange.add(text);
+                  },
+                  maxLines: null,
+                  scrollPadding: const EdgeInsets.all(0),
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ],
