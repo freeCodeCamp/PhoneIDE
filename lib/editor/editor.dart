@@ -156,6 +156,7 @@ class EditorState extends State<Editor> {
   Widget build(BuildContext context) {
     widget.fileTextStream.stream.listen((event) {
       TextEditingControllerIDE.language = event.ext;
+      inController.text = event.content;
     });
 
     return Row(
