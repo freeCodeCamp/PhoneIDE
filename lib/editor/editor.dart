@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
@@ -89,7 +88,6 @@ class EditorState extends State<Editor> {
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleEditableRegionFields();
-      executeOnEditableRegionChange();
     });
 
     Future.delayed(const Duration(seconds: 0), () {
@@ -104,15 +102,11 @@ class EditorState extends State<Editor> {
     });
 
     TextEditingControllerIDE.language = widget.language;
-
-    log("I AM GETTING CALLED");
   }
 
   void handlePossibleExecutingEvents() async {
     String lines =
         beforeController.text + inController.text + afterController.text;
-
-    executeOnEditableRegionChange();
 
     setState(() {
       _currNumLines = lines.split('\n').length + 3;
@@ -138,6 +132,7 @@ class EditorState extends State<Editor> {
 
   handleEditableRegionFields() async {
     String fileContent = widget.openedFile?.fileContent ?? '';
+
     if (fileContent != '' && widget.options.hasEditableRegion) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -145,6 +140,7 @@ class EditorState extends State<Editor> {
 
       if (prefs.get(widget.openedFile!.fileId) != null) {
         regionEnd = int.parse(prefs.getString(widget.openedFile!.fileId) ?? '');
+        log('regionEnd: ' + regionEnd.toString());
       } else {
         regionEnd = widget.regionEnd!;
       }
@@ -169,18 +165,30 @@ class EditorState extends State<Editor> {
       inController.text = fileContent;
     }
 
-    _currNumLines = fileContent.split("\n").length;
+    setState(() {
+      _currNumLines = fileContent.split("\n").length;
+    });
   }
 
-  void executeOnEditableRegionChange() {
+  @override
+  Widget build(BuildContext context) {
+    // widget.fileTextStream.stream.listen((event) {
+    //   TextEditingControllerIDE.language = event.ext;
+    //   inController.text = event.content;
+    // });
+
     if (widget.options.hasEditableRegion && widget.openedFile!.fileId != '') {
       inController.addListener(() async {
         SharedPreferences prefs = await SharedPreferences.getInstance();
 
-        int newRegionLines = inController.text.split('\n').length + 1;
+        int beforeRegionLines = beforeController.text.split('\n').length;
+        int inRegionLines = inController.text.split('\n').length + 1;
+
+        int newRegionLines = beforeRegionLines + inRegionLines;
 
         if (prefs.get(widget.openedFile!.fileId) != null) {
-          String cached = prefs.getString(widget.openedFile!.fileId) ?? '';
+          String cached = prefs.getString(widget.openedFile!.fileId) ?? '0';
+
           int oldRegionLines = int.parse(cached);
 
           if (oldRegionLines != newRegionLines) {
@@ -189,17 +197,14 @@ class EditorState extends State<Editor> {
               newRegionLines.toString(),
             );
           }
+        } else {
+          prefs.setString(
+            widget.openedFile!.fileId,
+            newRegionLines.toString(),
+          );
         }
       });
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    widget.fileTextStream.stream.listen((event) {
-      TextEditingControllerIDE.language = event.ext;
-      inController.text = event.content;
-    });
 
     return Row(
       children: [
