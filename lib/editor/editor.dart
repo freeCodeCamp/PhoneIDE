@@ -350,7 +350,6 @@ class EditorState extends State<Editor> {
     return ListView(
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
-      shrinkWrap: true,
       children: [
         SizedBox(
           height: 1000,
