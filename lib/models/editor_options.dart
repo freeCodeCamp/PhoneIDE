@@ -37,14 +37,14 @@ class EditorOptions {
 
 class EditorRegionOptions {
   EditorRegionOptions({
-    this.start = 0,
-    this.end = 1,
+    this.start,
+    this.end,
     this.color = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
     this.condition = false,
   });
 
-  int start;
-  int end;
+  int? start;
+  int? end;
   Color color;
   bool condition;
 }

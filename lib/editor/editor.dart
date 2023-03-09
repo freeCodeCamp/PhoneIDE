@@ -87,7 +87,7 @@ class EditorState extends State<Editor> {
     Future.delayed(const Duration(seconds: 0), () {
       double offset = fileContent
               .split('\n')
-              .sublist(0, widget.options.region!.start - 1)
+              .sublist(0, widget.options.region!.start! - 1)
               .length *
           getTextHeight();
       scrollController.animateTo(
@@ -137,26 +137,26 @@ class EditorState extends State<Editor> {
     String fileId = file?.id ?? widget.openedFile!.id;
     bool hasRegion = file?.hasRegion ?? widget.options.hasRegion;
 
-    if (fileContent != '' && hasRegion) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    if (fileContent != '' && hasRegion) {
+      int regionStart = file?.region.start ?? widget.options.region!.start!;
       int regionEnd;
 
       if (prefs.get(fileId) != null) {
         regionEnd = int.parse(prefs.getString(fileId) ?? '');
+      } else if (file?.region != null) {
+        regionEnd = file!.region.end!;
       } else {
-        regionEnd = widget.options.region!.end;
+        regionEnd = widget.options.region!.end!;
       }
-
       if (fileContent.split('\n').length > 1) {
-        String beforeEditableRegionText = fileContent
-            .split("\n")
-            .sublist(0, widget.options.region!.end)
-            .join("\n");
+        String beforeEditableRegionText =
+            fileContent.split("\n").sublist(0, regionEnd).join("\n");
 
         String inEditableRegionText = fileContent
             .split("\n")
-            .sublist(widget.options.region!.start, regionEnd - 1)
+            .sublist(regionStart, regionEnd - 1)
             .join("\n");
 
         String afterEditableRegionText = fileContent
