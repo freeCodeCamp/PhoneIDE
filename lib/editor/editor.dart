@@ -201,13 +201,13 @@ class EditorState extends State<Editor> {
     return ListView(
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
-      shrinkWrap: true,
       children: [
         SizedBox(
           height: 1000,
           width: widget.options.minHeight,
           child: ListView(
             controller: scrollController,
+            scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
               SizedBox(
@@ -241,16 +241,20 @@ class EditorState extends State<Editor> {
                 child: TextField(
                   controller: inController,
                   decoration: InputDecoration(
-                      border: InputBorder.none,
-                      fillColor: widget.options.tabBarColor,
-                      filled: true,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.only(left: 10)),
+                    border: InputBorder.none,
+                    fillColor: widget.options.tabBarColor,
+                    filled: true,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.only(left: 10),
+                  ),
                   onChanged: (String event) async {
                     handlePossibleExecutingEvents();
 
-                    String text =
-                        beforeController.text + event + afterController.text;
+                    String text = beforeController.text +
+                        '\n' +
+                        event +
+                        '\n' +
+                        afterController.text;
 
                     widget.onTextChange.add(text);
                   },
@@ -309,8 +313,11 @@ class EditorState extends State<Editor> {
                   onChanged: (String event) async {
                     handlePossibleExecutingEvents();
 
-                    String text =
-                        beforeController.text + event + afterController.text;
+                    String text = beforeController.text +
+                        '\n' +
+                        event +
+                        '\n' +
+                        afterController.text;
 
                     widget.onTextChange.add(text);
                   },
