@@ -10,10 +10,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer';
 
 class FileStreamEvent {
+  final String challengeId;
   final String ext;
   final String content;
+  final bool hasEditableRegion;
 
-  FileStreamEvent({required this.ext, required this.content});
+  FileStreamEvent({
+    required this.challengeId,
+    required this.ext,
+    required this.content,
+    required this.hasEditableRegion,
+  });
 }
 
 // ignore: must_be_immutable
@@ -105,6 +112,8 @@ class EditorState extends State<Editor> {
       scrollController.addListener(() {
         linebarController.jumpTo(scrollController.offset);
       });
+
+      handlePossibleExecutingEvents();
     });
 
     TextEditingControllerIDE.language = widget.language;
@@ -136,16 +145,16 @@ class EditorState extends State<Editor> {
     return textHeight.height;
   }
 
-  handleEditableRegionFields() async {
-    String fileContent = widget.openedFile?.fileContent ?? '';
-
+  handleEditableRegionFields([String? content, String? id]) async {
+    String fileContent = content ?? widget.openedFile?.fileContent ?? '';
+    String fileId = id ?? widget.openedFile!.fileId;
     if (fileContent != '' && widget.options.hasEditableRegion) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
       int regionEnd;
 
-      if (prefs.get(widget.openedFile!.fileId) != null) {
-        regionEnd = int.parse(prefs.getString(widget.openedFile!.fileId) ?? '');
+      if (prefs.get(fileId) != null) {
+        regionEnd = int.parse(prefs.getString(fileId) ?? '');
         log('regionEnd: ' + regionEnd.toString());
       } else {
         regionEnd = widget.regionEnd!;
@@ -181,12 +190,10 @@ class EditorState extends State<Editor> {
   @override
   Widget build(BuildContext context) {
     widget.fileTextStream.stream.listen((event) {
-      if (!widget.options.hasEditableRegion) {
-        inController.text = widget.openedFile!.fileContent;
-
-        setState(() {});
+      if (!event.hasEditableRegion) {
+        inController.text = event.content;
       } else {
-        handleEditableRegionFields();
+        handleEditableRegionFields(event.content, event.challengeId);
       }
 
       TextEditingControllerIDE.language = event.ext;
@@ -278,6 +285,7 @@ class EditorState extends State<Editor> {
                     border: InputBorder.none,
                     fillColor: widget.options.editorBackgroundColor,
                     filled: true,
+                    isDense: true,
                     contentPadding: const EdgeInsets.only(top: 10, left: 10),
                   ),
                   enabled: false,
@@ -332,6 +340,7 @@ class EditorState extends State<Editor> {
                     filled: true,
                     fillColor: widget.options.editorBackgroundColor,
                     contentPadding: const EdgeInsets.only(left: 10),
+                    isDense: true,
                   ),
                   enabled: false,
                   maxLines: null,
