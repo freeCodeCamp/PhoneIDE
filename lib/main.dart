@@ -17,9 +17,6 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     EditorOptions options = EditorOptions(
       hasEditableRegion: true,
-      canCloseFiles: false,
-      showAppBar: false,
-      showTabBar: false,
     );
 
     Editor editor = Editor(
@@ -29,7 +26,7 @@ class App extends StatelessWidget {
       language: 'html',
       options: options,
       openedFile: FileIDE(
-        fileContent: '''<html>
+        content: '''<html>
   <body>
     <h1>CatPhotoApp</h1>
     <h2>Cat Photos</h2>
@@ -37,20 +34,17 @@ class App extends StatelessWidget {
     <p>Click here to view more cat photos.</p>
   </body>
 </html>''',
-        fileExplorer: null,
-        fileName: '',
-        filePath: '',
-        parentDirectory: '',
+        name: '',
+        id: 'js9dfhsk',
+        ext: 'HTML',
+        hasRegion: false,
       ),
     );
-
-    EditorViewController controller =
-        EditorViewController(options: options, editor: editor);
 
     return MaterialApp(
       home: Row(
         children: [
-          Expanded(child: controller),
+          Expanded(child: editor),
         ],
       ),
       debugShowCheckedModeBanner: false,

@@ -13,13 +13,13 @@ class FileStreamEvent {
   final String challengeId;
   final String ext;
   final String content;
-  final bool hasEditableRegion;
+  final bool hasRegion;
 
   FileStreamEvent({
     required this.challengeId,
     required this.ext,
     required this.content,
-    required this.hasEditableRegion,
+    required this.hasRegion,
   });
 }
 
@@ -45,8 +45,8 @@ class Editor extends StatefulWidget with IEditor {
 
   // A stream where the text in the editor is changable
 
-  StreamController<FileStreamEvent> fileTextStream =
-      StreamController<FileStreamEvent>.broadcast();
+  StreamController<FileIDE> fileTextStream =
+      StreamController<FileIDE>.broadcast();
 
   // A stream where you can listen to the changes made in the editor
   StreamController<String> onTextChange = StreamController<String>.broadcast();
@@ -91,7 +91,7 @@ class EditorState extends State<Editor> {
   void initState() {
     super.initState();
 
-    String fileContent = widget.openedFile?.fileContent ?? '';
+    String fileContent = widget.openedFile?.content ?? '';
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (widget.options.hasEditableRegion) {
@@ -145,10 +145,11 @@ class EditorState extends State<Editor> {
     return textHeight.height;
   }
 
-  handleEditableRegionFields([String? content, String? id]) async {
-    String fileContent = content ?? widget.openedFile?.fileContent ?? '';
-    String fileId = id ?? widget.openedFile!.fileId;
-    if (fileContent != '' && widget.options.hasEditableRegion) {
+  handleEditableRegionFields([FileIDE? file]) async {
+    String fileContent = file?.content ?? widget.openedFile?.content ?? '';
+    String fileId = file?.id ?? widget.openedFile!.id;
+    bool hasRegion = file?.hasRegion ?? widget.options.hasEditableRegion;
+    if (fileContent != '' && hasRegion) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
       int regionEnd;
@@ -187,46 +188,48 @@ class EditorState extends State<Editor> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    widget.fileTextStream.stream.listen((event) {
-      if (!event.hasEditableRegion) {
-        inController.text = event.content;
-      } else {
-        handleEditableRegionFields(event.content, event.challengeId);
-      }
+  handleRegionCaching() {
+    inController.addListener(() async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      TextEditingControllerIDE.language = event.ext;
-    });
+      int beforeRegionLines = beforeController.text.split('\n').length;
+      int inRegionLines = inController.text.split('\n').length + 1;
 
-    if (widget.options.hasEditableRegion && widget.openedFile!.fileId != '') {
-      inController.addListener(() async {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
+      int newRegionLines = beforeRegionLines + inRegionLines;
 
-        int beforeRegionLines = beforeController.text.split('\n').length;
-        int inRegionLines = inController.text.split('\n').length + 1;
+      if (prefs.get(widget.openedFile!.id) != null) {
+        String cached = prefs.getString(widget.openedFile!.id) ?? '0';
 
-        int newRegionLines = beforeRegionLines + inRegionLines;
+        int oldRegionLines = int.parse(cached);
 
-        if (prefs.get(widget.openedFile!.fileId) != null) {
-          String cached = prefs.getString(widget.openedFile!.fileId) ?? '0';
-
-          int oldRegionLines = int.parse(cached);
-
-          if (oldRegionLines != newRegionLines) {
-            prefs.setString(
-              widget.openedFile!.fileId,
-              newRegionLines.toString(),
-            );
-          }
-        } else {
+        if (oldRegionLines != newRegionLines) {
           prefs.setString(
-            widget.openedFile!.fileId,
+            widget.openedFile!.id,
             newRegionLines.toString(),
           );
         }
-      });
-    }
+      } else {
+        prefs.setString(
+          widget.openedFile!.id,
+          newRegionLines.toString(),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    widget.fileTextStream.stream.listen((file) {
+      if (!file.hasRegion) {
+        inController.text = file.content;
+      } else {
+        handleEditableRegionFields(file);
+      }
+
+      TextEditingControllerIDE.language = file.ext;
+    });
+
+    if (widget.options.hasEditableRegion) {}
 
     return Row(
       children: [
@@ -266,6 +269,7 @@ class EditorState extends State<Editor> {
 
   Widget editorViewWithRegion(BuildContext context) {
     return ListView(
+      padding: const EdgeInsets.only(top: 0),
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
       children: [
@@ -273,6 +277,7 @@ class EditorState extends State<Editor> {
           height: 1000,
           width: widget.options.minHeight,
           child: ListView(
+            padding: const EdgeInsets.only(top: 0),
             controller: scrollController,
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
