@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/models/editor_options.dart';
 
 class FileIDE {
   const FileIDE({
@@ -8,6 +9,7 @@ class FileIDE {
     required this.name,
     required this.content,
     required this.hasRegion,
+    required this.region,
   });
 
   final String id;
@@ -15,4 +17,5 @@ class FileIDE {
   final String name;
   final String content;
   final bool hasRegion;
+  final EditorRegionOptions region;
 }

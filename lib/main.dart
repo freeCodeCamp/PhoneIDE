@@ -16,13 +16,11 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EditorOptions options = EditorOptions(
-      hasEditableRegion: true,
+      hasRegion: true,
+      region: EditorRegionOptions(start: 3, end: 5),
     );
 
     Editor editor = Editor(
-      condition: true,
-      regionStart: 3,
-      regionEnd: 5,
       language: 'html',
       options: options,
       openedFile: FileIDE(
@@ -38,6 +36,7 @@ class App extends StatelessWidget {
         id: 'js9dfhsk',
         ext: 'HTML',
         hasRegion: false,
+        region: EditorRegionOptions(start: 3, end: 5),
       ),
     );
 
