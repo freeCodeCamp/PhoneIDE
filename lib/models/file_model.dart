@@ -5,6 +5,7 @@ import 'package:flutter_code_editor/editor/file_explorer/file_explorer.dart';
 class FileIDE extends StatefulWidget {
   const FileIDE(
       {Key? key,
+      this.fileId = '',
       required this.fileName,
       required this.filePath,
       required this.fileContent,
@@ -12,6 +13,7 @@ class FileIDE extends StatefulWidget {
       required this.fileExplorer})
       : super(key: key);
 
+  final String fileId;
   final String fileName;
   final String filePath;
   final String fileContent;

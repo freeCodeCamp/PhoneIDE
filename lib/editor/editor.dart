@@ -87,28 +87,10 @@ class EditorState extends State<Editor> {
 
     String fileContent = widget.openedFile?.fileContent ?? '';
 
-    if (fileContent != '' && widget.options.hasEditableRegion) {
-      String beforeEditableRegionText =
-          fileContent.split("\n").sublist(0, widget.regionStart!).join("\n");
-
-      String inEditableRegionText = fileContent
-          .split("\n")
-          .sublist(widget.regionStart!, widget.regionEnd! - 1)
-          .join("\n");
-
-      String afterEditableRegionText = fileContent
-          .split("\n")
-          .sublist(widget.regionEnd! - 1, fileContent.split("\n").length)
-          .join("\n");
-
-      beforeController.text = beforeEditableRegionText;
-      inController.text = inEditableRegionText;
-      afterController.text = afterEditableRegionText;
-    } else {
-      inController.text = fileContent;
-    }
-
-    _currNumLines = fileContent.split("\n").length;
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      handleEditableRegionFields();
+      executeOnEditableRegionChange();
+    });
 
     Future.delayed(const Duration(seconds: 0), () {
       double offset =
@@ -119,18 +101,18 @@ class EditorState extends State<Editor> {
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
-
-      scrollController.addListener(() {
-        linebarController.jumpTo(scrollController.offset);
-      });
     });
 
     TextEditingControllerIDE.language = widget.language;
+
+    log("I AM GETTING CALLED");
   }
 
   void handlePossibleExecutingEvents() async {
     String lines =
         beforeController.text + inController.text + afterController.text;
+
+    executeOnEditableRegionChange();
 
     setState(() {
       _currNumLines = lines.split('\n').length + 3;
@@ -152,6 +134,64 @@ class EditorState extends State<Editor> {
     );
 
     return textHeight.height;
+  }
+
+  handleEditableRegionFields() async {
+    String fileContent = widget.openedFile?.fileContent ?? '';
+    if (fileContent != '' && widget.options.hasEditableRegion) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      int regionEnd;
+
+      if (prefs.get(widget.openedFile!.fileId) != null) {
+        regionEnd = int.parse(prefs.getString(widget.openedFile!.fileId) ?? '');
+      } else {
+        regionEnd = widget.regionEnd!;
+      }
+
+      String beforeEditableRegionText =
+          fileContent.split("\n").sublist(0, widget.regionStart!).join("\n");
+
+      String inEditableRegionText = fileContent
+          .split("\n")
+          .sublist(widget.regionStart!, regionEnd - 1)
+          .join("\n");
+
+      String afterEditableRegionText = fileContent
+          .split("\n")
+          .sublist(regionEnd - 1, fileContent.split("\n").length)
+          .join("\n");
+
+      beforeController.text = beforeEditableRegionText;
+      inController.text = inEditableRegionText;
+      afterController.text = afterEditableRegionText;
+    } else {
+      inController.text = fileContent;
+    }
+
+    _currNumLines = fileContent.split("\n").length;
+  }
+
+  void executeOnEditableRegionChange() {
+    if (widget.options.hasEditableRegion && widget.openedFile!.fileId != '') {
+      inController.addListener(() async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        int newRegionLines = inController.text.split('\n').length + 1;
+
+        if (prefs.get(widget.openedFile!.fileId) != null) {
+          String cached = prefs.getString(widget.openedFile!.fileId) ?? '';
+          int oldRegionLines = int.parse(cached);
+
+          if (oldRegionLines != newRegionLines) {
+            prefs.setString(
+              widget.openedFile!.fileId,
+              newRegionLines.toString(),
+            );
+          }
+        }
+      });
+    }
   }
 
   @override
