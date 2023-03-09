@@ -87,7 +87,9 @@ class EditorState extends State<Editor> {
     String fileContent = widget.openedFile?.fileContent ?? '';
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      handleEditableRegionFields();
+      if (widget.options.hasEditableRegion) {
+        handleEditableRegionFields();
+      }
     });
 
     Future.delayed(const Duration(seconds: 0), () {
@@ -99,6 +101,10 @@ class EditorState extends State<Editor> {
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
+
+      scrollController.addListener(() {
+        linebarController.jumpTo(scrollController.offset);
+      });
     });
 
     TextEditingControllerIDE.language = widget.language;
@@ -145,22 +151,24 @@ class EditorState extends State<Editor> {
         regionEnd = widget.regionEnd!;
       }
 
-      String beforeEditableRegionText =
-          fileContent.split("\n").sublist(0, widget.regionStart!).join("\n");
+      if (fileContent.split('\n').length > 1) {
+        String beforeEditableRegionText =
+            fileContent.split("\n").sublist(0, widget.regionStart!).join("\n");
 
-      String inEditableRegionText = fileContent
-          .split("\n")
-          .sublist(widget.regionStart!, regionEnd - 1)
-          .join("\n");
+        String inEditableRegionText = fileContent
+            .split("\n")
+            .sublist(widget.regionStart!, regionEnd - 1)
+            .join("\n");
 
-      String afterEditableRegionText = fileContent
-          .split("\n")
-          .sublist(regionEnd - 1, fileContent.split("\n").length)
-          .join("\n");
+        String afterEditableRegionText = fileContent
+            .split("\n")
+            .sublist(regionEnd - 1, fileContent.split("\n").length)
+            .join("\n");
 
-      beforeController.text = beforeEditableRegionText;
-      inController.text = inEditableRegionText;
-      afterController.text = afterEditableRegionText;
+        beforeController.text = beforeEditableRegionText;
+        inController.text = inEditableRegionText;
+        afterController.text = afterEditableRegionText;
+      }
     } else {
       inController.text = fileContent;
     }
@@ -172,10 +180,17 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    // widget.fileTextStream.stream.listen((event) {
-    //   TextEditingControllerIDE.language = event.ext;
-    //   inController.text = event.content;
-    // });
+    widget.fileTextStream.stream.listen((event) {
+      if (!widget.options.hasEditableRegion) {
+        inController.text = widget.openedFile!.fileContent;
+
+        setState(() {});
+      } else {
+        handleEditableRegionFields();
+      }
+
+      TextEditingControllerIDE.language = event.ext;
+    });
 
     if (widget.options.hasEditableRegion && widget.openedFile!.fileId != '') {
       inController.addListener(() async {
