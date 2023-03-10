@@ -7,6 +7,7 @@ import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer';
 
 class FileStreamEvent {
   final String challengeId;
@@ -66,14 +67,20 @@ class EditorState extends State<Editor> {
   // the initial width of the line count bar
   double _initialWidth = 28;
 
+  String currentFileId = '';
+
   @override
   void initState() {
     super.initState();
   }
 
-  void handlePossibleExecutingEvents() async {
+  void handlePossibleExecutingEvents(FileIDE file) async {
     String lines =
         beforeController.text + inController.text + afterController.text;
+
+    if (file.hasRegion) {
+      handleRegionCaching(file);
+    }
 
     setState(() {
       _currNumLines = lines.split('\n').length + 3;
@@ -101,26 +108,25 @@ class EditorState extends State<Editor> {
     String fileContent = file.content;
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      handleEditableRegionFields(file);
       if (widget.options.hasRegion) {
-        handleEditableRegionFields(file);
-      }
-    });
-
-    Future.delayed(const Duration(seconds: 0), () {
-      double offset =
-          fileContent.split('\n').sublist(0, file.region.start - 1).length *
+        Future.delayed(const Duration(seconds: 0), () {
+          double offset = fileContent
+                  .split('\n')
+                  .sublist(0, file.region.start! - 1)
+                  .length *
               getTextHeight();
-      scrollController.animateTo(
-        offset,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+          scrollController.animateTo(
+            offset,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
 
-      scrollController.addListener(() {
-        linebarController.jumpTo(scrollController.offset);
-      });
-
-      handlePossibleExecutingEvents();
+          scrollController.addListener(() {
+            linebarController.jumpTo(scrollController.offset);
+          });
+        });
+      }
     });
 
     TextEditingControllerIDE.language = widget.language;
@@ -130,13 +136,13 @@ class EditorState extends State<Editor> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (file.content != '' && file.hasRegion) {
-      int regionStart = file.region.start;
+      int regionStart = file.region.start!;
       int regionEnd;
 
       if (prefs.get(file.id) != null) {
         regionEnd = int.parse(prefs.getString(file.id) ?? '');
       } else {
-        regionEnd = file.region.end;
+        regionEnd = file.region.end!;
       }
 
       if (file.content.split('\n').length > 1) {
@@ -156,6 +162,10 @@ class EditorState extends State<Editor> {
         beforeController.text = beforeEditableRegionText;
         inController.text = inEditableRegionText;
         afterController.text = afterEditableRegionText;
+
+        if (file.hasRegion) {
+          handleRegionCaching(file);
+        }
       }
     } else {
       inController.text = file.content;
@@ -197,14 +207,25 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
+    widget.fileTextStream.stream.listen((event) {
+      log("DATA IS COMING IN !!!!!!!");
+      log(event.content);
+      log('!!!!!!!!!!!!!!!!!!!!!!!!!');
+    });
+
     return StreamBuilder<FileIDE>(
         stream: widget.fileTextStream.stream,
         builder: (context, snapshot) {
+          FileIDE? file;
+
           if (snapshot.hasData) {
             if (snapshot.data is FileIDE) {
-              FileIDE file = snapshot.data as FileIDE;
+              file = snapshot.data as FileIDE;
 
-              handleFileInit(file);
+              if (file.id != currentFileId) {
+                handleFileInit(file);
+                currentFileId = file.id;
+              }
 
               TextEditingControllerIDE.language = file.ext;
             } else {
@@ -237,13 +258,11 @@ class EditorState extends State<Editor> {
                 ),
                 if (widget.options.hasRegion)
                   Expanded(
-                    child: editorViewWithRegion(context),
+                    child: editorViewWithRegion(context, file),
                   )
                 else
                   Expanded(
-                    child: editorView(
-                      context,
-                    ),
+                    child: editorView(context, file),
                   )
               ],
             );
@@ -255,7 +274,7 @@ class EditorState extends State<Editor> {
         });
   }
 
-  Widget editorViewWithRegion(BuildContext context) {
+  Widget editorViewWithRegion(BuildContext context, FileIDE file) {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
       scrollDirection: Axis.horizontal,
@@ -309,7 +328,7 @@ class EditorState extends State<Editor> {
                     contentPadding: const EdgeInsets.only(left: 10),
                   ),
                   onChanged: (String event) async {
-                    handlePossibleExecutingEvents();
+                    handlePossibleExecutingEvents(file);
 
                     String text = beforeController.text +
                         '\n' +
@@ -348,7 +367,7 @@ class EditorState extends State<Editor> {
     );
   }
 
-  Widget editorView(context) {
+  Widget editorView(context, file) {
     return ListView(
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
@@ -372,7 +391,7 @@ class EditorState extends State<Editor> {
                     contentPadding: const EdgeInsets.only(left: 10, top: 10),
                   ),
                   onChanged: (String event) async {
-                    handlePossibleExecutingEvents();
+                    handlePossibleExecutingEvents(file);
 
                     String text = beforeController.text +
                         '\n' +

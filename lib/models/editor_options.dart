@@ -43,8 +43,8 @@ class EditorRegionOptions {
     this.condition = false,
   });
 
-  int start;
-  int end;
+  int? start;
+  int? end;
   Color color;
   bool condition;
 }
