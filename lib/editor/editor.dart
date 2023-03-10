@@ -26,7 +26,6 @@ class FileStreamEvent {
 class Editor extends StatefulWidget with IEditor {
   Editor({
     Key? key,
-    this.openedFile,
     required this.options,
     required this.language,
   }) : super(key: key);
@@ -34,10 +33,6 @@ class Editor extends StatefulWidget with IEditor {
   // the coding language in the editor
 
   String language;
-
-  // an instance of the current file
-
-  FileIDE? openedFile;
 
   // A stream where the text in the editor is changable
 
@@ -74,35 +69,6 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
-
-    String fileContent = widget.openedFile?.content ?? '';
-
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (widget.options.hasRegion) {
-        handleEditableRegionFields();
-      }
-    });
-
-    Future.delayed(const Duration(seconds: 0), () {
-      double offset = fileContent
-              .split('\n')
-              .sublist(0, widget.options.region!.start! - 1)
-              .length *
-          getTextHeight();
-      scrollController.animateTo(
-        offset,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-
-      scrollController.addListener(() {
-        linebarController.jumpTo(scrollController.offset);
-      });
-
-      handlePossibleExecutingEvents();
-    });
-
-    TextEditingControllerIDE.language = widget.language;
   }
 
   void handlePossibleExecutingEvents() async {
@@ -131,36 +97,60 @@ class EditorState extends State<Editor> {
     return textHeight.height;
   }
 
-  handleEditableRegionFields([FileIDE? file]) async {
-    String fileContent = file?.content ?? widget.openedFile?.content ?? '';
-    String fileId = file?.id ?? widget.openedFile!.id;
-    bool hasRegion = file?.hasRegion ?? widget.options.hasRegion;
+  handleFileInit(FileIDE file) {
+    String fileContent = file.content;
 
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (widget.options.hasRegion) {
+        handleEditableRegionFields(file);
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 0), () {
+      double offset =
+          fileContent.split('\n').sublist(0, file.region.start - 1).length *
+              getTextHeight();
+      scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+
+      scrollController.addListener(() {
+        linebarController.jumpTo(scrollController.offset);
+      });
+
+      handlePossibleExecutingEvents();
+    });
+
+    TextEditingControllerIDE.language = widget.language;
+  }
+
+  handleEditableRegionFields(FileIDE file) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (fileContent != '' && hasRegion) {
-      int regionStart = file?.region.start ?? widget.options.region!.start!;
+    if (file.content != '' && file.hasRegion) {
+      int regionStart = file.region.start;
       int regionEnd;
 
-      if (prefs.get(fileId) != null) {
-        regionEnd = int.parse(prefs.getString(fileId) ?? '');
-      } else if (file?.region != null) {
-        regionEnd = file!.region.end!;
+      if (prefs.get(file.id) != null) {
+        regionEnd = int.parse(prefs.getString(file.id) ?? '');
       } else {
-        regionEnd = widget.options.region!.end!;
+        regionEnd = file.region.end;
       }
-      if (fileContent.split('\n').length > 1) {
-        String beforeEditableRegionText =
-            fileContent.split("\n").sublist(0, regionStart).join("\n");
 
-        String inEditableRegionText = fileContent
+      if (file.content.split('\n').length > 1) {
+        String beforeEditableRegionText =
+            file.content.split("\n").sublist(0, regionStart).join("\n");
+
+        String inEditableRegionText = file.content
             .split("\n")
             .sublist(regionStart, regionEnd - 1)
             .join("\n");
 
-        String afterEditableRegionText = fileContent
+        String afterEditableRegionText = file.content
             .split("\n")
-            .sublist(regionEnd - 1, fileContent.split("\n").length)
+            .sublist(regionEnd - 1, file.content.split("\n").length)
             .join("\n");
 
         beforeController.text = beforeEditableRegionText;
@@ -168,15 +158,15 @@ class EditorState extends State<Editor> {
         afterController.text = afterEditableRegionText;
       }
     } else {
-      inController.text = fileContent;
+      inController.text = file.content;
     }
 
     setState(() {
-      _currNumLines = fileContent.split("\n").length;
+      _currNumLines = file.content.split("\n").length;
     });
   }
 
-  handleRegionCaching() {
+  handleRegionCaching(FileIDE file) {
     inController.addListener(() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -185,20 +175,20 @@ class EditorState extends State<Editor> {
 
       int newRegionLines = beforeRegionLines + inRegionLines;
 
-      if (prefs.get(widget.openedFile!.id) != null) {
-        String cached = prefs.getString(widget.openedFile!.id) ?? '0';
+      if (prefs.get(file.id) != null) {
+        String cached = prefs.getString(file.id) ?? '0';
 
         int oldRegionLines = int.parse(cached);
 
         if (oldRegionLines != newRegionLines) {
           prefs.setString(
-            widget.openedFile!.id,
+            file.id,
             newRegionLines.toString(),
           );
         }
       } else {
         prefs.setString(
-          widget.openedFile!.id,
+          file.id,
           newRegionLines.toString(),
         );
       }
@@ -207,50 +197,62 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.fileTextStream.stream.listen((file) {
-      if (!file.hasRegion) {
-        inController.text = file.content;
-      } else {
-        handleEditableRegionFields(file);
-      }
+    return StreamBuilder<FileIDE>(
+        stream: widget.fileTextStream.stream,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data is FileIDE) {
+              FileIDE file = snapshot.data as FileIDE;
 
-      TextEditingControllerIDE.language = file.ext;
-    });
+              handleFileInit(file);
 
-    return Row(
-      children: [
-        Container(
-          constraints: BoxConstraints(
-            minWidth: 1,
-            maxWidth: _initialWidth,
-          ),
-          decoration: BoxDecoration(
-            color: widget.options.linebarColor,
-            border: const Border(
-              right: BorderSide(
-                color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(
-              top: 10,
-            ),
-            child: linecountBar(),
-          ),
-        ),
-        if (widget.options.hasRegion)
-          Expanded(
-            child: editorViewWithRegion(context),
-          )
-        else
-          Expanded(
-            child: editorView(
-              context,
-            ),
-          )
-      ],
-    );
+              TextEditingControllerIDE.language = file.ext;
+            } else {
+              return const Center(
+                child: Text('Something went wrong'),
+              );
+            }
+
+            return Row(
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    minWidth: 1,
+                    maxWidth: _initialWidth,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.options.linebarColor,
+                    border: const Border(
+                      right: BorderSide(
+                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 10,
+                    ),
+                    child: linecountBar(),
+                  ),
+                ),
+                if (widget.options.hasRegion)
+                  Expanded(
+                    child: editorViewWithRegion(context),
+                  )
+                else
+                  Expanded(
+                    child: editorView(
+                      context,
+                    ),
+                  )
+              ],
+            );
+          }
+
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        });
   }
 
   Widget editorViewWithRegion(BuildContext context) {
