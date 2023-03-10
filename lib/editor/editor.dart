@@ -7,7 +7,6 @@ import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer';
 
 class FileStreamEvent {
   final String challengeId;
@@ -152,7 +151,7 @@ class EditorState extends State<Editor> {
       }
       if (fileContent.split('\n').length > 1) {
         String beforeEditableRegionText =
-            fileContent.split("\n").sublist(0, regionEnd).join("\n");
+            fileContent.split("\n").sublist(0, regionStart).join("\n");
 
         String inEditableRegionText = fileContent
             .split("\n")
