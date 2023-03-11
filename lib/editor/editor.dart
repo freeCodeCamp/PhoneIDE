@@ -9,21 +9,6 @@ import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer';
 
-class FileStreamEvent {
-  final String challengeId;
-  final String ext;
-  final String content;
-  final bool hasRegion;
-
-  FileStreamEvent({
-    required this.challengeId,
-    required this.ext,
-    required this.content,
-    required this.hasRegion,
-  });
-}
-
-// ignore: must_be_immutable
 class Editor extends StatefulWidget with IEditor {
   Editor({
     Key? key,
@@ -207,12 +192,6 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.fileTextStream.stream.listen((event) {
-      log("DATA IS COMING IN !!!!!!!");
-      log(event.content);
-      log('!!!!!!!!!!!!!!!!!!!!!!!!!');
-    });
-
     return StreamBuilder<FileIDE>(
         stream: widget.fileTextStream.stream,
         builder: (context, snapshot) {
@@ -256,14 +235,9 @@ class EditorState extends State<Editor> {
                     child: linecountBar(),
                   ),
                 ),
-                if (widget.options.hasRegion)
-                  Expanded(
-                    child: editorViewWithRegion(context, file),
-                  )
-                else
-                  Expanded(
-                    child: editorView(context, file),
-                  )
+                Expanded(
+                  child: editorView(context, file),
+                )
               ],
             );
           }
@@ -274,7 +248,7 @@ class EditorState extends State<Editor> {
         });
   }
 
-  Widget editorViewWithRegion(BuildContext context, FileIDE file) {
+  Widget editorView(BuildContext context, FileIDE file) {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
       scrollDirection: Axis.horizontal,
@@ -289,123 +263,80 @@ class EditorState extends State<Editor> {
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
-              SizedBox(
-                width: widget.options.minHeight,
-                child: TextField(
-                  controller: beforeController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(top: 10, left: 10),
-                  ),
-                  enabled: false,
-                  maxLines: null,
-                  style: const TextStyle(fontSize: 18),
-                  scrollPadding: const EdgeInsets.all(0),
+              if (file.hasRegion)
+                SizedBox(
+                  width: widget.options.minHeight,
+                  child: TextField(
+                      controller: beforeController,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        fillColor: widget.options.editorBackgroundColor,
+                        filled: true,
+                        isDense: true,
+                        contentPadding:
+                            const EdgeInsets.only(top: 10, left: 10),
+                      ),
+                      enabled: false,
+                      maxLines: null,
+                      style: const TextStyle(fontSize: 18)),
                 ),
-              ),
               Container(
                 width: widget.options.minHeight,
-                decoration: BoxDecoration(
-                  border: Border(
-                    left: BorderSide(
-                      width: 5,
-                      color: widget.options.region!.condition
-                          ? Colors.green
-                          : Colors.grey,
+                decoration: file.hasRegion
+                    ? BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            width: 5,
+                            color: widget.options.region!.condition
+                                ? Colors.green
+                                : Colors.grey,
+                          ),
+                        ),
+                      )
+                    : null,
+                child: TextField(
+                  controller: inController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    fillColor: file.hasRegion
+                        ? widget.options.tabBarColor
+                        : widget.options.editorBackgroundColor,
+                    filled: true,
+                    isDense: file.hasRegion,
+                    contentPadding: const EdgeInsets.only(left: 10),
+                  ),
+                  onChanged: (String event) async {
+                    handlePossibleExecutingEvents(file);
+
+                    String text = beforeController.text +
+                        '\n' +
+                        event +
+                        '\n' +
+                        afterController.text;
+
+                    widget.onTextChange.add(text);
+                  },
+                  maxLines: null,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              if (file.hasRegion)
+                SizedBox(
+                  width: widget.options.minHeight,
+                  child: TextField(
+                    controller: afterController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      filled: true,
+                      fillColor: widget.options.editorBackgroundColor,
+                      contentPadding: const EdgeInsets.only(left: 10),
+                      isDense: true,
                     ),
+                    enabled: false,
+                    maxLines: null,
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ),
-                child: TextField(
-                  controller: inController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.tabBarColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(left: 10),
-                  ),
-                  onChanged: (String event) async {
-                    handlePossibleExecutingEvents(file);
-
-                    String text = beforeController.text +
-                        '\n' +
-                        event +
-                        '\n' +
-                        afterController.text;
-
-                    widget.onTextChange.add(text);
-                  },
-                  maxLines: null,
-                  scrollPadding: const EdgeInsets.all(0),
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-              SizedBox(
-                width: widget.options.minHeight,
-                child: TextField(
-                  controller: afterController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    filled: true,
-                    fillColor: widget.options.editorBackgroundColor,
-                    contentPadding: const EdgeInsets.only(left: 10),
-                    isDense: true,
-                  ),
-                  enabled: false,
-                  maxLines: null,
-                  style: const TextStyle(fontSize: 18),
-                  scrollPadding: const EdgeInsets.all(0),
-                ),
-              ),
-            ],
-          ),
-        )
-      ],
-    );
-  }
-
-  Widget editorView(context, file) {
-    return ListView(
-      scrollDirection: Axis.horizontal,
-      controller: horizontalController,
-      children: [
-        SizedBox(
-          height: 1000,
-          width: widget.options.minHeight,
-          child: ListView(
-            controller: scrollController,
-            shrinkWrap: true,
-            children: [
-              SizedBox(
-                width: widget.options.minHeight,
-                child: TextField(
-                  controller: inController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(left: 10, top: 10),
-                  ),
-                  onChanged: (String event) async {
-                    handlePossibleExecutingEvents(file);
-
-                    String text = beforeController.text +
-                        '\n' +
-                        event +
-                        '\n' +
-                        afterController.text;
-
-                    widget.onTextChange.add(text);
-                  },
-                  maxLines: null,
-                  scrollPadding: const EdgeInsets.all(0),
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
             ],
           ),
         )
