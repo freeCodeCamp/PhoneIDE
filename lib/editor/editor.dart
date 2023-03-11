@@ -153,7 +153,9 @@ class EditorState extends State<Editor> {
         }
       }
     } else {
+      beforeController.text = '';
       inController.text = file.content;
+      afterController.text = '';
     }
 
     setState(() {
