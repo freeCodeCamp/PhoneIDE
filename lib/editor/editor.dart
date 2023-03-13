@@ -77,16 +77,17 @@ class EditorState extends State<Editor> {
     });
   }
 
-  double getTextHeight() {
-    double systemFonstSize = MediaQuery.of(context).textScaleFactor;
+  double getTextHeight(BuildContext context, {double fontSize = 18}) {
+    double systemFontSize = MediaQuery.of(context).textScaleFactor;
 
-    double fontSize = systemFonstSize > 1 ? 18 * systemFonstSize : 18;
+    double calculatedFontSize =
+        systemFontSize > 1 ? fontSize * systemFontSize : fontSize;
 
     Size textHeight = Linebar.calculateTextSize(
       'L',
       style: TextStyle(
         color: widget.options.linebarTextColor,
-        fontSize: fontSize,
+        fontSize: calculatedFontSize,
       ),
       context: context,
     );
@@ -105,7 +106,7 @@ class EditorState extends State<Editor> {
                   .split('\n')
                   .sublist(0, file.region.start! - 1)
                   .length *
-              getTextHeight();
+              getTextHeight(context);
           scrollController.animateTo(
             offset,
             duration: const Duration(milliseconds: 500),
@@ -371,7 +372,7 @@ class EditorState extends State<Editor> {
                   SchedulerBinding.instance.addPostFrameCallback(
                     (timeStamp) {
                       setState(() {
-                        _initialWidth = getTextHeight() + 2;
+                        _initialWidth = getTextHeight(context) + 2;
                       });
                     },
                   );
