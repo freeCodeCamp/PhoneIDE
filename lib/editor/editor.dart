@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/models/editor.dart';
@@ -43,13 +44,12 @@ class EditorState extends State<Editor> {
 
   TextEditingControllerIDE beforeController = TextEditingControllerIDE();
   TextEditingControllerIDE inController = TextEditingControllerIDE();
-  TextEditingController afterController = TextEditingControllerIDE();
+  TextEditingControllerIDE afterController = TextEditingControllerIDE();
 
-  // current amount of lines in the eidtor
+  FocusNode node = FocusNode();
 
   int _currNumLines = 1;
 
-  // the initial width of the line count bar
   double _initialWidth = 28;
 
   String currentFileId = '';
@@ -57,15 +57,12 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
+    log('I GET CALLED ON FILE SWITCH!!!');
   }
 
   void handlePossibleExecutingEvents(FileIDE file) async {
     String lines =
         beforeController.text + inController.text + afterController.text;
-
-    if (file.hasRegion) {
-      handleRegionCaching(file);
-    }
 
     setState(() {
       _currNumLines = lines.split('\n').length + 3;
@@ -94,7 +91,7 @@ class EditorState extends State<Editor> {
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleEditableRegionFields(file);
-      if (widget.options.hasRegion) {
+      if (file.hasRegion) {
         Future.delayed(const Duration(seconds: 0), () {
           double offset = fileContent
                   .split('\n')
@@ -120,7 +117,7 @@ class EditorState extends State<Editor> {
   handleEditableRegionFields(FileIDE file) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (file.content != '' && file.hasRegion) {
+    if (file.hasRegion) {
       int regionStart = file.region.start!;
       int regionEnd;
 
@@ -143,7 +140,6 @@ class EditorState extends State<Editor> {
             .split("\n")
             .sublist(regionEnd - 1, file.content.split("\n").length)
             .join("\n");
-
         beforeController.text = beforeEditableRegionText;
         inController.text = inEditableRegionText;
         afterController.text = afterEditableRegionText;
@@ -163,26 +159,19 @@ class EditorState extends State<Editor> {
     inController.addListener(() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      int beforeRegionLines = beforeController.text.split('\n').length;
       int inRegionLines = inController.text.split('\n').length + 1;
-
-      int newRegionLines = beforeRegionLines + inRegionLines;
 
       if (prefs.get(file.id) != null) {
         String cached = prefs.getString(file.id) ?? '0';
 
-        int oldRegionLines = int.parse(cached);
-
-        if (oldRegionLines != newRegionLines) {
-          prefs.setString(
-            file.id,
-            newRegionLines.toString(),
-          );
-        }
+        prefs.setString(
+          file.id,
+          inRegionLines.toString(),
+        );
       } else {
         prefs.setString(
           file.id,
-          newRegionLines.toString(),
+          inRegionLines.toString(),
         );
       }
     });
@@ -292,30 +281,33 @@ class EditorState extends State<Editor> {
                         ),
                       )
                     : null,
-                child: TextField(
-                  controller: inController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: file.hasRegion
-                        ? widget.options.tabBarColor
-                        : widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: file.hasRegion,
-                    contentPadding: const EdgeInsets.only(left: 10),
-                  ),
-                  onChanged: (String event) async {
-                    handlePossibleExecutingEvents(file);
-
-                    String text = beforeController.text +
-                        '\n' +
-                        event +
-                        '\n' +
-                        afterController.text;
-
-                    widget.onTextChange.add(text);
+                child: RawKeyboardListener(
+                  focusNode: node,
+                  onKey: (keyEvent) {
+                    log(keyEvent.toString());
+                    if (keyEvent.isKeyPressed(LogicalKeyboardKey.enter)) {
+                      if (file.hasRegion) {
+                        handleRegionCaching(file);
+                      }
+                    }
                   },
-                  maxLines: null,
-                  style: const TextStyle(fontSize: 18),
+                  child: TextField(
+                    controller: inController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      fillColor: file.hasRegion
+                          ? widget.options.tabBarColor
+                          : widget.options.editorBackgroundColor,
+                      filled: true,
+                      isDense: file.hasRegion,
+                      contentPadding: const EdgeInsets.only(left: 10),
+                    ),
+                    onChanged: (String event) async {
+                      handlePossibleExecutingEvents(file);
+                    },
+                    maxLines: null,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
               ),
               if (file.hasRegion)
