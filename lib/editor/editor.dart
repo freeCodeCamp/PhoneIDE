@@ -304,7 +304,10 @@ class EditorState extends State<Editor> {
                         : widget.options.editorBackgroundColor,
                     filled: true,
                     isDense: file.hasRegion,
-                    contentPadding: const EdgeInsets.only(left: 10),
+                    contentPadding: EdgeInsets.only(
+                      left: 10,
+                      top: file.hasRegion ? 0 : 10,
+                    ),
                   ),
                   onChanged: (String event) async {
                     updateLineCount(event);
