@@ -147,10 +147,6 @@ class EditorState extends State<Editor> {
         beforeController.text = beforeEditableRegionText;
         inController.text = inEditableRegionText;
         afterController.text = afterEditableRegionText;
-
-        if (file.hasRegion) {
-          handleRegionCaching(file);
-        }
       }
     } else {
       beforeController.text = '';
