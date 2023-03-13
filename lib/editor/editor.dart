@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
-import 'package:flutter_code_editor/models/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer';
 
-class Editor extends StatefulWidget with IEditor {
+class Editor extends StatefulWidget {
   Editor({
     Key? key,
     required this.options,
@@ -45,8 +43,6 @@ class EditorState extends State<Editor> {
   TextEditingControllerIDE inController = TextEditingControllerIDE();
   TextEditingControllerIDE afterController = TextEditingControllerIDE();
 
-  FocusNode node = FocusNode();
-
   int _currNumLines = 1;
 
   double _initialWidth = 28;
@@ -56,12 +52,25 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
-    log('I GET CALLED ON FILE SWITCH!!!');
   }
 
-  void handlePossibleExecutingEvents(FileIDE file) async {
-    String lines =
-        beforeController.text + inController.text + afterController.text;
+  @override
+  void dispose() {
+    super.dispose();
+    scrollController.dispose();
+    horizontalController.dispose();
+    linebarController.dispose();
+
+    beforeController.dispose();
+    inController.dispose();
+    afterController.dispose();
+
+    widget.onTextChange.close();
+    widget.fileTextStream.close();
+  }
+
+  void handlePossibleExecutingEvents(String event) async {
+    String lines = beforeController.text + event + afterController.text;
 
     setState(() {
       _currNumLines = lines.split('\n').length + 3;
@@ -89,7 +98,7 @@ class EditorState extends State<Editor> {
     String fileContent = file.content;
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      handleEditableRegionFields(file);
+      handleRegionFields(file);
       if (file.hasRegion) {
         Future.delayed(const Duration(seconds: 0), () {
           double offset = fileContent
@@ -113,7 +122,7 @@ class EditorState extends State<Editor> {
     TextEditingControllerIDE.language = widget.language;
   }
 
-  handleEditableRegionFields(FileIDE file) async {
+  handleRegionFields(FileIDE file) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (file.hasRegion) {
@@ -178,59 +187,60 @@ class EditorState extends State<Editor> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<FileIDE>(
-        stream: widget.fileTextStream.stream,
-        builder: (context, snapshot) {
-          FileIDE? file;
+      stream: widget.fileTextStream.stream,
+      builder: (context, snapshot) {
+        FileIDE? file;
 
-          if (snapshot.hasData) {
-            if (snapshot.data is FileIDE) {
-              file = snapshot.data as FileIDE;
+        if (snapshot.hasData) {
+          if (snapshot.data is FileIDE) {
+            file = snapshot.data as FileIDE;
 
-              if (file.id != currentFileId) {
-                handleFileInit(file);
-                currentFileId = file.id;
-              }
-
-              TextEditingControllerIDE.language = file.ext;
-            } else {
-              return const Center(
-                child: Text('Something went wrong'),
-              );
+            if (file.id != currentFileId) {
+              handleFileInit(file);
+              currentFileId = file.id;
             }
 
-            return Row(
-              children: [
-                Container(
-                  constraints: BoxConstraints(
-                    minWidth: 1,
-                    maxWidth: _initialWidth,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.options.linebarColor,
-                    border: const Border(
-                      right: BorderSide(
-                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
-                      ),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: 10,
-                    ),
-                    child: linecountBar(),
-                  ),
-                ),
-                Expanded(
-                  child: editorView(context, file),
-                )
-              ],
+            TextEditingControllerIDE.language = file.ext;
+          } else {
+            return const Center(
+              child: Text('Something went wrong'),
             );
           }
 
-          return const Center(
-            child: CircularProgressIndicator(),
+          return Row(
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  minWidth: 1,
+                  maxWidth: _initialWidth,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.options.linebarColor,
+                  border: const Border(
+                    right: BorderSide(
+                      color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                    ),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: 10,
+                  ),
+                  child: linecountBar(),
+                ),
+              ),
+              Expanded(
+                child: editorView(context, file),
+              )
+            ],
           );
-        });
+        }
+
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
   }
 
   Widget editorView(BuildContext context, FileIDE file) {
@@ -243,7 +253,9 @@ class EditorState extends State<Editor> {
           height: 1000,
           width: widget.options.minHeight,
           child: ListView(
-            padding: const EdgeInsets.only(top: 0),
+            padding: const EdgeInsets.only(
+              top: 0,
+            ),
             controller: scrollController,
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
@@ -252,18 +264,21 @@ class EditorState extends State<Editor> {
                 SizedBox(
                   width: widget.options.minHeight,
                   child: TextField(
-                      controller: beforeController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        fillColor: widget.options.editorBackgroundColor,
-                        filled: true,
-                        isDense: true,
-                        contentPadding:
-                            const EdgeInsets.only(top: 10, left: 10),
+                    controller: beforeController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      fillColor: widget.options.editorBackgroundColor,
+                      filled: true,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.only(
+                        top: 10,
+                        left: 10,
                       ),
-                      enabled: false,
-                      maxLines: null,
-                      style: const TextStyle(fontSize: 18)),
+                    ),
+                    enabled: false,
+                    maxLines: null,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
               Container(
                 width: widget.options.minHeight,
@@ -284,14 +299,14 @@ class EditorState extends State<Editor> {
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     fillColor: file.hasRegion
-                        ? widget.options.tabBarColor
+                        ? file.region.color
                         : widget.options.editorBackgroundColor,
                     filled: true,
                     isDense: file.hasRegion,
                     contentPadding: const EdgeInsets.only(left: 10),
                   ),
                   onChanged: (String event) async {
-                    handlePossibleExecutingEvents(file);
+                    handlePossibleExecutingEvents(event);
 
                     if (file.hasRegion) {
                       handleRegionCaching(
@@ -321,12 +336,16 @@ class EditorState extends State<Editor> {
                       border: InputBorder.none,
                       filled: true,
                       fillColor: widget.options.editorBackgroundColor,
-                      contentPadding: const EdgeInsets.only(left: 10),
+                      contentPadding: const EdgeInsets.only(
+                        left: 10,
+                      ),
                       isDense: true,
                     ),
                     enabled: false,
                     maxLines: null,
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
                   ),
                 ),
             ],
