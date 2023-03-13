@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
 import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
 import 'package:flutter_code_editor/models/editor.dart';
@@ -155,26 +154,25 @@ class EditorState extends State<Editor> {
     });
   }
 
-  handleRegionCaching(FileIDE file) {
-    inController.addListener(() async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+  handleRegionCaching(FileIDE file, String event) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      int inRegionLines = inController.text.split('\n').length + 1;
+    int inRegionLines = event.split('\n').length + 1;
+    int beforeRegionLines = beforeController.text.split('\n').length;
 
-      if (prefs.get(file.id) != null) {
-        String cached = prefs.getString(file.id) ?? '0';
+    int newRegionlines = inRegionLines + beforeRegionLines;
 
-        prefs.setString(
-          file.id,
-          inRegionLines.toString(),
-        );
-      } else {
-        prefs.setString(
-          file.id,
-          inRegionLines.toString(),
-        );
-      }
-    });
+    if (prefs.get(file.id) != null) {
+      prefs.setString(
+        file.id,
+        newRegionlines.toString(),
+      );
+    } else {
+      prefs.setString(
+        file.id,
+        newRegionlines.toString(),
+      );
+    }
   }
 
   @override
@@ -281,33 +279,37 @@ class EditorState extends State<Editor> {
                         ),
                       )
                     : null,
-                child: RawKeyboardListener(
-                  focusNode: node,
-                  onKey: (keyEvent) {
-                    log(keyEvent.toString());
-                    if (keyEvent.isKeyPressed(LogicalKeyboardKey.enter)) {
-                      if (file.hasRegion) {
-                        handleRegionCaching(file);
-                      }
-                    }
-                  },
-                  child: TextField(
-                    controller: inController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      fillColor: file.hasRegion
-                          ? widget.options.tabBarColor
-                          : widget.options.editorBackgroundColor,
-                      filled: true,
-                      isDense: file.hasRegion,
-                      contentPadding: const EdgeInsets.only(left: 10),
-                    ),
-                    onChanged: (String event) async {
-                      handlePossibleExecutingEvents(file);
-                    },
-                    maxLines: null,
-                    style: const TextStyle(fontSize: 18),
+                child: TextField(
+                  controller: inController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    fillColor: file.hasRegion
+                        ? widget.options.tabBarColor
+                        : widget.options.editorBackgroundColor,
+                    filled: true,
+                    isDense: file.hasRegion,
+                    contentPadding: const EdgeInsets.only(left: 10),
                   ),
+                  onChanged: (String event) async {
+                    handlePossibleExecutingEvents(file);
+
+                    if (file.hasRegion) {
+                      handleRegionCaching(
+                        file,
+                        event,
+                      );
+                    }
+
+                    String text = beforeController.text +
+                        '\n' +
+                        event +
+                        '\n' +
+                        afterController.text;
+
+                    widget.onTextChange.sink.add(text);
+                  },
+                  maxLines: null,
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
               if (file.hasRegion)
