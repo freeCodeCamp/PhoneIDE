@@ -69,7 +69,7 @@ class EditorState extends State<Editor> {
     widget.fileTextStream.close();
   }
 
-  void handlePossibleExecutingEvents(String event) async {
+  void updateLineCount(String event) async {
     String lines = beforeController.text + event + afterController.text;
 
     setState(() {
@@ -306,7 +306,7 @@ class EditorState extends State<Editor> {
                     contentPadding: const EdgeInsets.only(left: 10),
                   ),
                   onChanged: (String event) async {
-                    handlePossibleExecutingEvents(event);
+                    updateLineCount(event);
 
                     if (file.hasRegion) {
                       handleRegionCaching(
