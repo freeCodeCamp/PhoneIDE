@@ -69,11 +69,11 @@ class EditorState extends State<Editor> {
     widget.fileTextStream.close();
   }
 
-  void updateLineCount(String event) async {
+  void updateLineCount(FileIDE file, String event) async {
     String lines = beforeController.text + event + afterController.text;
 
     setState(() {
-      _currNumLines = lines.split('\n').length + 3;
+      _currNumLines = lines.split('\n').length + (file.hasRegion ? 2 : 0);
     });
   }
 
@@ -303,14 +303,14 @@ class EditorState extends State<Editor> {
                         ? file.region.color
                         : widget.options.editorBackgroundColor,
                     filled: true,
-                    isDense: file.hasRegion,
+                    isDense: true,
                     contentPadding: EdgeInsets.only(
                       left: 10,
                       top: file.hasRegion ? 0 : 10,
                     ),
                   ),
                   onChanged: (String event) async {
-                    updateLineCount(event);
+                    updateLineCount(file, event);
 
                     if (file.hasRegion) {
                       handleRegionCaching(
