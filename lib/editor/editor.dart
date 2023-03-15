@@ -69,11 +69,23 @@ class EditorState extends State<Editor> {
     widget.fileTextStream.close();
   }
 
-  void updateLineCount(FileIDE file, String event) async {
-    String lines = beforeController.text + event + afterController.text;
+  void updateLineCount(FileIDE file, String event, String region) async {
+    late String lines;
+    switch (region) {
+      case 'BEFORE':
+        lines = event + '\n' + inController.text + '\n' + afterController.text;
+        break;
+      case 'IN':
+        lines =
+            beforeController.text + '\n' + event + '\n' + afterController.text;
+        break;
+      case 'AFTER':
+        lines = beforeController.text + '\n' + inController.text + '\n' + event;
+        break;
+    }
 
     setState(() {
-      _currNumLines = lines.split('\n').length + (file.hasRegion ? 2 : 0);
+      _currNumLines = lines.split('\n').length;
     });
   }
 
@@ -95,18 +107,23 @@ class EditorState extends State<Editor> {
     return textHeight.height;
   }
 
-  handleFileInit(FileIDE file) {
+  handleFileInit(FileIDE file) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     String fileContent = file.content;
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleRegionFields(file);
       if (file.hasRegion) {
+        int regionStart = file.region.start!;
+        if (prefs.get(file.id) != null) {
+          regionStart =
+              int.parse(prefs.getString(file.id)?.split(':')[0] ?? '');
+        }
+
         Future.delayed(const Duration(seconds: 0), () {
-          double offset = fileContent
-                  .split('\n')
-                  .sublist(0, file.region.start! - 1)
-                  .length *
-              getTextHeight(context);
+          double offset =
+              fileContent.split('\n').sublist(0, regionStart - 1).length *
+                  getTextHeight(context);
           scrollController.animateTo(
             offset,
             duration: const Duration(milliseconds: 500),
@@ -128,12 +145,11 @@ class EditorState extends State<Editor> {
 
     if (file.hasRegion) {
       int regionStart = file.region.start!;
-      int regionEnd;
+      int regionEnd = file.region.end!;
 
       if (prefs.get(file.id) != null) {
-        regionEnd = int.parse(prefs.getString(file.id) ?? '');
-      } else {
-        regionEnd = file.region.end!;
+        regionStart = int.parse(prefs.getString(file.id)?.split(':')[0] ?? '');
+        regionEnd = int.parse(prefs.getString(file.id)?.split(':')[1] ?? '');
       }
 
       if (file.content.split('\n').length > 1) {
@@ -164,25 +180,51 @@ class EditorState extends State<Editor> {
     });
   }
 
-  handleRegionCaching(FileIDE file, String event) async {
+  handleRegionCaching(FileIDE file, String event, String region) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    late int beforeRegionLines;
+    late int inRegionLines;
+    late int newRegionlines;
 
-    int inRegionLines = event.split('\n').length + 1;
-    int beforeRegionLines = beforeController.text.split('\n').length;
-
-    int newRegionlines = inRegionLines + beforeRegionLines;
-
-    if (prefs.get(file.id) != null) {
-      prefs.setString(
-        file.id,
-        newRegionlines.toString(),
-      );
-    } else {
-      prefs.setString(
-        file.id,
-        newRegionlines.toString(),
-      );
+    if (region == 'BEFORE') {
+      beforeRegionLines = event.split('\n').length;
+      inRegionLines = inController.text.split('\n').length + 1;
+      newRegionlines = inRegionLines + beforeRegionLines;
+    } else if (region == 'IN') {
+      beforeRegionLines = beforeController.text.split('\n').length;
+      inRegionLines = event.split('\n').length + 1;
+      newRegionlines = inRegionLines + beforeRegionLines;
     }
+
+    prefs.setString(
+      file.id,
+      '$beforeRegionLines:$newRegionlines',
+    );
+  }
+
+  handleTextChange(FileIDE file, String event, String region) {
+    updateLineCount(file, event, region);
+
+    if (file.hasRegion && region != 'AFTER') {
+      handleRegionCaching(file, event, region);
+    }
+
+    late String text;
+
+    switch (region) {
+      case 'BEFORE':
+        text = event + '\n' + inController.text + '\n' + afterController.text;
+        break;
+      case 'IN':
+        text =
+            beforeController.text + '\n' + event + '\n' + afterController.text;
+        break;
+      case 'AFTER':
+        text = beforeController.text + '\n' + inController.text + '\n' + event;
+        break;
+    }
+
+    widget.onTextChange.sink.add(text);
   }
 
   @override
@@ -276,9 +318,11 @@ class EditorState extends State<Editor> {
                         left: 10,
                       ),
                     ),
-                    enabled: false,
                     maxLines: null,
                     style: const TextStyle(fontSize: 18),
+                    onChanged: (String event) {
+                      handleTextChange(file, event, 'BEFORE');
+                    },
                   ),
                 ),
               Container(
@@ -309,23 +353,8 @@ class EditorState extends State<Editor> {
                       top: file.hasRegion ? 0 : 10,
                     ),
                   ),
-                  onChanged: (String event) async {
-                    updateLineCount(file, event);
-
-                    if (file.hasRegion) {
-                      handleRegionCaching(
-                        file,
-                        event,
-                      );
-                    }
-
-                    String text = beforeController.text +
-                        '\n' +
-                        event +
-                        '\n' +
-                        afterController.text;
-
-                    widget.onTextChange.sink.add(text);
+                  onChanged: (String event) {
+                    handleTextChange(file, event, 'IN');
                   },
                   maxLines: null,
                   style: const TextStyle(fontSize: 18),
@@ -345,11 +374,13 @@ class EditorState extends State<Editor> {
                       ),
                       isDense: true,
                     ),
-                    enabled: false,
                     maxLines: null,
                     style: const TextStyle(
                       fontSize: 18,
                     ),
+                    onChanged: (String event) {
+                      handleTextChange(file, event, 'AFTER');
+                    },
                   ),
                 ),
             ],
