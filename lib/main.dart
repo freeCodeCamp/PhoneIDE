@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/phoneide.dart';
+import 'package:flutter_code_editor/phone_ide.dart';
 
 void main() {
   runApp(const App());
