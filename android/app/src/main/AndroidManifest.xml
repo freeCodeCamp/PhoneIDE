@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_code_editor">
+    package="com.phone.ide">
    <application
         android:label="flutter_code_editor"
         android:icon="@mipmap/ic_launcher">

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/editor/editor.dart';
-import 'package:flutter_code_editor/models/editor_options.dart';
+import 'package:flutter_code_editor/phoneide.dart';
 
 void main() {
   runApp(const App());
