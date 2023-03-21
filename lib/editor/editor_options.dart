@@ -11,7 +11,6 @@ class EditorOptions {
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
     this.hasRegion = false,
-    this.region,
   });
 
   Color tabBarColor;
@@ -31,8 +30,6 @@ class EditorOptions {
   Color linebarTextColor;
 
   bool hasRegion;
-
-  EditorRegionOptions? region;
 }
 
 class EditorRegionOptions {

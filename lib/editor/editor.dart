@@ -54,21 +54,6 @@ class EditorState extends State<Editor> {
     super.initState();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    scrollController.dispose();
-    horizontalController.dispose();
-    linebarController.dispose();
-
-    beforeController.dispose();
-    inController.dispose();
-    afterController.dispose();
-
-    widget.onTextChange.close();
-    widget.fileTextStream.close();
-  }
-
   void updateLineCount(FileIDE file, String event, String region) async {
     late String lines;
     switch (region) {
@@ -332,7 +317,7 @@ class EditorState extends State<Editor> {
                         border: Border(
                           left: BorderSide(
                             width: 5,
-                            color: widget.options.region!.condition
+                            color: file.region.condition
                                 ? Colors.green
                                 : Colors.grey,
                           ),
