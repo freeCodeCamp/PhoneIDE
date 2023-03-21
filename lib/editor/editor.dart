@@ -258,7 +258,10 @@ class EditorState extends State<Editor> {
                 ),
               ),
               Expanded(
-                child: editorView(context, file),
+                child: Container(
+                  color: widget.options.editorBackgroundColor,
+                  child: editorView(context, file),
+                ),
               )
             ],
           );
