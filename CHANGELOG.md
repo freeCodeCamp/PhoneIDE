@@ -1,0 +1,14 @@
+### v1.0.0+1
+- removes file system 
+- removes file explorer
+- removes highlight enums and history enums, which where no longer used
+- removes directory model
+- removes html package
+- removes path_provider
+- changes name from `flutter_code_editor` to `phone_ide`
+- changes the default color of the editor text to white
+- changes the circular progress indicator to "open file"
+- updated `compileSDKversion` from 31 to 33
+- updated `readme.md` to use the new example
+- creates a library file which imports all separate files
+- creates a good example `main.dart` file.
