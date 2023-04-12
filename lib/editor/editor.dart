@@ -98,6 +98,7 @@ class EditorState extends State<Editor> {
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleRegionFields(file);
+
       if (file.hasRegion) {
         int regionStart = file.region.start!;
         if (prefs.get(file.id) != null) {
@@ -267,9 +268,7 @@ class EditorState extends State<Editor> {
           );
         }
 
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
+        return const Center(child: Text('open file'));
       },
     );
   }
@@ -307,7 +306,10 @@ class EditorState extends State<Editor> {
                       ),
                     ),
                     maxLines: null,
-                    style: const TextStyle(fontSize: 18),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white.withOpacity(0.87),
+                    ),
                     onChanged: (String event) {
                       handleTextChange(file, event, 'BEFORE');
                     },
@@ -345,7 +347,10 @@ class EditorState extends State<Editor> {
                     handleTextChange(file, event, 'IN');
                   },
                   maxLines: null,
-                  style: const TextStyle(fontSize: 18),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.87),
+                  ),
                 ),
               ),
               if (file.hasRegion)
@@ -363,8 +368,9 @@ class EditorState extends State<Editor> {
                       isDense: true,
                     ),
                     maxLines: null,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
+                      color: Colors.white.withOpacity(0.87),
                     ),
                     onChanged: (String event) {
                       handleTextChange(file, event, 'AFTER');
