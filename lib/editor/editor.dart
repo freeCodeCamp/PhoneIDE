@@ -7,6 +7,7 @@ import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/models/file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ignore: must_be_immutable
 class Editor extends StatefulWidget {
   Editor({
     Key? key,

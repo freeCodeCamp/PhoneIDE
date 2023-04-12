@@ -1,7 +1,7 @@
 name: phone_ide
-description: A new Flutter project.
+description: PhoneIDE freeCodeCamps Mobile Editor Made with Flutter.
 version: 1.0.0+1
-publish_to: https://pub.dev
+repository: https://github.com/freeCodeCamp/PhoneIDE
 environment:
   sdk: ">=2.12.0 <3.0.0"
 dependencies:
