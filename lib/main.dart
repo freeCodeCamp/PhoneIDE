@@ -27,25 +27,31 @@ class EditorView extends StatefulWidget {
 }
 
 class EditorViewState extends State<EditorView> {
-  void initFile() {
-    editor.fileTextStream.add(
-      FileIDE(
-        id: '1',
-        ext: 'HTML',
-        name: 'index',
-        content: '<h1> Hello World! </h1>',
-        hasRegion: true,
-        region: EditorRegionOptions(start: 1, end: 2),
-      ),
-    );
-  }
-
   Editor editor = Editor(
     language: 'html',
     options: EditorOptions(
       hasRegion: true,
     ),
   );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      editor.fileTextStream.add(FileIDE(
+        id: '1',
+        ext: 'HTML',
+        name: 'index',
+        content: """
+          <div>
+            <h1> Hello World! </h1>
+          </div>
+        """,
+        hasRegion: true,
+        region: EditorRegionOptions(start: 1, end: 3),
+      ));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,9 +65,20 @@ class EditorViewState extends State<EditorView> {
                 Expanded(child: editor),
                 ElevatedButton(
                   onPressed: () {
-                    initFile();
+                    editor.fileTextStream.add(FileIDE(
+                      id: '2',
+                      ext: 'HTML',
+                      name: 'index',
+                      content: """
+                        <div>
+                          <h1> Hello World from file two! </h1>
+                        </div>
+                      """,
+                      hasRegion: true,
+                      region: EditorRegionOptions(start: 1, end: 3),
+                    ));
                   },
-                  child: const Text('open file'),
+                  child: const Text('open another file'),
                 )
               ],
             ),
