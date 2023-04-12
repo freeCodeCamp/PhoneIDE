@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
-import 'package:flutter_code_editor/editor/linebar.dart';
-import 'package:flutter_code_editor/editor/editor_options.dart';
-import 'package:flutter_code_editor/models/file.dart';
+import 'package:phone_ide/controller/custom_text_controller/custom_text_controller.dart';
+import 'package:phone_ide/editor/linebar.dart';
+import 'package:phone_ide/editor/editor_options.dart';
+import 'package:phone_ide/models/file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Editor extends StatefulWidget {
