@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:phone_ide/controller/custom_text_controller/custom_text_controller.dart';
+import 'package:phone_ide/controller/custom_text_controller.dart';
 import 'package:phone_ide/editor/linebar.dart';
 import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/models/file.dart';
