@@ -1,6 +1,6 @@
 name: phone_ide
 description: PhoneIDE freeCodeCamps Mobile Editor Made with Flutter.
-version: 1.0.0+1
+version: 1.0.1+1
 repository: https://github.com/freeCodeCamp/PhoneIDE
 environment:
   sdk: ">=2.12.0 <3.0.0"

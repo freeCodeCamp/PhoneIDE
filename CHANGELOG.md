@@ -1,3 +1,6 @@
+### v1.0.1
+- updated `readme.md` to use right package name.
+
 ### v1.0.0+1
 - removes file system 
 - removes file explorer
