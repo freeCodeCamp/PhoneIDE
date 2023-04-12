@@ -1,6 +1,6 @@
 ## Usage
 
-To use PhoneIDE in your Flutter app, simply add the `flutter_code_editor` package to your project dependencies and import the `phone_ide.dart` file. You can then use the `Editor` widget to display the code editor in your app.
+To use PhoneIDE in your Flutter app, simply add the `phone_ide` package to your project dependencies and import the `phone_ide.dart` file. You can then use the `Editor` widget to display the code editor in your app.
 
 ```dart
 import 'package:flutter/material.dart';
