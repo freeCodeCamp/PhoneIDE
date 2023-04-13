@@ -47,11 +47,6 @@ class EditorState extends State<Editor> {
 
   String currentFileId = '';
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   void updateLineCount(FileIDE file, String event, String region) async {
     late String lines;
     switch (region) {
