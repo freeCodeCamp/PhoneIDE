@@ -7,7 +7,6 @@ import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/models/file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ignore: must_be_immutable
 class Editor extends StatefulWidget {
   Editor({
     Key? key,
@@ -16,20 +15,18 @@ class Editor extends StatefulWidget {
   }) : super(key: key);
 
   // the coding language in the editor
-
-  String language;
+  final String language;
 
   // A stream where the text in the editor is changable
-
-  StreamController<FileIDE> fileTextStream =
+  final StreamController<FileIDE> fileTextStream =
       StreamController<FileIDE>.broadcast();
 
   // A stream where you can listen to the changes made in the editor
-  StreamController<String> onTextChange = StreamController<String>.broadcast();
+  final StreamController<String> onTextChange =
+      StreamController<String>.broadcast();
 
   // options of the editor
-
-  EditorOptions options = EditorOptions();
+  final EditorOptions options;
 
   @override
   State<StatefulWidget> createState() => EditorState();
