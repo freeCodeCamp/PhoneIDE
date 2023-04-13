@@ -279,7 +279,7 @@ class EditorState extends State<Editor> {
       children: [
         SizedBox(
           height: 1000,
-          width: widget.options.minHeight,
+          width: 2500,
           child: ListView(
             padding: const EdgeInsets.only(
               top: 0,
@@ -290,7 +290,7 @@ class EditorState extends State<Editor> {
             children: [
               if (file.hasRegion)
                 SizedBox(
-                  width: widget.options.minHeight,
+                  width: 2500,
                   child: TextField(
                     controller: beforeController,
                     decoration: InputDecoration(
@@ -314,7 +314,7 @@ class EditorState extends State<Editor> {
                   ),
                 ),
               Container(
-                width: widget.options.minHeight,
+                width: 2500,
                 decoration: file.hasRegion
                     ? BoxDecoration(
                         border: Border(
@@ -353,7 +353,7 @@ class EditorState extends State<Editor> {
               ),
               if (file.hasRegion)
                 SizedBox(
-                  width: widget.options.minHeight,
+                  width: 2500,
                   child: TextField(
                     controller: afterController,
                     decoration: InputDecoration(
