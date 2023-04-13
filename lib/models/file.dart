@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/models/editor_options.dart';
+import 'package:phone_ide/editor/editor_options.dart';
 
 class FileIDE {
   const FileIDE({

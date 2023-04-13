@@ -1,4 +1,4 @@
-package com.example.flutter_code_editor
+package org.freecodecamp.phone_ide
 
 import io.flutter.embedding.android.FlutterActivity
 

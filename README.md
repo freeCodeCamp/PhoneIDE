@@ -1,11 +1,10 @@
-## PhoneIDE
+## Usage
 
-PhoneIDE is a powerful and flexible code editor designed for mobile devices, allowing developers to work on-the-go without sacrificing functionality or usability. With support for multiple coding languages, including Python, JavaScript, Ruby, and more, PhoneIDE is a versatile tool that can be used for a wide range of coding projects. Whether you're writing simple scripts or working on complex applications, PhoneIDE offers a range of features that make coding on a mobile device easier and more productive. With a user-friendly interface and robust set of tools, PhoneIDE is the ideal choice for developers who need a mobile code editor that can keep up with their busy lifestyles.
+To use PhoneIDE in your Flutter app, simply add the `phone_ide` package to your project dependencies and import the `phone_ide.dart` file. You can then use the `Editor` widget to display the code editor in your app.
 
-```Dart
+```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/editor/editor.dart';
-import 'package:flutter_code_editor/models/editor_options.dart';
+import 'package:flutter_code_editor/phone_ide.dart';
 
 void main() {
   runApp(const App());
@@ -16,20 +15,81 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  
-    Editor editor = Editor(
-      language: 'html',
-      options: options,
-    );
-
-    return MaterialApp(
-      home: Row(
-        children: [
-          Expanded(child: editor),
-        ],
-      ),
+    return const MaterialApp(
+      home: EditorView(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
-```
+
+class EditorView extends StatefulWidget {
+  const EditorView({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => EditorViewState();
+}
+
+class EditorViewState extends State<EditorView> {
+  Editor editor = Editor(
+    language: 'html',
+    options: EditorOptions(
+      hasRegion: true,
+    ),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      editor.fileTextStream.add(FileIDE(
+        id: '1',
+        ext: 'HTML',
+        name: 'index',
+        content: """
+          <div>
+            <h1> Hello World! </h1>
+          </div>
+        """,
+        hasRegion: true,
+        region: EditorRegionOptions(start: 1, end: 3),
+      ));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: editor.fileTextStream.stream,
+      builder: (context, snapshot) {
+        return Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(child: editor),
+                ElevatedButton(
+                  onPressed: () {
+                    editor.fileTextStream.add(FileIDE(
+                      id: '2',
+                      ext: 'HTML',
+                      name: 'index',
+                      content: """
+                        <div>
+                          <h1> Hello World from file two! </h1>
+                        </div>
+                      """,
+                      hasRegion: true,
+                      region: EditorRegionOptions(start: 1, end: 3),
+                    ));
+                  },
+                  child: const Text('open another file'),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

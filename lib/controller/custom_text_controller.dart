@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/enums/syntax.dart';
+import 'package:phone_ide/enums/syntax.dart';
 import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
 

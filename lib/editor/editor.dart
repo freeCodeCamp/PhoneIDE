@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_code_editor/controller/custom_text_controller/custom_text_controller.dart';
-import 'package:flutter_code_editor/editor/linebar/linebar_helper.dart';
-import 'package:flutter_code_editor/models/editor_options.dart';
-import 'package:flutter_code_editor/models/file_model.dart';
+import 'package:phone_ide/controller/custom_text_controller.dart';
+import 'package:phone_ide/editor/linebar.dart';
+import 'package:phone_ide/editor/editor_options.dart';
+import 'package:phone_ide/models/file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Editor extends StatefulWidget {
@@ -15,20 +15,18 @@ class Editor extends StatefulWidget {
   }) : super(key: key);
 
   // the coding language in the editor
-
-  String language;
+  final String language;
 
   // A stream where the text in the editor is changable
-
-  StreamController<FileIDE> fileTextStream =
+  final StreamController<FileIDE> fileTextStream =
       StreamController<FileIDE>.broadcast();
 
   // A stream where you can listen to the changes made in the editor
-  StreamController<String> onTextChange = StreamController<String>.broadcast();
+  final StreamController<String> onTextChange =
+      StreamController<String>.broadcast();
 
   // options of the editor
-
-  EditorOptions options = EditorOptions();
+  final EditorOptions options;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -48,26 +46,6 @@ class EditorState extends State<Editor> {
   double _initialWidth = 28;
 
   String currentFileId = '';
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    scrollController.dispose();
-    horizontalController.dispose();
-    linebarController.dispose();
-
-    beforeController.dispose();
-    inController.dispose();
-    afterController.dispose();
-
-    widget.onTextChange.close();
-    widget.fileTextStream.close();
-  }
 
   void updateLineCount(FileIDE file, String event, String region) async {
     late String lines;
@@ -113,6 +91,7 @@ class EditorState extends State<Editor> {
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleRegionFields(file);
+
       if (file.hasRegion) {
         int regionStart = file.region.start!;
         if (prefs.get(file.id) != null) {
@@ -273,15 +252,16 @@ class EditorState extends State<Editor> {
                 ),
               ),
               Expanded(
-                child: editorView(context, file),
+                child: Container(
+                  color: widget.options.editorBackgroundColor,
+                  child: editorView(context, file),
+                ),
               )
             ],
           );
         }
 
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
+        return const Center(child: Text('open file'));
       },
     );
   }
@@ -294,7 +274,7 @@ class EditorState extends State<Editor> {
       children: [
         SizedBox(
           height: 1000,
-          width: widget.options.minHeight,
+          width: 2500,
           child: ListView(
             padding: const EdgeInsets.only(
               top: 0,
@@ -305,7 +285,7 @@ class EditorState extends State<Editor> {
             children: [
               if (file.hasRegion)
                 SizedBox(
-                  width: widget.options.minHeight,
+                  width: 2500,
                   child: TextField(
                     controller: beforeController,
                     decoration: InputDecoration(
@@ -319,20 +299,23 @@ class EditorState extends State<Editor> {
                       ),
                     ),
                     maxLines: null,
-                    style: const TextStyle(fontSize: 18),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white.withOpacity(0.87),
+                    ),
                     onChanged: (String event) {
                       handleTextChange(file, event, 'BEFORE');
                     },
                   ),
                 ),
               Container(
-                width: widget.options.minHeight,
+                width: 2500,
                 decoration: file.hasRegion
                     ? BoxDecoration(
                         border: Border(
                           left: BorderSide(
                             width: 5,
-                            color: widget.options.region!.condition
+                            color: file.region.condition
                                 ? Colors.green
                                 : Colors.grey,
                           ),
@@ -357,12 +340,15 @@ class EditorState extends State<Editor> {
                     handleTextChange(file, event, 'IN');
                   },
                   maxLines: null,
-                  style: const TextStyle(fontSize: 18),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.87),
+                  ),
                 ),
               ),
               if (file.hasRegion)
                 SizedBox(
-                  width: widget.options.minHeight,
+                  width: 2500,
                   child: TextField(
                     controller: afterController,
                     decoration: InputDecoration(
@@ -375,8 +361,9 @@ class EditorState extends State<Editor> {
                       isDense: true,
                     ),
                     maxLines: null,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
+                      color: Colors.white.withOpacity(0.87),
                     ),
                     onChanged: (String event) {
                       handleTextChange(file, event, 'AFTER');
