@@ -1,3 +1,8 @@
+### v1.0.2 
+- removes test file
+- removes redundant options
+- updated applicationId from `com.phone.ide` to `org.freecodecamp.phone_ide`
+
 ### v1.0.1
 - updated `readme.md` to use right package name.
 
