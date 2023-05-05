@@ -120,12 +120,11 @@ class EditorState extends State<Editor> {
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
           );
-
-          scrollController.addListener(() {
-            linebarController.jumpTo(scrollController.offset);
-          });
         });
       }
+      scrollController.addListener(() {
+        linebarController.jumpTo(scrollController.offset);
+      });
     });
 
     TextEditingControllerIDE.language = widget.language;
