@@ -49,17 +49,29 @@ class EditorState extends State<Editor> {
 
   void updateLineCount(FileIDE file, String event, String region) async {
     late String lines;
-    switch (region) {
-      case 'BEFORE':
-        lines = event + '\n' + inController.text + '\n' + afterController.text;
-        break;
-      case 'IN':
-        lines =
-            beforeController.text + '\n' + event + '\n' + afterController.text;
-        break;
-      case 'AFTER':
-        lines = beforeController.text + '\n' + inController.text + '\n' + event;
-        break;
+
+    if (widget.options.hasRegion) {
+      switch (region) {
+        case 'BEFORE':
+          lines =
+              event + '\n' + inController.text + '\n' + afterController.text;
+          break;
+        case 'IN':
+          lines = beforeController.text +
+              '\n' +
+              event +
+              '\n' +
+              afterController.text;
+          break;
+        case 'AFTER':
+          lines =
+              beforeController.text + '\n' + inController.text + '\n' + event;
+          break;
+      }
+    }
+
+    if (!widget.options.hasRegion) {
+      lines = event;
     }
 
     setState(() {
