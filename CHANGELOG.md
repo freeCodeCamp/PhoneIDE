@@ -1,3 +1,7 @@
+### v1.0.3
+- fixes a bug where the linebar displays the incorrect amount of line numbers
+- fixes a bug where the linebar does not scroll with the editor
+
 ### v1.0.2 
 - removes test file
 - removes redundant options
