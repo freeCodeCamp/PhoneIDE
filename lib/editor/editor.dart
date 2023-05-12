@@ -255,12 +255,7 @@ class EditorState extends State<Editor> {
                     ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 10,
-                  ),
-                  child: linecountBar(),
-                ),
+                child: linecountBar(),
               ),
               Expanded(
                 child: Container(
@@ -287,9 +282,7 @@ class EditorState extends State<Editor> {
           height: 1000,
           width: 2500,
           child: ListView(
-            padding: const EdgeInsets.only(
-              top: 0,
-            ),
+            padding: const EdgeInsets.only(top: 10),
             controller: scrollController,
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
@@ -305,7 +298,6 @@ class EditorState extends State<Editor> {
                       filled: true,
                       isDense: true,
                       contentPadding: const EdgeInsets.only(
-                        top: 10,
                         left: 10,
                       ),
                     ),
@@ -393,7 +385,7 @@ class EditorState extends State<Editor> {
       children: [
         Flexible(
           child: ListView.builder(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.only(top: 10),
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
