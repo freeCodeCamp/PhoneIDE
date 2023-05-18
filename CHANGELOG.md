@@ -1,3 +1,6 @@
+### v1.1.0
+- creates an example for the phoneIDE package
+
 ### v1.0.4
 - fixes a bug where the linebanr does not correctly align with top of the editor
 
