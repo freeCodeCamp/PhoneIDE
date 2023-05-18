@@ -12,10 +12,27 @@ class FileIDE {
     required this.region,
   });
 
+  // [id] is the id of the file.
+
   final String id;
+
+  // [ext] is the extension of the file.
+
   final String ext;
+
+  // [name] is the name of the file.
+
   final String name;
+
+  // [content] is the content of the file.
+
   final String content;
+
+  // [hasRegion] is whether the file has a region.
+
   final bool hasRegion;
+
+  // [region] is the region of the file.
+
   final EditorRegionOptions region;
 }

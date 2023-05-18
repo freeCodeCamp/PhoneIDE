@@ -1,14 +1,12 @@
 name: phone_ide
-description: PhoneIDE freeCodeCamps Mobile Editor Made with Flutter.
+description: PhoneIDE is a highly dynamic IDE for learning on freeCodeCamp's mobile app.
 version: 1.0.4+1
 repository: https://github.com/freeCodeCamp/PhoneIDE
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.15.0 <3.0.0"
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-  property_change_notifier: ^0.3.0
   shared_preferences: ^2.0.13
   highlight: ^0.7.0
   flutter_highlight: ^0.7.0

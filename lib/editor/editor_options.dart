@@ -8,11 +8,19 @@ class EditorOptions {
     this.hasRegion = false,
   });
 
+  // [editorBackgroundColor] is the background color of the editor.
+
   Color editorBackgroundColor;
+
+  // [linebarColor] is the background color of the linebar.
 
   Color linebarColor;
 
+  // [linebarTextColor] is the text color of the linebar.
+
   Color linebarTextColor;
+
+  // [hasRegion] is whether the editor has a region.
 
   bool hasRegion;
 }
@@ -25,8 +33,18 @@ class EditorRegionOptions {
     this.condition = false,
   });
 
+  // [start] is the start line of the region.
+
   int? start;
+
+  // [end] is the end line of the region.
   int? end;
+
+  // [color] is the background color of the region.
+
   Color color;
+
+  // [condition] is wheter the region has a condition which will show the border red or green.
+
   bool condition;
 }
