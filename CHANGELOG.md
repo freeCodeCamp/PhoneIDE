@@ -1,3 +1,6 @@
+### v1.0.4
+- fixes a bug where the linebanr does not correctly align with top of the editor
+
 ### v1.0.3
 - fixes a bug where the linebar displays the incorrect amount of line numbers
 - fixes a bug where the linebar does not scroll with the editor
