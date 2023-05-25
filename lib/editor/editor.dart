@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
@@ -47,25 +48,16 @@ class EditorState extends State<Editor> {
 
   String currentFileId = '';
 
-  List<double> fieldSizes = [0, 0, 0];
-
-  void updateLineCount(String field, double? height) async {
-    if (height != null) {
-      if (field == 'BEFORE' && fieldSizes[0] != height) {
-        fieldSizes[0] = height;
-      } else if (field == 'IN' && fieldSizes[1] != height) {
-        fieldSizes[1] = height;
-      } else if (field == 'AFTER' && fieldSizes[2] != height) {
-        fieldSizes[2] = height;
-      }
-    }
-
-    double totalHeight = fieldSizes.reduce((a, b) => a + b);
-
+  void updateLineCount(double? totalHeight) async {
+    totalHeight = totalHeight ?? 48;
     double totalLines = totalHeight / getTextHeight(context);
 
+    double totalHeightWithoutPadding = totalHeight - totalLines * 3;
+    double totalLinesWithoutPadding =
+        totalHeightWithoutPadding / getTextHeight(context);
+
     setState(() {
-      _currNumLines = totalLines.toInt();
+      _currNumLines = totalLinesWithoutPadding.toInt() + 1;
     });
   }
 
@@ -279,141 +271,105 @@ class EditorState extends State<Editor> {
                 controller: scrollController,
                 shrinkWrap: true,
                 children: [
-                  if (file.hasRegion)
-                    LayoutBuilder(
-                      builder: (localContext, constraints) {
-                        late StreamSubscription subscription;
-
-                        subscription =
-                            widget.onTextChange.stream.listen((event) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            updateLineCount(
-                              'BEFORE',
-                              localContext.size?.height,
-                            );
-                          });
-
-                          subscription.cancel();
-                        });
-
-                        return TextField(
-                          controller: beforeController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            fillColor: widget.options.editorBackgroundColor,
-                            filled: true,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.only(
-                              left: 10,
-                            ),
-                          ),
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white.withOpacity(0.87),
-                          ),
-                          onChanged: (String code) {
-                            handleTextChange(file, code, 'BEFORE');
-                          },
-                        );
-                      },
-                    ),
                   LayoutBuilder(
                     builder: (localContext, constraints) {
                       late StreamSubscription subscription;
 
                       subscription = widget.onTextChange.stream.listen((event) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          updateLineCount(
-                            'IN',
-                            localContext.size?.height,
-                          );
+                          updateLineCount(localContext.size?.height);
                         });
-
                         subscription.cancel();
                       });
 
-                      return Container(
-                        decoration: file.hasRegion
-                            ? BoxDecoration(
-                                border: Border(
-                                  left: BorderSide(
-                                    width: 5,
-                                    color: file.region.condition
-                                        ? Colors.green
-                                        : Colors.grey,
-                                  ),
+                      return Column(
+                        children: [
+                          if (file.hasRegion)
+                            TextField(
+                              controller: beforeController,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                fillColor: widget.options.editorBackgroundColor,
+                                filled: true,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.only(
+                                  left: 10,
                                 ),
-                              )
-                            : null,
-                        child: TextField(
-                          controller: inController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            fillColor: file.hasRegion
-                                ? file.region.color
-                                : widget.options.editorBackgroundColor,
-                            filled: true,
-                            isDense: true,
-                            contentPadding: EdgeInsets.only(
-                              left: 10,
-                              top: file.hasRegion ? 0 : 10,
+                              ),
+                              maxLines: null,
+                              keyboardType: TextInputType.multiline,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white.withOpacity(0.87),
+                              ),
+                              onChanged: (String code) {
+                                handleTextChange(file, code, 'BEFORE');
+                              },
+                            ),
+                          Container(
+                            decoration: file.hasRegion
+                                ? BoxDecoration(
+                                    border: Border(
+                                      left: BorderSide(
+                                        width: 5,
+                                        color: file.region.condition
+                                            ? Colors.green
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                            child: TextField(
+                              controller: inController,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                fillColor: file.hasRegion
+                                    ? file.region.color
+                                    : widget.options.editorBackgroundColor,
+                                filled: true,
+                                isDense: true,
+                                contentPadding: EdgeInsets.only(
+                                  left: 10,
+                                  top: file.hasRegion ? 0 : 10,
+                                ),
+                              ),
+                              onChanged: (String code) {
+                                handleTextChange(file, code, 'IN');
+                              },
+                              maxLines: null,
+                              keyboardType: TextInputType.multiline,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white.withOpacity(0.87),
+                              ),
                             ),
                           ),
-                          onChanged: (String code) {
-                            handleTextChange(file, code, 'IN');
-                          },
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white.withOpacity(0.87),
-                          ),
-                        ),
+                          if (file.hasRegion)
+                            TextField(
+                              controller: afterController,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                filled: true,
+                                fillColor: widget.options.editorBackgroundColor,
+                                contentPadding: const EdgeInsets.only(
+                                  left: 10,
+                                ),
+                                isDense: true,
+                              ),
+                              maxLines: null,
+                              keyboardType: TextInputType.multiline,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white.withOpacity(0.87),
+                              ),
+                              onChanged: (String code) {
+                                handleTextChange(file, code, 'AFTER');
+                              },
+                            )
+                        ],
                       );
                     },
                   ),
-                  if (file.hasRegion)
-                    LayoutBuilder(
-                      builder: (localContext, constraints) {
-                        late StreamSubscription subscription;
-
-                        subscription =
-                            widget.onTextChange.stream.listen((event) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            updateLineCount(
-                              'AFTER',
-                              localContext.size?.height,
-                            );
-                          });
-
-                          subscription.cancel();
-                        });
-
-                        return TextField(
-                          controller: afterController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            filled: true,
-                            fillColor: widget.options.editorBackgroundColor,
-                            contentPadding: const EdgeInsets.only(
-                              left: 10,
-                            ),
-                            isDense: true,
-                          ),
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white.withOpacity(0.87),
-                          ),
-                          onChanged: (String code) {
-                            handleTextChange(file, code, 'AFTER');
-                          },
-                        );
-                      },
-                    ),
                 ],
               );
             },
