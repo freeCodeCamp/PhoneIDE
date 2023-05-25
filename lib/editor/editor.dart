@@ -47,35 +47,25 @@ class EditorState extends State<Editor> {
 
   String currentFileId = '';
 
-  void updateLineCount(FileIDE file, String event, String region) async {
-    late String lines;
+  List<double> fieldSizes = [0, 0, 0];
 
-    if (widget.options.hasRegion) {
-      switch (region) {
-        case 'BEFORE':
-          lines =
-              event + '\n' + inController.text + '\n' + afterController.text;
-          break;
-        case 'IN':
-          lines = beforeController.text +
-              '\n' +
-              event +
-              '\n' +
-              afterController.text;
-          break;
-        case 'AFTER':
-          lines =
-              beforeController.text + '\n' + inController.text + '\n' + event;
-          break;
+  void updateLineCount(String field, double? height) async {
+    if (height != null) {
+      if (field == 'BEFORE' && fieldSizes[0] != height) {
+        fieldSizes[0] = height;
+      } else if (field == 'IN' && fieldSizes[1] != height) {
+        fieldSizes[1] = height;
+      } else if (field == 'AFTER' && fieldSizes[2] != height) {
+        fieldSizes[2] = height;
       }
     }
 
-    if (!widget.options.hasRegion) {
-      lines = event;
-    }
+    double totalHeight = fieldSizes.reduce((a, b) => a + b);
+
+    double totalLines = totalHeight / getTextHeight(context);
 
     setState(() {
-      _currNumLines = lines.split('\n').length;
+      _currNumLines = totalLines.toInt();
     });
   }
 
@@ -192,25 +182,23 @@ class EditorState extends State<Editor> {
     );
   }
 
-  handleTextChange(FileIDE file, String event, String region) {
-    updateLineCount(file, event, region);
-
+  handleTextChange(FileIDE file, String code, String region) {
     if (file.hasRegion && region != 'AFTER') {
-      handleRegionCaching(file, event, region);
+      handleRegionCaching(file, code, region);
     }
 
     late String text;
 
     switch (region) {
       case 'BEFORE':
-        text = event + '\n' + inController.text + '\n' + afterController.text;
+        text = code + '\n' + inController.text + '\n' + afterController.text;
         break;
       case 'IN':
         text =
-            beforeController.text + '\n' + event + '\n' + afterController.text;
+            beforeController.text + '\n' + code + '\n' + afterController.text;
         break;
       case 'AFTER':
-        text = beforeController.text + '\n' + inController.text + '\n' + event;
+        text = beforeController.text + '\n' + inController.text + '\n' + code;
         break;
     }
 
@@ -284,94 +272,151 @@ class EditorState extends State<Editor> {
         SizedBox(
           height: 1000,
           width: widget.options.wrap ? MediaQuery.of(context).size.width : 2500,
-          child: ListView(
-            padding: const EdgeInsets.only(top: 10),
-            controller: scrollController,
-            shrinkWrap: true,
-            children: [
-              if (file.hasRegion)
-                TextField(
-                  controller: beforeController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(
-                      left: 10,
+          child: LayoutBuilder(
+            builder: (p0, p1) {
+              return ListView(
+                padding: const EdgeInsets.only(top: 10),
+                controller: scrollController,
+                shrinkWrap: true,
+                children: [
+                  if (file.hasRegion)
+                    LayoutBuilder(
+                      builder: (localContext, constraints) {
+                        late StreamSubscription subscription;
+
+                        subscription =
+                            widget.onTextChange.stream.listen((event) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            updateLineCount(
+                              'BEFORE',
+                              localContext.size?.height,
+                            );
+                          });
+
+                          subscription.cancel();
+                        });
+
+                        return TextField(
+                          controller: beforeController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            fillColor: widget.options.editorBackgroundColor,
+                            filled: true,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.only(
+                              left: 10,
+                            ),
+                          ),
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.87),
+                          ),
+                          onChanged: (String code) {
+                            handleTextChange(file, code, 'BEFORE');
+                          },
+                        );
+                      },
                     ),
-                  ),
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white.withOpacity(0.87),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(file, event, 'BEFORE');
-                  },
-                ),
-              Container(
-                decoration: file.hasRegion
-                    ? BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            width: 5,
-                            color: file.region.condition
-                                ? Colors.green
-                                : Colors.grey,
+                  LayoutBuilder(
+                    builder: (localContext, constraints) {
+                      late StreamSubscription subscription;
+
+                      subscription = widget.onTextChange.stream.listen((event) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          updateLineCount(
+                            'IN',
+                            localContext.size?.height,
+                          );
+                        });
+
+                        subscription.cancel();
+                      });
+
+                      return Container(
+                        decoration: file.hasRegion
+                            ? BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    width: 5,
+                                    color: file.region.condition
+                                        ? Colors.green
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        child: TextField(
+                          controller: inController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            fillColor: file.hasRegion
+                                ? file.region.color
+                                : widget.options.editorBackgroundColor,
+                            filled: true,
+                            isDense: true,
+                            contentPadding: EdgeInsets.only(
+                              left: 10,
+                              top: file.hasRegion ? 0 : 10,
+                            ),
+                          ),
+                          onChanged: (String code) {
+                            handleTextChange(file, code, 'IN');
+                          },
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.87),
                           ),
                         ),
-                      )
-                    : null,
-                child: TextField(
-                  controller: inController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: file.hasRegion
-                        ? file.region.color
-                        : widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: EdgeInsets.only(
-                      left: 10,
-                      top: file.hasRegion ? 0 : 10,
+                      );
+                    },
+                  ),
+                  if (file.hasRegion)
+                    LayoutBuilder(
+                      builder: (localContext, constraints) {
+                        late StreamSubscription subscription;
+
+                        subscription =
+                            widget.onTextChange.stream.listen((event) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            updateLineCount(
+                              'AFTER',
+                              localContext.size?.height,
+                            );
+                          });
+
+                          subscription.cancel();
+                        });
+
+                        return TextField(
+                          controller: afterController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: widget.options.editorBackgroundColor,
+                            contentPadding: const EdgeInsets.only(
+                              left: 10,
+                            ),
+                            isDense: true,
+                          ),
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.87),
+                          ),
+                          onChanged: (String code) {
+                            handleTextChange(file, code, 'AFTER');
+                          },
+                        );
+                      },
                     ),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(file, event, 'IN');
-                  },
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white.withOpacity(0.87),
-                  ),
-                ),
-              ),
-              if (file.hasRegion)
-                TextField(
-                  controller: afterController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    filled: true,
-                    fillColor: widget.options.editorBackgroundColor,
-                    contentPadding: const EdgeInsets.only(
-                      left: 10,
-                    ),
-                    isDense: true,
-                  ),
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white.withOpacity(0.87),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(file, event, 'AFTER');
-                  },
-                ),
-            ],
+                ],
+              );
+            },
           ),
         )
       ],
