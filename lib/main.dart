@@ -38,18 +38,20 @@ class EditorViewState extends State<EditorView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      editor.fileTextStream.add(FileIDE(
-        id: '1',
-        ext: 'HTML',
-        name: 'index',
-        content: """
+      editor.fileTextStream.add(
+        FileIDE(
+          id: '1',
+          ext: 'HTML',
+          name: 'index',
+          content: '''
           <div>
             <h1> Hello World! </h1>
           </div>
-        """,
-        hasRegion: true,
-        region: EditorRegionOptions(start: 1, end: 3),
-      ));
+        ''',
+          hasRegion: true,
+          region: EditorRegionOptions(start: 1, end: 3),
+        ),
+      );
     });
   }
 
@@ -69,11 +71,11 @@ class EditorViewState extends State<EditorView> {
                       id: '2',
                       ext: 'HTML',
                       name: 'index',
-                      content: """
+                      content: '''
                         <div>
                           <h1> Hello World from file two! </h1>
                         </div>
-                      """,
+                      ''',
                       hasRegion: true,
                       region: EditorRegionOptions(start: 1, end: 3),
                     ));

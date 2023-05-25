@@ -144,17 +144,17 @@ class EditorState extends State<Editor> {
 
       if (file.content.split('\n').length > 1) {
         String beforeEditableRegionText =
-            file.content.split("\n").sublist(0, regionStart).join("\n");
+            file.content.split('\n').sublist(0, regionStart).join('\n');
 
         String inEditableRegionText = file.content
-            .split("\n")
+            .split('\n')
             .sublist(regionStart, regionEnd - 1)
-            .join("\n");
+            .join('\n');
 
         String afterEditableRegionText = file.content
-            .split("\n")
-            .sublist(regionEnd - 1, file.content.split("\n").length)
-            .join("\n");
+            .split('\n')
+            .sublist(regionEnd - 1, file.content.split('\n').length)
+            .join('\n');
         beforeController.text = beforeEditableRegionText;
         inController.text = inEditableRegionText;
         afterController.text = afterEditableRegionText;
@@ -166,7 +166,7 @@ class EditorState extends State<Editor> {
     }
 
     setState(() {
-      _currNumLines = file.content.split("\n").length;
+      _currNumLines = file.content.split('\n').length;
     });
   }
 
