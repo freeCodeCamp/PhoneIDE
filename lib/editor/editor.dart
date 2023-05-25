@@ -45,11 +45,13 @@ class EditorState extends State<Editor> {
   int _currNumLines = 1;
 
   double _initialWidth = 28;
+  double _height = 0;
 
   String currentFileId = '';
 
   void updateLineCount(double? totalHeight) async {
     totalHeight = totalHeight ?? 48;
+    _height = totalHeight;
     double totalLines = totalHeight / getTextHeight(context);
 
     double totalHeightWithoutPadding = totalHeight - totalLines * 3;
@@ -264,115 +266,108 @@ class EditorState extends State<Editor> {
         SizedBox(
           height: 1000,
           width: widget.options.wrap ? MediaQuery.of(context).size.width : 2500,
-          child: LayoutBuilder(
-            builder: (p0, p1) {
-              return ListView(
-                padding: const EdgeInsets.only(top: 10),
-                controller: scrollController,
-                shrinkWrap: true,
-                children: [
-                  LayoutBuilder(
-                    builder: (localContext, constraints) {
-                      late StreamSubscription subscription;
+          child: ListView(
+            padding: widget.options.editorPadding,
+            controller: scrollController,
+            shrinkWrap: true,
+            children: [
+              LayoutBuilder(
+                builder: (localContext, constraints) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (localContext.size?.height != _height) {
+                      updateLineCount(localContext.size?.height);
+                    }
+                  });
 
-                      subscription = widget.onTextChange.stream.listen((event) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          updateLineCount(localContext.size?.height);
-                        });
-                        subscription.cancel();
-                      });
-
-                      return Column(
-                        children: [
-                          if (file.hasRegion)
-                            TextField(
-                              controller: beforeController,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                fillColor: widget.options.editorBackgroundColor,
-                                filled: true,
-                                isDense: true,
-                                contentPadding: const EdgeInsets.only(
-                                  left: 10,
-                                ),
-                              ),
-                              maxLines: null,
-                              keyboardType: TextInputType.multiline,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white.withOpacity(0.87),
-                              ),
-                              onChanged: (String code) {
-                                handleTextChange(file, code, 'BEFORE');
-                              },
-                            ),
-                          Container(
-                            decoration: file.hasRegion
-                                ? BoxDecoration(
-                                    border: Border(
-                                      left: BorderSide(
-                                        width: 5,
-                                        color: file.region.condition
-                                            ? Colors.green
-                                            : Colors.grey,
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                            child: TextField(
-                              controller: inController,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                fillColor: file.hasRegion
-                                    ? file.region.color
-                                    : widget.options.editorBackgroundColor,
-                                filled: true,
-                                isDense: true,
-                                contentPadding: EdgeInsets.only(
-                                  left: 10,
-                                  top: file.hasRegion ? 0 : 10,
-                                ),
-                              ),
-                              onChanged: (String code) {
-                                handleTextChange(file, code, 'IN');
-                              },
-                              maxLines: null,
-                              keyboardType: TextInputType.multiline,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white.withOpacity(0.87),
-                              ),
+                  return Column(
+                    children: [
+                      if (file.hasRegion)
+                        TextField(
+                          controller: beforeController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            fillColor: widget.options.editorBackgroundColor,
+                            filled: true,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.only(
+                              left: 10,
                             ),
                           ),
-                          if (file.hasRegion)
-                            TextField(
-                              controller: afterController,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                filled: true,
-                                fillColor: widget.options.editorBackgroundColor,
-                                contentPadding: const EdgeInsets.only(
-                                  left: 10,
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.87),
+                          ),
+                          onChanged: (String code) {
+                            handleTextChange(file, code, 'BEFORE');
+                          },
+                        ),
+                      Container(
+                        decoration: file.hasRegion
+                            ? BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    width: 5,
+                                    color: file.region.condition
+                                        ? Colors.green
+                                        : Colors.grey,
+                                  ),
                                 ),
-                                isDense: true,
-                              ),
-                              maxLines: null,
-                              keyboardType: TextInputType.multiline,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white.withOpacity(0.87),
-                              ),
-                              onChanged: (String code) {
-                                handleTextChange(file, code, 'AFTER');
-                              },
-                            )
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
+                              )
+                            : null,
+                        child: TextField(
+                          controller: inController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            fillColor: file.hasRegion
+                                ? file.region.color
+                                : widget.options.editorBackgroundColor,
+                            filled: true,
+                            isDense: true,
+                            contentPadding: EdgeInsets.only(
+                              left: 10,
+                              top: file.hasRegion ? 0 : 10,
+                            ),
+                          ),
+                          onChanged: (String code) {
+                            handleTextChange(file, code, 'IN');
+                          },
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.87),
+                          ),
+                        ),
+                      ),
+                      if (file.hasRegion)
+                        TextField(
+                          controller: afterController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: widget.options.editorBackgroundColor,
+                            contentPadding: const EdgeInsets.only(
+                              left: 10,
+                            ),
+                            isDense: true,
+                          ),
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.87),
+                          ),
+                          onChanged: (String code) {
+                            handleTextChange(file, code, 'AFTER');
+                          },
+                        )
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         )
       ],

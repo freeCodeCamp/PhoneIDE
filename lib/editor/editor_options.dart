@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class EditorOptions {
   EditorOptions({
     this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.editorPadding = const EdgeInsets.all(0),
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
     this.hasRegion = false,
@@ -12,6 +13,10 @@ class EditorOptions {
   // [editorBackgroundColor] is the background color of the editor.
 
   Color editorBackgroundColor;
+
+  // [editorPadding] is the padding of the editor.
+
+  EdgeInsets editorPadding;
 
   // [linebarColor] is the background color of the linebar.
 
