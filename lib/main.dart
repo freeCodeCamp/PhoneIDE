@@ -29,9 +29,7 @@ class EditorView extends StatefulWidget {
 class EditorViewState extends State<EditorView> {
   Editor editor = Editor(
     language: 'html',
-    options: EditorOptions(
-      hasRegion: true,
-    ),
+    options: EditorOptions(hasRegion: true, wrap: true),
   );
 
   @override

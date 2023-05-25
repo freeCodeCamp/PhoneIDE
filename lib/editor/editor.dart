@@ -276,43 +276,42 @@ class EditorState extends State<Editor> {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
       scrollDirection: Axis.horizontal,
+      physics: widget.options.wrap
+          ? const NeverScrollableScrollPhysics()
+          : const ScrollPhysics(),
       controller: horizontalController,
       children: [
         SizedBox(
           height: 1000,
-          width: 2500,
+          width: widget.options.wrap ? MediaQuery.of(context).size.width : 2500,
           child: ListView(
             padding: const EdgeInsets.only(top: 10),
             controller: scrollController,
-            scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
               if (file.hasRegion)
-                SizedBox(
-                  width: 2500,
-                  child: TextField(
-                    controller: beforeController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      fillColor: widget.options.editorBackgroundColor,
-                      filled: true,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.only(
-                        left: 10,
-                      ),
+                TextField(
+                  controller: beforeController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    fillColor: widget.options.editorBackgroundColor,
+                    filled: true,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.only(
+                      left: 10,
                     ),
-                    maxLines: null,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white.withOpacity(0.87),
-                    ),
-                    onChanged: (String event) {
-                      handleTextChange(file, event, 'BEFORE');
-                    },
                   ),
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.87),
+                  ),
+                  onChanged: (String event) {
+                    handleTextChange(file, event, 'BEFORE');
+                  },
                 ),
               Container(
-                width: 2500,
                 decoration: file.hasRegion
                     ? BoxDecoration(
                         border: Border(
@@ -343,6 +342,7 @@ class EditorState extends State<Editor> {
                     handleTextChange(file, event, 'IN');
                   },
                   maxLines: null,
+                  keyboardType: TextInputType.multiline,
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white.withOpacity(0.87),
@@ -350,28 +350,26 @@ class EditorState extends State<Editor> {
                 ),
               ),
               if (file.hasRegion)
-                SizedBox(
-                  width: 2500,
-                  child: TextField(
-                    controller: afterController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      filled: true,
-                      fillColor: widget.options.editorBackgroundColor,
-                      contentPadding: const EdgeInsets.only(
-                        left: 10,
-                      ),
-                      isDense: true,
+                TextField(
+                  controller: afterController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: widget.options.editorBackgroundColor,
+                    contentPadding: const EdgeInsets.only(
+                      left: 10,
                     ),
-                    maxLines: null,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white.withOpacity(0.87),
-                    ),
-                    onChanged: (String event) {
-                      handleTextChange(file, event, 'AFTER');
-                    },
+                    isDense: true,
                   ),
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.87),
+                  ),
+                  onChanged: (String event) {
+                    handleTextChange(file, event, 'AFTER');
+                  },
                 ),
             ],
           ),
