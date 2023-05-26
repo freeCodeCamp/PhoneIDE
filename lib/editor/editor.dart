@@ -269,6 +269,7 @@ class EditorState extends State<Editor> {
           child: ListView(
             padding: widget.options.editorPadding,
             controller: scrollController,
+            physics: const ClampingScrollPhysics(),
             shrinkWrap: true,
             children: [
               LayoutBuilder(
