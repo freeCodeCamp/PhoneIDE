@@ -71,8 +71,6 @@ class EditorState extends State<Editor> {
         afterController.text;
 
     List<String> countNewLines(List<String> textArr) {
-      bool needsRecursion = false;
-
       for (int i = 0; i < textArr.length; i++) {
         if (textArr[i].length > 35) {
           int spacesCounted = 0;
@@ -85,27 +83,15 @@ class EditorState extends State<Editor> {
             }
           }
 
-          if (textArr[i].split(' ')[spacesCounted].length > 35) {
-            textArr.insert(
-              i + 1,
-              textArr[i].split(' ')[spacesCounted].substring(35),
-            );
-            textArr[i] = textArr[i].split(' ')[spacesCounted].substring(0, 35);
-
-            needsRecursion = true;
-          }
+          String nextLine = textArr[i].split(' ')[spacesCounted];
+          textArr.insert(i + 1, nextLine + textArr[i].split(nextLine)[1]);
+          textArr[i] = textArr[i].split(nextLine)[0];
         }
       }
-
-      if (needsRecursion) {
-        countNewLines(textArr);
-      }
-
       return textArr;
     }
 
     List<String> textLines = countNewLines(text.split('\n'));
-    log(textLines.toString());
   }
 
   double getTextHeight(BuildContext context, {double fontSize = 18}) {
