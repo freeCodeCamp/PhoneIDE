@@ -63,60 +63,42 @@ class EditorState extends State<Editor> {
     });
   }
 
-  getLineWidth(BuildContext context) {
+  getLineInformation(BuildContext context) {
     String text = beforeController.text +
         '\n' +
         inController.text +
         '\n' +
         afterController.text;
 
-    Size textSize = Linebar.calculateTextSize(
-      text[0],
-      style: TextStyle(
-        color: widget.options.linebarTextColor,
-      ),
-      context: context,
-      maxWidth: context.size?.width ?? 0,
-    );
-
-    List<bool> includesNewLine = [];
-
     List<String> countNewLines(List<String> textArr) {
-      bool needsToRecurse = false;
+      bool needsRecursion = false;
+
       for (int i = 0; i < textArr.length; i++) {
         if (textArr[i].length > 35) {
-          List<String> words = textArr[i].split(' ');
+          int spacesCounted = 0;
 
-          int emptySpace = 0;
-          int totalLength = 0;
-          String wordBeforeCutting = '';
-
-          for (int j = 0; j < words.length; j++) {
-            if (words[j] == '') {
-              emptySpace++;
-            } else {
-              if ((totalLength += words[j].length + emptySpace) >= 35) {
-                wordBeforeCutting = words[j];
-
-                textArr.insert(
-                  i + 1,
-                  wordBeforeCutting + textArr[i].split(wordBeforeCutting)[1],
-                );
-
-                textArr[i] = textArr[i].split(wordBeforeCutting)[0];
-
-                needsToRecurse = true;
+          for (int j = 0; j < textArr[i].length; j++) {
+            if (j <= 35) {
+              if (textArr[i][j] == ' ') {
+                spacesCounted++;
               }
-              emptySpace = 0;
             }
+          }
+
+          if (textArr[i].split(' ')[spacesCounted].length > 35) {
+            textArr.insert(
+              i + 1,
+              textArr[i].split(' ')[spacesCounted].substring(35),
+            );
+            textArr[i] = textArr[i].split(' ')[spacesCounted].substring(0, 35);
+
+            needsRecursion = true;
           }
         }
       }
 
-      if (needsToRecurse) {
+      if (needsRecursion) {
         countNewLines(textArr);
-      } else {
-        return textArr;
       }
 
       return textArr;
@@ -370,7 +352,7 @@ class EditorState extends State<Editor> {
                           ),
                           onChanged: (String code) {
                             handleTextChange(file, code, 'BEFORE');
-                            getLineWidth(localContext);
+                            getLineInformation(localContext);
                           },
                         ),
                       Container(
