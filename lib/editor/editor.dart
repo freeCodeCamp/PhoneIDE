@@ -291,6 +291,8 @@ class EditorState extends State<Editor> {
                 SizedBox(
                   width: 2500,
                   child: TextField(
+                    smartQuotesType: SmartQuotesType.disabled,
+                    smartDashesType: SmartDashesType.disabled,
                     controller: beforeController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -326,6 +328,8 @@ class EditorState extends State<Editor> {
                       )
                     : null,
                 child: TextField(
+                  smartQuotesType: SmartQuotesType.disabled,
+                  smartDashesType: SmartDashesType.disabled,
                   controller: inController,
                   decoration: InputDecoration(
                     border: InputBorder.none,
@@ -353,6 +357,8 @@ class EditorState extends State<Editor> {
                 SizedBox(
                   width: 2500,
                   child: TextField(
+                    smartQuotesType: SmartQuotesType.disabled,
+                    smartDashesType: SmartDashesType.disabled,
                     controller: afterController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
