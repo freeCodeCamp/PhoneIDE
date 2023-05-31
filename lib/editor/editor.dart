@@ -49,7 +49,7 @@ class EditorState extends State<Editor> {
 
   String currentFileId = '';
 
-  void updateLineCount(double? totalHeight) async {
+  updateLineCount(double? totalHeight) async {
     totalHeight = totalHeight ?? 48;
     _height = totalHeight;
     double totalLines = totalHeight / getTextHeight(context);
@@ -61,6 +61,69 @@ class EditorState extends State<Editor> {
     setState(() {
       _currNumLines = totalLinesWithoutPadding.toInt() + 1;
     });
+  }
+
+  getLineWidth(BuildContext context) {
+    String text = beforeController.text +
+        '\n' +
+        inController.text +
+        '\n' +
+        afterController.text;
+
+    Size textSize = Linebar.calculateTextSize(
+      text[0],
+      style: TextStyle(
+        color: widget.options.linebarTextColor,
+      ),
+      context: context,
+      maxWidth: context.size?.width ?? 0,
+    );
+
+    List<bool> includesNewLine = [];
+
+    List<String> countNewLines(List<String> textArr) {
+      bool needsToRecurse = false;
+      for (int i = 0; i < textArr.length; i++) {
+        if (textArr[i].length > 35) {
+          List<String> words = textArr[i].split(' ');
+
+          int emptySpace = 0;
+          int totalLength = 0;
+          String wordBeforeCutting = '';
+
+          for (int j = 0; j < words.length; j++) {
+            if (words[j] == '') {
+              emptySpace++;
+            } else {
+              if ((totalLength += words[j].length + emptySpace) >= 35) {
+                wordBeforeCutting = words[j];
+
+                textArr.insert(
+                  i + 1,
+                  wordBeforeCutting + textArr[i].split(wordBeforeCutting)[1],
+                );
+
+                textArr[i] = textArr[i].split(wordBeforeCutting)[0];
+
+                needsToRecurse = true;
+              }
+              emptySpace = 0;
+            }
+          }
+        }
+      }
+
+      if (needsToRecurse) {
+        countNewLines(textArr);
+      } else {
+        return textArr;
+      }
+
+      return textArr;
+    }
+
+    List<String> textLines = countNewLines(text.split('\n'));
+    log(textLines.toString());
   }
 
   double getTextHeight(BuildContext context, {double fontSize = 18}) {
@@ -256,7 +319,9 @@ class EditorState extends State<Editor> {
 
   Widget editorView(BuildContext context, FileIDE file) {
     return ListView(
-      padding: const EdgeInsets.only(top: 0),
+      padding: const EdgeInsets.only(
+        top: 0,
+      ),
       scrollDirection: Axis.horizontal,
       physics: widget.options.wrap
           ? const NeverScrollableScrollPhysics()
@@ -292,8 +357,9 @@ class EditorState extends State<Editor> {
                             fillColor: widget.options.editorBackgroundColor,
                             filled: true,
                             isDense: true,
-                            contentPadding: const EdgeInsets.only(
+                            contentPadding: EdgeInsets.only(
                               left: 10,
+                              right: widget.options.wrap ? _initialWidth : 0,
                             ),
                           ),
                           maxLines: null,
@@ -304,6 +370,7 @@ class EditorState extends State<Editor> {
                           ),
                           onChanged: (String code) {
                             handleTextChange(file, code, 'BEFORE');
+                            getLineWidth(localContext);
                           },
                         ),
                       Container(
@@ -332,6 +399,7 @@ class EditorState extends State<Editor> {
                             isDense: true,
                             contentPadding: EdgeInsets.only(
                               left: 10,
+                              right: widget.options.wrap ? _initialWidth : 0,
                               top: file.hasRegion ? 0 : 10,
                             ),
                           ),
@@ -355,8 +423,9 @@ class EditorState extends State<Editor> {
                             border: InputBorder.none,
                             filled: true,
                             fillColor: widget.options.editorBackgroundColor,
-                            contentPadding: const EdgeInsets.only(
+                            contentPadding: EdgeInsets.only(
                               left: 10,
+                              right: widget.options.wrap ? _initialWidth : 0,
                             ),
                             isDense: true,
                           ),
