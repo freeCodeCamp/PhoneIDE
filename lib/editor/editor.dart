@@ -80,70 +80,54 @@ class EditorState extends State<Editor> {
 
       List<bool> isWrappedLine = [];
 
-      List<String> capturedWords = [];
+      int initialLength = textArr.length;
 
-      for (int i = 0; i < textArr.length; i++) {
+      List<String> capturedWords = [];
+      for (int i = 0; i <= initialLength; i++) {
         if (textArr[i].length > 35) {
           int spacesCounted = 0;
 
-          for (int j = 0; j < textArr[i].length; j++) {
-            if (j <= 35) {
-              String currWord = textArr[i].split(' ')[spacesCounted];
+          if (textArr[i].contains('/')) {
+            if (textArr[i].length > 35) {
+              List words = [];
 
-              if (!capturedWords.contains(currWord)) {
-                capturedWords.add(currWord);
-              }
+              List<String> splitOnFrontSlash = textArr[i].split('/');
 
-              if (textArr[i][j] == ' ') {
-                spacesCounted++;
-              }
-            }
-          }
+              for (int k = 0; k < splitOnFrontSlash.length; k++) {
+                String slashed = words.join('/');
 
-          List<String> nextLine = textArr[i].split(' ').sublist(spacesCounted);
-
-          for (int j = 0; j < nextLine.length; j++) {
-            if (nextLine[j].contains('/')) {
-              if (nextLine[j].length > 35) {
-                List words = [];
-
-                List<String> splitOnFrontSlash = nextLine[j].split('/');
-
-                for (int k = 0; k < splitOnFrontSlash.length; k++) {
-                  String slashed = words.join('/');
-
-                  if (slashed.length + splitOnFrontSlash[k].length > 35) {
-                    List<String> sentence = nextLine[j].split(slashed);
-
-                    nextLine[j] = slashed;
-
-                    if (sentence.length > 1) {
-                      nextLine.insert(j + 1, sentence[1]);
-                    } else {
-                      nextLine.insert(j + 1, '/');
-                    }
-
-                    break;
-                  } else {
-                    words.add(splitOnFrontSlash[k]);
-                  }
+                if (slashed.length + splitOnFrontSlash[k].length > 35) {
+                  textArr[i] = slashed;
+                  textArr.insert(
+                    i + 1,
+                    splitOnFrontSlash
+                        .sublist(k, splitOnFrontSlash.length - 1)
+                        .join('/'),
+                  );
+                } else {
+                  words.add(splitOnFrontSlash[k]);
                 }
               }
             }
           }
 
-          // this checks if the line is too long and if it is, it splits it into two lines
+          // for (int j = 0; j < textArr[i].length; j++) {
+          //   String currWord = textArr[i].split(' ')[spacesCounted];
+          //   if (capturedWords.join(' ').length <= 35) {
+          //     capturedWords.add(currWord);
 
-          List wholeLine = textArr[i].split(' ');
-          log(nextLine.toString());
+          //     if (textArr[i][j] == ' ') {
+          //       spacesCounted++;
+          //     }
+          //   }
+          // }
 
-          // log(wholeLine.toString());
-          // log(spacesCounted.toString());
-
-          // textArr.insert(i + 1, nextLine + textArr[i].split(nextLine)[1]);
-          // textArr[i] = textArr[i].split(nextLine)[0];
+          capturedWords = [];
         }
       }
+
+      // every element which has more than 35 characters to be cutt
+      log(textArr.toString());
       return textArr;
     }
 
