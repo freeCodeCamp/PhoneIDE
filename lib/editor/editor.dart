@@ -71,21 +71,77 @@ class EditorState extends State<Editor> {
         afterController.text;
 
     List<String> countNewLines(List<String> textArr) {
+      // the next value will be true if the line is wrapped e.g. but will add
+      // two values to the list. The first value will be false and the second value will be true.
+      // false, true => the first line is not wrapped, the second line is wrapped.
+
+      // if the value is false, the line is not wrapped.
+      // false => the line is not wrapped
+
+      List<bool> isWrappedLine = [];
+
+      List<String> capturedWords = [];
+
       for (int i = 0; i < textArr.length; i++) {
         if (textArr[i].length > 35) {
           int spacesCounted = 0;
 
           for (int j = 0; j < textArr[i].length; j++) {
             if (j <= 35) {
+              String currWord = textArr[i].split(' ')[spacesCounted];
+
+              if (!capturedWords.contains(currWord)) {
+                capturedWords.add(currWord);
+              }
+
               if (textArr[i][j] == ' ') {
                 spacesCounted++;
               }
             }
           }
 
-          String nextLine = textArr[i].split(' ')[spacesCounted];
-          textArr.insert(i + 1, nextLine + textArr[i].split(nextLine)[1]);
-          textArr[i] = textArr[i].split(nextLine)[0];
+          List<String> nextLine = textArr[i].split(' ').sublist(spacesCounted);
+
+          for (int j = 0; j < nextLine.length; j++) {
+            if (nextLine[j].contains('/')) {
+              if (nextLine[j].length > 35) {
+                List words = [];
+
+                List<String> splitOnFrontSlash = nextLine[j].split('/');
+
+                for (int k = 0; k < splitOnFrontSlash.length; k++) {
+                  String slashed = words.join('/');
+
+                  if (slashed.length + splitOnFrontSlash[k].length > 35) {
+                    List<String> sentence = nextLine[j].split(slashed);
+
+                    nextLine[j] = slashed;
+
+                    if (sentence.length > 1) {
+                      nextLine.insert(j + 1, sentence[1]);
+                    } else {
+                      nextLine.insert(j + 1, '/');
+                    }
+
+                    break;
+                  } else {
+                    words.add(splitOnFrontSlash[k]);
+                  }
+                }
+              }
+            }
+          }
+
+          // this checks if the line is too long and if it is, it splits it into two lines
+
+          List wholeLine = textArr[i].split(' ');
+          log(nextLine.toString());
+
+          // log(wholeLine.toString());
+          // log(spacesCounted.toString());
+
+          // textArr.insert(i + 1, nextLine + textArr[i].split(nextLine)[1]);
+          // textArr[i] = textArr[i].split(nextLine)[0];
         }
       }
       return textArr;
