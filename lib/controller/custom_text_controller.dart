@@ -52,12 +52,14 @@ class TextEditingControllerIDE extends TextEditingController {
   }
 
   @override
-  TextSpan buildTextSpan(
-      {required BuildContext context,
-      TextStyle? style,
-      required bool withComposing}) {
-    Syntax syntax =
-        Syntax.values.firstWhere((s) => s.name == language.toUpperCase());
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    Syntax syntax = Syntax.values.firstWhere(
+      (s) => s.name == language.toUpperCase(),
+    );
     var nodes =
         highlight.parse(text, language: syntax.name.toLowerCase()).nodes!;
     return TextSpan(style: style, children: _convert(nodes));

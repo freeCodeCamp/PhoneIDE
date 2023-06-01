@@ -48,18 +48,11 @@ class EditorState extends State<Editor> {
   double _height = 0;
 
   String currentFileId = '';
+  List wrappedLines = [];
 
   updateLineCount(double? totalHeight) async {
-    totalHeight = totalHeight ?? 48;
-    _height = totalHeight;
-    double totalLines = totalHeight / getTextHeight(context);
-
-    double totalHeightWithoutPadding = totalHeight - totalLines * 3;
-    double totalLinesWithoutPadding =
-        totalHeightWithoutPadding / getTextHeight(context);
-
     setState(() {
-      _currNumLines = totalLinesWithoutPadding.toInt() + 1;
+      wrappedLines = [...getLineInformation(context)];
     });
   }
 
@@ -70,68 +63,27 @@ class EditorState extends State<Editor> {
         '\n' +
         afterController.text;
 
-    List<String> countNewLines(List<String> textArr) {
-      // the next value will be true if the line is wrapped e.g. but will add
-      // two values to the list. The first value will be false and the second value will be true.
-      // false, true => the first line is not wrapped, the second line is wrapped.
-
-      // if the value is false, the line is not wrapped.
-      // false => the line is not wrapped
-
+    List<bool> countNewLines(List<String> textArr) {
       List<bool> isWrappedLine = [];
 
-      int initialLength = textArr.length;
-
-      List<String> capturedWords = [];
-      for (int i = 0; i <= initialLength; i++) {
+      for (int i = 0; i < textArr.length; i++) {
         if (textArr[i].length > 35) {
-          int spacesCounted = 0;
+          int numLines = (textArr[i].length / 35).ceil();
 
-          if (textArr[i].contains('/')) {
-            if (textArr[i].length > 35) {
-              List words = [];
+          isWrappedLine.add(false);
 
-              List<String> splitOnFrontSlash = textArr[i].split('/');
-
-              for (int k = 0; k < splitOnFrontSlash.length; k++) {
-                String slashed = words.join('/');
-
-                if (slashed.length + splitOnFrontSlash[k].length > 35) {
-                  textArr[i] = slashed;
-                  textArr.insert(
-                    i + 1,
-                    splitOnFrontSlash
-                        .sublist(k, splitOnFrontSlash.length - 1)
-                        .join('/'),
-                  );
-                } else {
-                  words.add(splitOnFrontSlash[k]);
-                }
-              }
-            }
+          for (int j = 1; j < numLines; j++) {
+            isWrappedLine.add(true);
           }
-
-          // for (int j = 0; j < textArr[i].length; j++) {
-          //   String currWord = textArr[i].split(' ')[spacesCounted];
-          //   if (capturedWords.join(' ').length <= 35) {
-          //     capturedWords.add(currWord);
-
-          //     if (textArr[i][j] == ' ') {
-          //       spacesCounted++;
-          //     }
-          //   }
-          // }
-
-          capturedWords = [];
+        } else {
+          isWrappedLine.add(false);
         }
       }
 
-      // every element which has more than 35 characters to be cutt
-      log(textArr.toString());
-      return textArr;
+      return isWrappedLine;
     }
 
-    List<String> textLines = countNewLines(text.split('\n'));
+    return countNewLines(text.split('\n'));
   }
 
   double getTextHeight(BuildContext context, {double fontSize = 18}) {
@@ -378,7 +330,6 @@ class EditorState extends State<Editor> {
                           ),
                           onChanged: (String code) {
                             handleTextChange(file, code, 'BEFORE');
-                            getLineInformation(localContext);
                           },
                         ),
                       Container(
@@ -467,7 +418,7 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _currNumLines == 0 ? 1 : _currNumLines,
+            itemCount: wrappedLines.length,
             itemBuilder: (_, i) => Linebar(
               calculateBarWidth: () {
                 if (i + 1 > 9) {
@@ -481,7 +432,7 @@ class EditorState extends State<Editor> {
                 }
               },
               child: Text(
-                i == 0 ? (1).toString() : (i + 1).toString(),
+                !wrappedLines[i] ? '${i + 1}' : '',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
