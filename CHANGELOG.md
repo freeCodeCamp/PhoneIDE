@@ -1,3 +1,6 @@
+### v1.1.1
+- fixes smart quoutes being inserted into the editor for IOS devices
+
 ### v1.1.0
 - creates an example for the phoneIDE package
 
