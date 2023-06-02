@@ -1,25 +1,25 @@
-### v1.1.1
+### 1.1.1+1
 - fixes smart quoutes being inserted into the editor for IOS devices
 
-### v1.1.0
+### 1.1.0+1
 - creates an example for the phoneIDE package
 
-### v1.0.4
+### 1.0.4+1
 - fixes a bug where the linebanr does not correctly align with top of the editor
 
-### v1.0.3
+### 1.0.3+1
 - fixes a bug where the linebar displays the incorrect amount of line numbers
 - fixes a bug where the linebar does not scroll with the editor
 
-### v1.0.2 
+### 1.0.2+1
 - removes test file
 - removes redundant options
 - updated applicationId from `com.phone.ide` to `org.freecodecamp.phone_ide`
 
-### v1.0.1
+### 1.0.1+1
 - updated `readme.md` to use right package name.
 
-### v1.0.0+1
+### 1.0.0+1
 - removes file system 
 - removes file explorer
 - removes highlight enums and history enums, which where no longer used
