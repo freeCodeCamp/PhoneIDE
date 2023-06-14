@@ -285,7 +285,6 @@ class EditorState extends State<Editor> {
             padding: const EdgeInsets.only(top: 10),
             controller: scrollController,
             scrollDirection: Axis.vertical,
-            shrinkWrap: true,
             children: [
               if (file.hasRegion)
                 SizedBox(
@@ -392,7 +391,6 @@ class EditorState extends State<Editor> {
         Flexible(
           child: ListView.builder(
             padding: const EdgeInsets.only(top: 10),
-            shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
