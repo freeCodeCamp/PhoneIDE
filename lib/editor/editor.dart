@@ -160,8 +160,8 @@ class EditorState extends State<Editor> {
         afterController.text = afterEditableRegionText;
       }
     } else {
-      beforeController.text = file.content;
-      inController.text = '';
+      beforeController.text = '';
+      inController.text = file.content;
       afterController.text = '';
     }
 
