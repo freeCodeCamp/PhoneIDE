@@ -75,7 +75,12 @@ class EditorState extends State<Editor> {
     }
 
     setState(() {
-      _currNumLines = lines.split('\n').length;
+      int subtractBefore = beforeController.text == '' ? 1 : 0;
+      int subtractAfter = afterController.text == '' ? 1 : 0;
+
+      int subtractLines = subtractBefore + subtractAfter;
+
+      _currNumLines = lines.split('\n').length - subtractLines;
     });
   }
 
@@ -166,7 +171,12 @@ class EditorState extends State<Editor> {
     }
 
     setState(() {
-      _currNumLines = file.content.split('\n').length;
+      int subtractBefore = beforeController.text == '' ? 1 : 0;
+      int subtractAfter = afterController.text == '' ? 1 : 0;
+
+      int subtractLines = subtractBefore + subtractAfter;
+
+      _currNumLines = file.content.split('\n').length - subtractLines;
     });
   }
 
@@ -291,7 +301,7 @@ class EditorState extends State<Editor> {
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
-              if (file.hasRegion)
+              if (file.hasRegion && beforeController.text.isNotEmpty)
                 TextField(
                   smartQuotesType: SmartQuotesType.disabled,
                   smartDashesType: SmartDashesType.disabled,
@@ -339,7 +349,7 @@ class EditorState extends State<Editor> {
                   color: Colors.white.withOpacity(0.87),
                 ),
               ),
-              if (file.hasRegion)
+              if (file.hasRegion && afterController.text.isNotEmpty)
                 TextField(
                   smartQuotesType: SmartQuotesType.disabled,
                   smartDashesType: SmartDashesType.disabled,
