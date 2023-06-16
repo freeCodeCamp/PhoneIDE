@@ -116,16 +116,18 @@ class EditorState extends State<Editor> {
               int.parse(prefs.getString(file.id)?.split(':')[0] ?? '');
         }
 
-        Future.delayed(const Duration(seconds: 0), () {
-          double offset =
-              fileContent.split('\n').sublist(0, regionStart - 1).length *
-                  getTextHeight(context);
-          scrollController.animateTo(
-            offset,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-          );
-        });
+        if (file.content.split('\n').length > 7) {
+          Future.delayed(const Duration(seconds: 0), () {
+            double offset =
+                fileContent.split('\n').sublist(0, regionStart - 1).length *
+                    getTextHeight(context);
+            scrollController.animateTo(
+              offset,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          });
+        }
       }
       scrollController.addListener(() {
         linebarController.jumpTo(scrollController.offset);
