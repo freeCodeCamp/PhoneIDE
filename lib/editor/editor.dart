@@ -275,6 +275,7 @@ class EditorState extends State<Editor> {
   Widget editorView(BuildContext context, FileIDE file) {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
+      physics: const ClampingScrollPhysics(),
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
       children: [
@@ -285,6 +286,7 @@ class EditorState extends State<Editor> {
             padding: widget.options.hasRegion
                 ? const EdgeInsets.only(top: 10)
                 : const EdgeInsets.only(top: 0),
+            physics: const ClampingScrollPhysics(),
             controller: scrollController,
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
