@@ -53,19 +53,25 @@ class EditorState extends State<Editor> {
     if (widget.options.hasRegion) {
       switch (region) {
         case 'BEFORE':
-          lines =
-              event + '\n' + inController.text + '\n' + afterController.text;
+          lines = event +
+              (event.isNotEmpty ? '\n' : '') +
+              inController.text +
+              (afterController.text.isNotEmpty ? '\n' : '') +
+              afterController.text;
           break;
         case 'IN':
           lines = beforeController.text +
-              '\n' +
+              (beforeController.text.isNotEmpty ? '\n' : '') +
               event +
-              '\n' +
+              (afterController.text.isNotEmpty ? '\n' : '') +
               afterController.text;
           break;
         case 'AFTER':
-          lines =
-              beforeController.text + '\n' + inController.text + '\n' + event;
+          lines = beforeController.text +
+              (beforeController.text.isNotEmpty ? '\n' : '') +
+              inController.text +
+              (event.isNotEmpty ? '\n' : '') +
+              event;
           break;
       }
     }
@@ -75,12 +81,7 @@ class EditorState extends State<Editor> {
     }
 
     setState(() {
-      int subtractBefore = beforeController.text == '' ? 1 : 0;
-      int subtractAfter = afterController.text == '' ? 1 : 0;
-
-      int subtractLines = subtractBefore + subtractAfter;
-
-      _currNumLines = lines.split('\n').length - subtractLines;
+      _currNumLines = lines.split('\n').length;
     });
   }
 
@@ -173,12 +174,7 @@ class EditorState extends State<Editor> {
     }
 
     setState(() {
-      int subtractBefore = beforeController.text == '' ? 1 : 0;
-      int subtractAfter = afterController.text == '' ? 1 : 0;
-
-      int subtractLines = subtractBefore + subtractAfter;
-
-      _currNumLines = file.content.split('\n').length - subtractLines;
+      _currNumLines = file.content.split('\n').length;
     });
   }
 
