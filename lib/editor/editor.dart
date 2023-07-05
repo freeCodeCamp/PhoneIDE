@@ -53,19 +53,25 @@ class EditorState extends State<Editor> {
     if (widget.options.hasRegion) {
       switch (region) {
         case 'BEFORE':
-          lines =
-              event + '\n' + inController.text + '\n' + afterController.text;
+          lines = event +
+              (event.isNotEmpty ? '\n' : '') +
+              inController.text +
+              (afterController.text.isNotEmpty ? '\n' : '') +
+              afterController.text;
           break;
         case 'IN':
           lines = beforeController.text +
-              '\n' +
+              (beforeController.text.isNotEmpty ? '\n' : '') +
               event +
-              '\n' +
+              (afterController.text.isNotEmpty ? '\n' : '') +
               afterController.text;
           break;
         case 'AFTER':
-          lines =
-              beforeController.text + '\n' + inController.text + '\n' + event;
+          lines = beforeController.text +
+              (beforeController.text.isNotEmpty ? '\n' : '') +
+              inController.text +
+              (event.isNotEmpty ? '\n' : '') +
+              event;
           break;
       }
     }
@@ -111,16 +117,18 @@ class EditorState extends State<Editor> {
               int.parse(prefs.getString(file.id)?.split(':')[0] ?? '');
         }
 
-        Future.delayed(const Duration(seconds: 0), () {
-          double offset =
-              fileContent.split('\n').sublist(0, regionStart - 1).length *
-                  getTextHeight(context);
-          scrollController.animateTo(
-            offset,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-          );
-        });
+        if (file.content.split('\n').length > 7) {
+          Future.delayed(const Duration(seconds: 0), () {
+            double offset =
+                fileContent.split('\n').sublist(0, regionStart - 1).length *
+                    getTextHeight(context);
+            scrollController.animateTo(
+              offset,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          });
+        }
       }
       scrollController.addListener(() {
         linebarController.jumpTo(scrollController.offset);
@@ -275,6 +283,7 @@ class EditorState extends State<Editor> {
   Widget editorView(BuildContext context, FileIDE file) {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
+      physics: const ClampingScrollPhysics(),
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
       children: [
@@ -282,102 +291,84 @@ class EditorState extends State<Editor> {
           height: 1000,
           width: 2500,
           child: ListView(
-            padding: const EdgeInsets.only(top: 10),
+            padding: widget.options.hasRegion
+                ? const EdgeInsets.only(top: 10)
+                : const EdgeInsets.only(top: 0),
+            physics: const ClampingScrollPhysics(),
             controller: scrollController,
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
-              if (file.hasRegion)
-                SizedBox(
-                  width: 2500,
-                  child: TextField(
-                    smartQuotesType: SmartQuotesType.disabled,
-                    smartDashesType: SmartDashesType.disabled,
-                    controller: beforeController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      fillColor: widget.options.editorBackgroundColor,
-                      filled: true,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.only(
-                        left: 10,
-                      ),
-                    ),
-                    maxLines: null,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white.withOpacity(0.87),
-                    ),
-                    onChanged: (String event) {
-                      handleTextChange(file, event, 'BEFORE');
-                    },
-                  ),
-                ),
-              Container(
-                width: 2500,
-                decoration: file.hasRegion
-                    ? BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            width: 5,
-                            color: file.region.condition
-                                ? Colors.green
-                                : Colors.grey,
-                          ),
-                        ),
-                      )
-                    : null,
-                child: TextField(
+              if (file.hasRegion && beforeController.text.isNotEmpty)
+                TextField(
                   smartQuotesType: SmartQuotesType.disabled,
                   smartDashesType: SmartDashesType.disabled,
-                  controller: inController,
+                  controller: beforeController,
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    fillColor: file.hasRegion
-                        ? file.region.color
-                        : widget.options.editorBackgroundColor,
+                    fillColor: widget.options.editorBackgroundColor,
                     filled: true,
                     isDense: true,
-                    contentPadding: EdgeInsets.only(
+                    contentPadding: const EdgeInsets.only(
                       left: 10,
-                      top: file.hasRegion ? 0 : 10,
                     ),
                   ),
-                  onChanged: (String event) {
-                    handleTextChange(file, event, 'IN');
-                  },
                   maxLines: null,
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white.withOpacity(0.87),
                   ),
+                  onChanged: (String event) {
+                    handleTextChange(file, event, 'BEFORE');
+                  },
+                ),
+              TextField(
+                smartQuotesType: SmartQuotesType.disabled,
+                smartDashesType: SmartDashesType.disabled,
+                controller: inController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  fillColor: file.hasRegion
+                      ? file.region.color
+                      : widget.options.editorBackgroundColor,
+                  filled: true,
+                  isDense: true,
+                  contentPadding: EdgeInsets.only(
+                    left: 10,
+                    top: file.hasRegion ? 0 : 10,
+                  ),
+                ),
+                onChanged: (String event) {
+                  handleTextChange(file, event, 'IN');
+                },
+                maxLines: null,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white.withOpacity(0.87),
                 ),
               ),
-              if (file.hasRegion)
-                SizedBox(
-                  width: 2500,
-                  child: TextField(
-                    smartQuotesType: SmartQuotesType.disabled,
-                    smartDashesType: SmartDashesType.disabled,
-                    controller: afterController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      filled: true,
-                      fillColor: widget.options.editorBackgroundColor,
-                      contentPadding: const EdgeInsets.only(
-                        left: 10,
-                      ),
-                      isDense: true,
+              if (file.hasRegion && afterController.text.isNotEmpty)
+                TextField(
+                  smartQuotesType: SmartQuotesType.disabled,
+                  smartDashesType: SmartDashesType.disabled,
+                  controller: afterController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: widget.options.editorBackgroundColor,
+                    contentPadding: const EdgeInsets.only(
+                      left: 10,
                     ),
-                    maxLines: null,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white.withOpacity(0.87),
-                    ),
-                    onChanged: (String event) {
-                      handleTextChange(file, event, 'AFTER');
-                    },
+                    isDense: true,
                   ),
+                  maxLines: null,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.87),
+                  ),
+                  onChanged: (String event) {
+                    handleTextChange(file, event, 'AFTER');
+                  },
                 ),
             ],
           ),
