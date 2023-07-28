@@ -211,14 +211,14 @@ class EditorState extends State<Editor> {
 
     switch (region) {
       case 'BEFORE':
-        text = event + '\n' + inController.text + '\n' + afterController.text;
+        text = '$event\n${inController.text}\n${afterController.text}';
         break;
       case 'IN':
         text =
-            beforeController.text + '\n' + event + '\n' + afterController.text;
+            '${beforeController.text}\n$event\n${afterController.text}';
         break;
       case 'AFTER':
-        text = beforeController.text + '\n' + inController.text + '\n' + event;
+        text = '${beforeController.text}\n${inController.text}\n$event';
         break;
     }
 

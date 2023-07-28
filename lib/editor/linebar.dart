@@ -27,10 +27,10 @@ class Linebar extends StatefulWidget {
   }
 
   @override
-  _LinebarState createState() => _LinebarState();
+  LinebarState createState() => LinebarState();
 }
 
-class _LinebarState extends State<Linebar> {
+class LinebarState extends State<Linebar> {
   @override
   void initState() {
     super.initState();
