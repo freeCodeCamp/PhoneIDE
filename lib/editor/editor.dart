@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
@@ -214,8 +215,7 @@ class EditorState extends State<Editor> {
         text = '$event\n${inController.text}\n${afterController.text}';
         break;
       case 'IN':
-        text =
-            '${beforeController.text}\n$event\n${afterController.text}';
+        text = '${beforeController.text}\n$event\n${afterController.text}';
         break;
       case 'AFTER':
         text = '${beforeController.text}\n${inController.text}\n$event';
@@ -268,7 +268,12 @@ class EditorState extends State<Editor> {
               Expanded(
                 child: Container(
                   color: widget.options.editorBackgroundColor,
-                  child: editorView(context, file),
+                  child: MediaQuery(
+                    data: const MediaQueryData(
+                      gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
+                    ),
+                    child: editorView(context, file),
+                  ),
                 ),
               )
             ],
