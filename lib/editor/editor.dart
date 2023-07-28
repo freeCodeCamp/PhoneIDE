@@ -302,6 +302,7 @@ class EditorState extends State<Editor> {
             physics: const ClampingScrollPhysics(),
             controller: scrollController,
             scrollDirection: Axis.vertical,
+            shrinkWrap: true,
             children: [
               if (file.hasRegion && beforeController.text.isNotEmpty)
                 TextField(
@@ -387,6 +388,7 @@ class EditorState extends State<Editor> {
         Flexible(
           child: ListView.builder(
             padding: const EdgeInsets.only(top: 10),
+            shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
