@@ -1,3 +1,6 @@
+### 1.2.1+1
+- made phoneIDE package compatible with Flutter 3.10
+
 ### 1.2.0+1
 - fixes top-padding when no region field is present in any way.
 - fixes scrolling beyond the list boundary for vertical and horizontal listview
