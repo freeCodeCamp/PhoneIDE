@@ -14,7 +14,7 @@ class TextEditingControllerIDE extends TextEditingController {
     var currentSpans = spans;
     List<List<TextSpan>> stack = [];
 
-    _traverse(Node node) {
+    traverse(Node node) {
       if (node.value != null) {
         currentSpans.add(
           node.className == null
@@ -36,7 +36,7 @@ class TextEditingControllerIDE extends TextEditingController {
         currentSpans = tmp;
 
         for (var n in node.children!) {
-          _traverse(n);
+          traverse(n);
           if (n == node.children!.last) {
             currentSpans = stack.isEmpty ? spans : stack.removeLast();
           }
@@ -45,7 +45,7 @@ class TextEditingControllerIDE extends TextEditingController {
     }
 
     for (var node in nodes) {
-      _traverse(node);
+      traverse(node);
     }
 
     return spans;
