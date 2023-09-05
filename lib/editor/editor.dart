@@ -120,9 +120,11 @@ class EditorState extends State<Editor> {
 
         if (file.content.split('\n').length > 7) {
           Future.delayed(const Duration(seconds: 0), () {
-            double offset =
-                fileContent.split('\n').sublist(0, regionStart - 1).length *
-                    getTextHeight(context);
+            double offset = fileContent
+                    .split('\n')
+                    .sublist(0, regionStart - 1 < 0 ? 0 : regionStart - 1)
+                    .length *
+                getTextHeight(context);
             scrollController.animateTo(
               offset,
               duration: const Duration(milliseconds: 500),
