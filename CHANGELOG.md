@@ -1,3 +1,6 @@
+### 1.2.2+1
+- fixes a bug where the editable region starts at the beginning of the file in the scrollcontroller.
+
 ### 1.2.1+1
 - made phoneIDE package compatible with Flutter 3.10
 
