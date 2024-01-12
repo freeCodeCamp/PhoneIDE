@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:phone_ide/enums/syntax.dart';
 import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
 
 class TextEditingControllerIDE extends TextEditingController {
-  TextEditingControllerIDE({Key? key, this.font});
+  TextEditingControllerIDE({Key? key, this.font, required this.language});
 
-  static String language = 'HTML';
+  final String language;
   final TextStyle? font;
 
   List<TextSpan> _convert(List<Node> nodes) {
@@ -52,14 +51,18 @@ class TextEditingControllerIDE extends TextEditingController {
   }
 
   @override
-  TextSpan buildTextSpan(
-      {required BuildContext context,
-      TextStyle? style,
-      required bool withComposing}) {
-    Syntax syntax =
-        Syntax.values.firstWhere((s) => s.name == language.toUpperCase());
-    var nodes =
-        highlight.parse(text, language: syntax.name.toLowerCase()).nodes!;
-    return TextSpan(style: style, children: _convert(nodes));
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    required bool withComposing,
+    TextStyle? style,
+  }) {
+    String lower = language.toLowerCase();
+
+    List<Node> nodes = highlight.parse(text, language: lower).nodes!;
+
+    return TextSpan(
+      style: style,
+      children: _convert(nodes),
+    );
   }
 }

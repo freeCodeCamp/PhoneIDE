@@ -38,15 +38,29 @@ class EditorState extends State<Editor> {
   ScrollController horizontalController = ScrollController();
   ScrollController linebarController = ScrollController();
 
-  TextEditingControllerIDE beforeController = TextEditingControllerIDE();
-  TextEditingControllerIDE inController = TextEditingControllerIDE();
-  TextEditingControllerIDE afterController = TextEditingControllerIDE();
+  late TextEditingControllerIDE beforeController;
+  late TextEditingControllerIDE inController;
+  late TextEditingControllerIDE afterController;
 
   int _currNumLines = 1;
 
   double _initialWidth = 28;
 
   String currentFileId = '';
+
+  @override
+  void initState() {
+    super.initState();
+    beforeController = TextEditingControllerIDE(
+      language: widget.language,
+    );
+    inController = TextEditingControllerIDE(
+      language: widget.language,
+    );
+    afterController = TextEditingControllerIDE(
+      language: widget.language,
+    );
+  }
 
   void updateLineCount(FileIDE file, String event, String region) async {
     late String lines;
@@ -137,8 +151,6 @@ class EditorState extends State<Editor> {
         linebarController.jumpTo(scrollController.offset);
       });
     });
-
-    TextEditingControllerIDE.language = widget.language;
   }
 
   handleRegionFields(FileIDE file) async {
@@ -242,8 +254,6 @@ class EditorState extends State<Editor> {
               handleFileInit(file);
               currentFileId = file.id;
             }
-
-            TextEditingControllerIDE.language = file.ext;
           } else {
             return const Center(
               child: Text('Something went wrong'),
