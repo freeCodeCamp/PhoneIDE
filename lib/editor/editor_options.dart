@@ -35,10 +35,10 @@ class EditorRegionOptions {
 
   // [start] is the start line of the region.
 
-  int? start;
+  int start;
 
   // [end] is the end line of the region.
-  int? end;
+  int end;
 
   // [color] is the background color of the region.
 
