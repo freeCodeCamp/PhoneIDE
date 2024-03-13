@@ -104,6 +104,14 @@ class EditorState extends State<Editor> {
     return textHeight.height;
   }
 
+  double getFontSize(BuildContext context, {double fontSize = 18}) {
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
+
+    double calculatedFontSize = textScaler.scale(fontSize);
+
+    return calculatedFontSize;
+  }
+
   handleFileInit(FileIDE file) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String fileContent = file.content;
@@ -250,35 +258,42 @@ class EditorState extends State<Editor> {
             );
           }
 
-          return Row(
-            children: [
-              Container(
-                constraints: BoxConstraints(
-                  minWidth: 1,
-                  maxWidth: _initialWidth,
-                ),
-                decoration: BoxDecoration(
-                  color: widget.options.linebarColor,
-                  border: const Border(
-                    right: BorderSide(
-                      color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+          final mediaQueryData = MediaQuery.of(context);
+
+          return MediaQuery(
+            data: mediaQueryData.copyWith(
+              textScaler: TextScaler.noScaling,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    minWidth: 1,
+                    maxWidth: _initialWidth,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.options.linebarColor,
+                    border: const Border(
+                      right: BorderSide(
+                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                      ),
                     ),
                   ),
+                  child: linecountBar(),
                 ),
-                child: linecountBar(),
-              ),
-              Expanded(
-                child: Container(
-                  color: widget.options.editorBackgroundColor,
-                  child: MediaQuery(
-                    data: const MediaQueryData(
-                      gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
+                Expanded(
+                  child: Container(
+                    color: widget.options.editorBackgroundColor,
+                    child: MediaQuery(
+                      data: const MediaQueryData(
+                        gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
+                      ),
+                      child: editorView(context, file),
                     ),
-                    child: editorView(context, file),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           );
         }
 
@@ -322,7 +337,7 @@ class EditorState extends State<Editor> {
                   ),
                   maxLines: null,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: getFontSize(context, fontSize: 18),
                     color: Colors.white.withOpacity(0.87),
                   ),
                   onChanged: (String event) {
@@ -350,7 +365,7 @@ class EditorState extends State<Editor> {
                 },
                 maxLines: null,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: getFontSize(context, fontSize: 18),
                   color: Colors.white.withOpacity(0.87),
                 ),
               ),
@@ -370,7 +385,7 @@ class EditorState extends State<Editor> {
                   ),
                   maxLines: null,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: getFontSize(context, fontSize: 18),
                     color: Colors.white.withOpacity(0.87),
                   ),
                   onChanged: (String event) {
@@ -417,7 +432,7 @@ class EditorState extends State<Editor> {
                   controller: lineController,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: getFontSize(context, fontSize: 18),
                     fontWeight: FontWeight.w500,
                     color: widget.options.linebarTextColor,
                   ),
