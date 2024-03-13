@@ -394,29 +394,42 @@ class EditorState extends State<Editor> {
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
-            itemBuilder: (_, i) => Linebar(
-              calculateBarWidth: () {
-                if (i + 1 > 9) {
-                  SchedulerBinding.instance.addPostFrameCallback(
-                    (timeStamp) {
-                      setState(() {
-                        _initialWidth = getTextHeight(context) +
-                            (8 * (i + 1).toString().length);
-                      });
-                    },
-                  );
-                }
-              },
-              child: Text(
-                i == 0 ? (1).toString() : (i + 1).toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: widget.options.linebarTextColor,
+            itemBuilder: (_, i) {
+              TextEditingControllerIDE lineController =
+                  TextEditingControllerIDE();
+              lineController.text = (i + 1).toString();
+              return Linebar(
+                calculateBarWidth: () {
+                  if (i + 1 > 9) {
+                    SchedulerBinding.instance.addPostFrameCallback(
+                      (timeStamp) {
+                        setState(() {
+                          _initialWidth = getTextHeight(context) +
+                              (8 * (i + 1).toString().length);
+                        });
+                      },
+                    );
+                  }
+                },
+                child: TextField(
+                  readOnly: true,
+                  enableInteractiveSelection: false,
+                  controller: lineController,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: widget.options.linebarTextColor,
+                  ),
+                  maxLines: null,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         )
       ],
