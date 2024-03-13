@@ -400,7 +400,8 @@ class EditorState extends State<Editor> {
                   SchedulerBinding.instance.addPostFrameCallback(
                     (timeStamp) {
                       setState(() {
-                        _initialWidth = getTextHeight(context) + 8;
+                        _initialWidth = getTextHeight(context) +
+                            (8 * (i + 1).toString().length);
                       });
                     },
                   );
