@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
-import 'package:phone_ide/editor/linebar.dart';
 import 'package:phone_ide/editor/editor_options.dart';
+import 'package:phone_ide/editor/linebar.dart';
 import 'package:phone_ide/models/file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,10 +88,9 @@ class EditorState extends State<Editor> {
   }
 
   double getTextHeight(BuildContext context, {double fontSize = 18}) {
-    double systemFontSize = MediaQuery.of(context).textScaleFactor;
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
 
-    double calculatedFontSize =
-        systemFontSize > 1 ? fontSize * systemFontSize : fontSize;
+    double calculatedFontSize = textScaler.scale(fontSize);
 
     Size textHeight = Linebar.calculateTextSize(
       'L',
