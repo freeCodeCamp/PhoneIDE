@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
-import 'package:phone_ide/editor/linebar.dart';
 import 'package:phone_ide/editor/editor_options.dart';
+import 'package:phone_ide/editor/linebar.dart';
 import 'package:phone_ide/models/file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,10 +88,9 @@ class EditorState extends State<Editor> {
   }
 
   double getTextHeight(BuildContext context, {double fontSize = 18}) {
-    double systemFontSize = MediaQuery.of(context).textScaleFactor;
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
 
-    double calculatedFontSize =
-        systemFontSize > 1 ? fontSize * systemFontSize : fontSize;
+    double calculatedFontSize = textScaler.scale(fontSize);
 
     Size textHeight = Linebar.calculateTextSize(
       'L',
@@ -102,6 +102,14 @@ class EditorState extends State<Editor> {
     );
 
     return textHeight.height;
+  }
+
+  double getFontSize(BuildContext context, {double fontSize = 18}) {
+    TextScaler textScaler = MediaQuery.of(context).textScaler;
+
+    double calculatedFontSize = textScaler.scale(fontSize);
+
+    return calculatedFontSize;
   }
 
   handleFileInit(FileIDE file) async {
@@ -250,35 +258,42 @@ class EditorState extends State<Editor> {
             );
           }
 
-          return Row(
-            children: [
-              Container(
-                constraints: BoxConstraints(
-                  minWidth: 1,
-                  maxWidth: _initialWidth,
-                ),
-                decoration: BoxDecoration(
-                  color: widget.options.linebarColor,
-                  border: const Border(
-                    right: BorderSide(
-                      color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+          final mediaQueryData = MediaQuery.of(context);
+
+          return MediaQuery(
+            data: mediaQueryData.copyWith(
+              textScaler: TextScaler.noScaling,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    minWidth: 1,
+                    maxWidth: _initialWidth,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.options.linebarColor,
+                    border: const Border(
+                      right: BorderSide(
+                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                      ),
                     ),
                   ),
+                  child: linecountBar(),
                 ),
-                child: linecountBar(),
-              ),
-              Expanded(
-                child: Container(
-                  color: widget.options.editorBackgroundColor,
-                  child: MediaQuery(
-                    data: const MediaQueryData(
-                      gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
+                Expanded(
+                  child: Container(
+                    color: widget.options.editorBackgroundColor,
+                    child: MediaQuery(
+                      data: const MediaQueryData(
+                        gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
+                      ),
+                      child: editorView(context, file),
                     ),
-                    child: editorView(context, file),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           );
         }
 
@@ -322,7 +337,7 @@ class EditorState extends State<Editor> {
                   ),
                   maxLines: null,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: getFontSize(context, fontSize: 18),
                     color: Colors.white.withOpacity(0.87),
                   ),
                   onChanged: (String event) {
@@ -350,7 +365,7 @@ class EditorState extends State<Editor> {
                 },
                 maxLines: null,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: getFontSize(context, fontSize: 18),
                   color: Colors.white.withOpacity(0.87),
                 ),
               ),
@@ -370,7 +385,7 @@ class EditorState extends State<Editor> {
                   ),
                   maxLines: null,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: getFontSize(context, fontSize: 18),
                     color: Colors.white.withOpacity(0.87),
                   ),
                   onChanged: (String event) {
@@ -394,28 +409,42 @@ class EditorState extends State<Editor> {
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
-            itemBuilder: (_, i) => Linebar(
-              calculateBarWidth: () {
-                if (i + 1 > 9) {
-                  SchedulerBinding.instance.addPostFrameCallback(
-                    (timeStamp) {
-                      setState(() {
-                        _initialWidth = getTextHeight(context) + 8;
-                      });
-                    },
-                  );
-                }
-              },
-              child: Text(
-                i == 0 ? (1).toString() : (i + 1).toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: widget.options.linebarTextColor,
+            itemBuilder: (_, i) {
+              TextEditingControllerIDE lineController =
+                  TextEditingControllerIDE();
+              lineController.text = (i + 1).toString();
+              return Linebar(
+                calculateBarWidth: () {
+                  if (i + 1 > 9) {
+                    SchedulerBinding.instance.addPostFrameCallback(
+                      (timeStamp) {
+                        setState(() {
+                          _initialWidth = getTextHeight(context) +
+                              (8 * (i + 1).toString().length);
+                        });
+                      },
+                    );
+                  }
+                },
+                child: TextField(
+                  readOnly: true,
+                  enableInteractiveSelection: false,
+                  controller: lineController,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: getFontSize(context, fontSize: 18),
+                    fontWeight: FontWeight.w500,
+                    color: widget.options.linebarTextColor,
+                  ),
+                  maxLines: null,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         )
       ],

@@ -15,13 +15,13 @@ class Linebar extends StatefulWidget {
     double minWidth = 0,
     double maxWidth = double.infinity,
   }) {
-    final double textScaleFactor = MediaQuery.of(context).textScaleFactor;
+    final TextScaler textScale = MediaQuery.of(context).textScaler;
     final TextDirection textDirection = Directionality.of(context);
 
     final TextPainter textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: textDirection,
-      textScaleFactor: textScaleFactor,
+      textScaler: textScale,
     )..layout(minWidth: minWidth, maxWidth: maxWidth);
     return textPainter.size;
   }
