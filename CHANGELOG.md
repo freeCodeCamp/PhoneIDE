@@ -1,3 +1,6 @@
+### 1.2.3+1
+- fixes a bug where the linecount does not align with the editor text in Flutter 3.16
+
 ### 1.2.2+1
 - fixes a bug where the editable region starts at the beginning of the file in the scrollcontroller.
 
