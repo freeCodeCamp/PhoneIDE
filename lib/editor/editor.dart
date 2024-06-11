@@ -412,8 +412,7 @@ class EditorState extends State<Editor> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
             itemBuilder: (_, i) {
-              TextEditingControllerIDE lineController =
-                  TextEditingControllerIDE();
+              TextEditingController lineController = TextEditingController();
               lineController.text = (i + 1).toString();
               return Linebar(
                 calculateBarWidth: () {
