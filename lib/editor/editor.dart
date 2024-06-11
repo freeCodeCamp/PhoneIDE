@@ -186,9 +186,7 @@ class EditorState extends State<Editor> {
       afterController.text = '';
     }
 
-    setState(() {
-      _currNumLines = file.content.split('\n').length;
-    });
+    updateLineCount(file, inController.text, 'IN');
   }
 
   handleRegionCaching(FileIDE file, String event, String region) async {
