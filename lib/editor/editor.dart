@@ -161,7 +161,9 @@ class EditorState extends State<Editor> {
         regionEnd = int.parse(prefs.getString(file.id)?.split(':')[1] ?? '');
       }
 
-      if (file.content.split('\n').length > 1) {
+      int lines = file.content.split('\n').length;
+
+      if (lines >= 1) {
         String beforeEditableRegionText =
             file.content.split('\n').sublist(0, regionStart).join('\n');
 
