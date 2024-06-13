@@ -161,7 +161,9 @@ class EditorState extends State<Editor> {
         regionEnd = int.parse(prefs.getString(file.id)?.split(':')[1] ?? '');
       }
 
-      if (file.content.split('\n').length > 1) {
+      int lines = file.content.split('\n').length;
+
+      if (lines >= 1) {
         String beforeEditableRegionText =
             file.content.split('\n').sublist(0, regionStart).join('\n');
 
@@ -184,9 +186,7 @@ class EditorState extends State<Editor> {
       afterController.text = '';
     }
 
-    setState(() {
-      _currNumLines = file.content.split('\n').length;
-    });
+    updateLineCount(file, inController.text, 'IN');
   }
 
   handleRegionCaching(FileIDE file, String event, String region) async {
@@ -410,8 +410,7 @@ class EditorState extends State<Editor> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _currNumLines == 0 ? 1 : _currNumLines,
             itemBuilder: (_, i) {
-              TextEditingControllerIDE lineController =
-                  TextEditingControllerIDE();
+              TextEditingController lineController = TextEditingController();
               lineController.text = (i + 1).toString();
               return Linebar(
                 calculateBarWidth: () {
