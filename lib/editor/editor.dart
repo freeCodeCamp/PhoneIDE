@@ -43,11 +43,19 @@ class EditorState extends State<Editor> {
   TextEditingControllerIDE inController = TextEditingControllerIDE();
   TextEditingControllerIDE afterController = TextEditingControllerIDE();
 
+  String searchText = '';
+
   int _currNumLines = 1;
 
   double _initialWidth = 28;
 
   String currentFileId = '';
+
+  void handleFind(String search) {
+    setState(() {
+      searchText = search;
+    });
+  }
 
   void updateLineCount(FileIDE file, String event, String region) async {
     late String lines;
@@ -236,73 +244,109 @@ class EditorState extends State<Editor> {
   }
 
   @override
+  void dispose() {
+    scrollController.dispose();
+    horizontalController.dispose();
+    linebarController.dispose();
+    beforeController.dispose();
+    inController.dispose();
+    afterController.dispose();
+    widget.fileTextStream.close();
+    widget.onTextChange.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<FileIDE>(
-      stream: widget.fileTextStream.stream,
-      builder: (context, snapshot) {
-        FileIDE? file;
-
-        if (snapshot.hasData) {
-          if (snapshot.data is FileIDE) {
-            file = snapshot.data as FileIDE;
-
-            if (file.id != currentFileId) {
-              handleFileInit(file);
-              currentFileId = file.id;
-            }
-
-            TextEditingControllerIDE.language = file.ext;
-          } else {
-            return const Center(
-              child: Text('Something went wrong'),
-            );
-          }
-
-          final mediaQueryData = MediaQuery.of(context);
-
-          return MediaQuery(
-            data: mediaQueryData.copyWith(
-              textScaler: TextScaler.noScaling,
+    return Container(
+      color: widget.options.editorBackgroundColor,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Find',
+                border: OutlineInputBorder(),
+                fillColor: widget.options.editorBackgroundColor,
+                filled: true,
+              ),
+              style: TextStyle(
+                color: Colors.white70,
+              ),
+              onChanged: handleFind,
             ),
-            child: Row(
-              children: [
-                Container(
-                  constraints: BoxConstraints(
-                    minWidth: 1,
-                    maxWidth: _initialWidth,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.options.linebarColor,
-                    border: const Border(
-                      right: BorderSide(
-                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
-                      ),
-                    ),
-                  ),
-                  child: linecountBar(),
-                ),
-                Expanded(
-                  child: Container(
-                    color: widget.options.editorBackgroundColor,
-                    child: MediaQuery(
-                      data: const MediaQueryData(
-                        gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
-                      ),
-                      child: editorView(context, file),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          );
-        }
+          ),
+          Expanded(
+            child: StreamBuilder<FileIDE>(
+              stream: widget.fileTextStream.stream,
+              builder: (context, snapshot) {
+                FileIDE? file;
 
-        return const Center(child: Text('open file'));
-      },
+                if (snapshot.hasData) {
+                  if (snapshot.data is FileIDE) {
+                    file = snapshot.data as FileIDE;
+
+                    if (file.id != currentFileId) {
+                      handleFileInit(file);
+                      currentFileId = file.id;
+                    }
+
+                    TextEditingControllerIDE.language = file.ext;
+                  } else {
+                    return const Center(
+                      child: Text('Something went wrong'),
+                    );
+                  }
+
+                  final mediaQueryData = MediaQuery.of(context);
+                  return MediaQuery(
+                    data: mediaQueryData.copyWith(
+                      textScaler: TextScaler.noScaling,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(
+                            minWidth: 1,
+                            maxWidth: _initialWidth,
+                          ),
+                          decoration: BoxDecoration(
+                            color: widget.options.linebarColor,
+                            border: const Border(
+                              right: BorderSide(
+                                color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                              ),
+                            ),
+                          ),
+                          child: linecountBar(),
+                        ),
+                        Expanded(
+                          child: Container(
+                            color: widget.options.editorBackgroundColor,
+                            child: MediaQuery(
+                              data: const MediaQueryData(
+                                gestureSettings:
+                                    DeviceGestureSettings(touchSlop: 8.0),
+                              ),
+                              child: editorView(context, file, searchText),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return Container(); 
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget editorView(BuildContext context, FileIDE file) {
+  Widget editorView(BuildContext context, FileIDE file, String searchText) {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
       physics: const ClampingScrollPhysics(),
@@ -322,80 +366,43 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             children: [
               if (file.hasRegion && beforeController.text.isNotEmpty)
-                TextField(
-                  smartQuotesType: SmartQuotesType.disabled,
-                  smartDashesType: SmartDashesType.disabled,
-                  controller: beforeController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(
-                      left: 10,
-                    ),
-                  ),
-                  maxLines: null,
-                  style: TextStyle(
-                    fontSize: getFontSize(context, fontSize: 18),
-                    color: Colors.white.withOpacity(0.87),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(file, event, 'BEFORE');
-                  },
-                ),
-              TextField(
-                smartQuotesType: SmartQuotesType.disabled,
-                smartDashesType: SmartDashesType.disabled,
-                controller: inController,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  fillColor: file.hasRegion
-                      ? file.region.color
-                      : widget.options.editorBackgroundColor,
-                  filled: true,
-                  isDense: true,
-                  contentPadding: EdgeInsets.only(
-                    left: 10,
-                    top: file.hasRegion ? 0 : 10,
-                  ),
-                ),
-                onChanged: (String event) {
-                  handleTextChange(file, event, 'IN');
-                },
-                maxLines: null,
-                style: TextStyle(
-                  fontSize: getFontSize(context, fontSize: 18),
-                  color: Colors.white.withOpacity(0.87),
-                ),
-              ),
+                highlightTextField(
+                    beforeController, 'BEFORE', file, searchText),
+              highlightTextField(inController, 'IN', file, searchText),
               if (file.hasRegion && afterController.text.isNotEmpty)
-                TextField(
-                  smartQuotesType: SmartQuotesType.disabled,
-                  smartDashesType: SmartDashesType.disabled,
-                  controller: afterController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    filled: true,
-                    fillColor: widget.options.editorBackgroundColor,
-                    contentPadding: const EdgeInsets.only(
-                      left: 10,
-                    ),
-                    isDense: true,
-                  ),
-                  maxLines: null,
-                  style: TextStyle(
-                    fontSize: getFontSize(context, fontSize: 18),
-                    color: Colors.white.withOpacity(0.87),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(file, event, 'AFTER');
-                  },
-                ),
+                highlightTextField(afterController, 'AFTER', file, searchText),
             ],
           ),
         )
       ],
+    );
+  }
+
+  Widget highlightTextField(TextEditingControllerIDE controller, String region,
+      FileIDE file, String searchText) {
+    return TextField(
+      smartQuotesType: SmartQuotesType.disabled,
+      smartDashesType: SmartDashesType.disabled,
+      controller: controller,
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        fillColor: widget.options.editorBackgroundColor,
+        filled: true,
+        isDense: true,
+        contentPadding: const EdgeInsets.only(left: 10),
+      ),
+      maxLines: null,
+      style: TextStyle(
+        fontSize: getFontSize(context, fontSize: 18),
+        color: Colors.white.withOpacity(0.87),
+        backgroundColor:
+            searchText.isNotEmpty && controller.text.contains(searchText)
+                ? Colors.yellow.withOpacity(0.4)
+                : Colors.transparent,
+      ),
+      onChanged: (String event) {
+        handleTextChange(file, event, region);
+      },
     );
   }
 
