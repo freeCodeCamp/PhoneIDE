@@ -244,7 +244,7 @@ class EditorState extends State<Editor> {
       widget.focusedController.sink.add(beforeController);
     } else if (controller == 'IN') {
       widget.focusedController.sink.add(inController);
-    } else {
+    } else if (controller == 'AFTER') {
       widget.focusedController.sink.add(afterController);
     }
   }
