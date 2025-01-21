@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
 import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/editor/linebar.dart';
@@ -360,6 +361,12 @@ class EditorState extends State<Editor> {
                   onTap: () {
                     handleCurrentFocusedTextfieldController('BEFORE');
                   },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
+                        replacementString: '"'),
+                    FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
+                        replacementString: "'")
+                  ],
                 ),
               TextField(
                 smartQuotesType: SmartQuotesType.disabled,
@@ -383,6 +390,12 @@ class EditorState extends State<Editor> {
                 onTap: () {
                   handleCurrentFocusedTextfieldController('IN');
                 },
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
+                      replacementString: '"'),
+                  FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
+                      replacementString: "'")
+                ],
                 maxLines: null,
                 style: TextStyle(
                   fontSize: getFontSize(context, fontSize: 18),
@@ -414,6 +427,12 @@ class EditorState extends State<Editor> {
                   onTap: () {
                     handleCurrentFocusedTextfieldController('AFTER');
                   },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
+                        replacementString: '"'),
+                    FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
+                        replacementString: "'")
+                  ],
                 ),
             ],
           ),
