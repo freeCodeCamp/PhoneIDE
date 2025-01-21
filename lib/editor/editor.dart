@@ -30,6 +30,10 @@ class Editor extends StatefulWidget {
   // options of the editor
   final EditorOptions options;
 
+  // The controller the user is currently using for the textfield
+  final StreamController<TextEditingControllerIDE> focusedController =
+      StreamController<TextEditingControllerIDE>.broadcast();
+
   @override
   State<StatefulWidget> createState() => EditorState();
 }
@@ -235,6 +239,16 @@ class EditorState extends State<Editor> {
     widget.onTextChange.sink.add(text);
   }
 
+  handleCurrentFocusedTextfieldController(String controller) {
+    if (controller == 'BEFORE') {
+      widget.focusedController.sink.add(beforeController);
+    } else if (controller == 'IN') {
+      widget.focusedController.sink.add(inController);
+    } else {
+      widget.focusedController.sink.add(afterController);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<FileIDE>(
@@ -343,6 +357,9 @@ class EditorState extends State<Editor> {
                   onChanged: (String event) {
                     handleTextChange(file, event, 'BEFORE');
                   },
+                  onTap: () {
+                    handleCurrentFocusedTextfieldController('BEFORE');
+                  },
                 ),
               TextField(
                 smartQuotesType: SmartQuotesType.disabled,
@@ -362,6 +379,9 @@ class EditorState extends State<Editor> {
                 ),
                 onChanged: (String event) {
                   handleTextChange(file, event, 'IN');
+                },
+                onTap: () {
+                  handleCurrentFocusedTextfieldController('IN');
                 },
                 maxLines: null,
                 style: TextStyle(
@@ -390,6 +410,9 @@ class EditorState extends State<Editor> {
                   ),
                   onChanged: (String event) {
                     handleTextChange(file, event, 'AFTER');
+                  },
+                  onTap: () {
+                    handleCurrentFocusedTextfieldController('AFTER');
                   },
                 ),
             ],
