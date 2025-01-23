@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:phone_ide/controller/custom_text_controller.dart';
 import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/editor/linebar.dart';
 import 'package:phone_ide/models/file.dart';
+import 'package:phone_ide/models/textfield_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Editor extends StatefulWidget {
@@ -32,8 +34,8 @@ class Editor extends StatefulWidget {
   final EditorOptions options;
 
   // The controller the user is currently using for the textfield
-  final StreamController<TextEditingControllerIDE> focusedController =
-      StreamController<TextEditingControllerIDE>.broadcast();
+  final StreamController<TextFieldData> textfieldData =
+      StreamController<TextFieldData>.broadcast();
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -54,26 +56,26 @@ class EditorState extends State<Editor> {
 
   String currentFileId = '';
 
-  void updateLineCount(FileIDE file, String event, String region) async {
+  void updateLineCount(String event, RegionPosition region) async {
     late String lines;
 
     if (widget.options.hasRegion) {
       switch (region) {
-        case 'BEFORE':
+        case RegionPosition.before:
           lines = event +
               (event.isNotEmpty ? '\n' : '') +
               inController.text +
               (afterController.text.isNotEmpty ? '\n' : '') +
               afterController.text;
           break;
-        case 'IN':
+        case RegionPosition.inner:
           lines = beforeController.text +
               (beforeController.text.isNotEmpty ? '\n' : '') +
               event +
               (afterController.text.isNotEmpty ? '\n' : '') +
               afterController.text;
           break;
-        case 'AFTER':
+        case RegionPosition.after:
           lines = beforeController.text +
               (beforeController.text.isNotEmpty ? '\n' : '') +
               inController.text +
@@ -191,20 +193,20 @@ class EditorState extends State<Editor> {
       afterController.text = '';
     }
 
-    updateLineCount(file, inController.text, 'IN');
+    updateLineCount(inController.text, RegionPosition.inner);
   }
 
-  handleRegionCaching(FileIDE file, String event, String region) async {
+  handleRegionCaching(FileIDE file, String event, RegionPosition region) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     late int beforeRegionLines;
     late int inRegionLines;
     late int newRegionlines;
 
-    if (region == 'BEFORE') {
+    if (region == RegionPosition.before) {
       beforeRegionLines = event.split('\n').length;
       inRegionLines = inController.text.split('\n').length + 1;
       newRegionlines = inRegionLines + beforeRegionLines;
-    } else if (region == 'IN') {
+    } else if (region == RegionPosition.inner) {
       beforeRegionLines = beforeController.text.split('\n').length;
       inRegionLines = event.split('\n').length + 1;
       newRegionlines = inRegionLines + beforeRegionLines;
@@ -216,23 +218,19 @@ class EditorState extends State<Editor> {
     );
   }
 
-  handleTextChange(FileIDE file, String event, String region) {
-    updateLineCount(file, event, region);
-
-    if (file.hasRegion && region != 'AFTER') {
-      handleRegionCaching(file, event, region);
-    }
+  handleTextChange(String event, RegionPosition region) {
+    updateLineCount(event, region);
 
     late String text;
 
     switch (region) {
-      case 'BEFORE':
+      case RegionPosition.before:
         text = '$event\n${inController.text}\n${afterController.text}';
         break;
-      case 'IN':
+      case RegionPosition.inner:
         text = '${beforeController.text}\n$event\n${afterController.text}';
         break;
-      case 'AFTER':
+      case RegionPosition.after:
         text = '${beforeController.text}\n${inController.text}\n$event';
         break;
     }
@@ -240,18 +238,37 @@ class EditorState extends State<Editor> {
     widget.onTextChange.sink.add(text);
   }
 
-  handleCurrentFocusedTextfieldController(String controller) {
-    if (controller == 'BEFORE') {
-      widget.focusedController.sink.add(beforeController);
-    } else if (controller == 'IN') {
-      widget.focusedController.sink.add(inController);
-    } else if (controller == 'AFTER') {
-      widget.focusedController.sink.add(afterController);
+  handleCurrentFocusedTextfieldController(RegionPosition position) {
+    if (position == RegionPosition.before) {
+      widget.textfieldData.sink.add(
+        TextFieldData(
+          controller: beforeController,
+          position: RegionPosition.before,
+        ),
+      );
+    } else if (position == RegionPosition.inner) {
+      widget.textfieldData.sink.add(
+        TextFieldData(
+          controller: inController,
+          position: RegionPosition.inner,
+        ),
+      );
+    } else if (position == RegionPosition.after) {
+      widget.textfieldData.sink.add(
+        TextFieldData(
+          controller: afterController,
+          position: RegionPosition.after,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    widget.textfieldData.stream.listen((event) {
+      handleTextChange(event.controller.text, event.position);
+    });
+
     return StreamBuilder<FileIDE>(
       stream: widget.fileTextStream.stream,
       builder: (context, snapshot) {
@@ -356,10 +373,15 @@ class EditorState extends State<Editor> {
                     color: Colors.white.withOpacity(0.87),
                   ),
                   onChanged: (String event) {
-                    handleTextChange(file, event, 'BEFORE');
+                    handleTextChange(event, RegionPosition.before);
+                    if (file.hasRegion) {
+                      handleRegionCaching(file, event, RegionPosition.before);
+                    }
                   },
                   onTap: () {
-                    handleCurrentFocusedTextfieldController('BEFORE');
+                    handleCurrentFocusedTextfieldController(
+                      RegionPosition.before,
+                    );
                   },
                   inputFormatters: [
                     FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
@@ -385,10 +407,13 @@ class EditorState extends State<Editor> {
                   ),
                 ),
                 onChanged: (String event) {
-                  handleTextChange(file, event, 'IN');
+                  handleTextChange(event, RegionPosition.inner);
+                  if (file.hasRegion) {
+                    handleRegionCaching(file, event, RegionPosition.before);
+                  }
                 },
                 onTap: () {
-                  handleCurrentFocusedTextfieldController('IN');
+                  handleCurrentFocusedTextfieldController(RegionPosition.inner);
                 },
                 inputFormatters: [
                   FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
@@ -422,10 +447,11 @@ class EditorState extends State<Editor> {
                     color: Colors.white.withOpacity(0.87),
                   ),
                   onChanged: (String event) {
-                    handleTextChange(file, event, 'AFTER');
+                    handleTextChange(event, RegionPosition.after);
                   },
                   onTap: () {
-                    handleCurrentFocusedTextfieldController('AFTER');
+                    handleCurrentFocusedTextfieldController(
+                        RegionPosition.after);
                   },
                   inputFormatters: [
                     FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
