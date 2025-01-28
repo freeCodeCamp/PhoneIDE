@@ -409,7 +409,7 @@ class EditorState extends State<Editor> {
                 onChanged: (String event) {
                   handleTextChange(event, RegionPosition.inner);
                   if (file.hasRegion) {
-                    handleRegionCaching(file, event, RegionPosition.before);
+                    handleRegionCaching(file, event, RegionPosition.inner);
                   }
                 },
                 onTap: () {
