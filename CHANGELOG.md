@@ -1,3 +1,8 @@
+### 1.3.0+1
+
+- fixes a bug where smart quitotes are inserted into the editor for IOS devices
+- feat added a text controller stream to the editor which allows for the editor to be controlled from outside the editor based on which controller is focused.
+
 ### 1.2.4+1
 
 - fixes a bug where the linecount is highlighted for JavaScript files
