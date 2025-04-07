@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -104,6 +102,7 @@ class EditorState extends State<Editor> {
       style: TextStyle(
         color: widget.options.linebarTextColor,
         fontSize: calculatedFontSize,
+        fontFamily: widget.options.fontFamily,
       ),
       context: context,
     );
@@ -370,7 +369,10 @@ class EditorState extends State<Editor> {
                   maxLines: null,
                   style: TextStyle(
                     fontSize: getFontSize(context, fontSize: 18),
-                    color: Colors.white.withOpacity(0.87),
+                    fontFamily: widget.options.fontFamily,
+                    color: Colors.white.withValues(
+                      alpha: 0.87,
+                    ),
                   ),
                   onChanged: (String event) {
                     handleTextChange(event, RegionPosition.before);
@@ -424,7 +426,10 @@ class EditorState extends State<Editor> {
                 maxLines: null,
                 style: TextStyle(
                   fontSize: getFontSize(context, fontSize: 18),
-                  color: Colors.white.withOpacity(0.87),
+                  fontFamily: widget.options.fontFamily,
+                  color: Colors.white.withValues(
+                    alpha: 0.87,
+                  ),
                 ),
               ),
               if (file.hasRegion && afterController.text.isNotEmpty)
@@ -444,14 +449,16 @@ class EditorState extends State<Editor> {
                   maxLines: null,
                   style: TextStyle(
                     fontSize: getFontSize(context, fontSize: 18),
-                    color: Colors.white.withOpacity(0.87),
+                    fontFamily: widget.options.fontFamily,
+                    color: Colors.white.withValues(alpha: 0.87),
                   ),
                   onChanged: (String event) {
                     handleTextChange(event, RegionPosition.after);
                   },
                   onTap: () {
                     handleCurrentFocusedTextfieldController(
-                        RegionPosition.after);
+                      RegionPosition.after,
+                    );
                   },
                   inputFormatters: [
                     FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
@@ -501,6 +508,7 @@ class EditorState extends State<Editor> {
                   style: TextStyle(
                     fontSize: getFontSize(context, fontSize: 18),
                     fontWeight: FontWeight.w500,
+                    fontFamily: widget.options.fontFamily,
                     color: widget.options.linebarTextColor,
                   ),
                   maxLines: null,
