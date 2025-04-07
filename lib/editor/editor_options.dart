@@ -6,6 +6,7 @@ class EditorOptions {
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
     this.hasRegion = false,
+    this.fontFamily,
   });
 
   // [editorBackgroundColor] is the background color of the editor.
@@ -23,6 +24,8 @@ class EditorOptions {
   // [hasRegion] is whether the editor has a region.
 
   bool hasRegion;
+
+  String? fontFamily;
 }
 
 class EditorRegionOptions {
