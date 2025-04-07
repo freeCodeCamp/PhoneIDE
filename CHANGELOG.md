@@ -1,6 +1,10 @@
+## 1.4.0+1
+
+- feat added the option to choose another font family.
+
 ### 1.3.0+1
 
-- fixes a bug where smart quitotes are inserted into the editor for IOS devices
+- fixes a bug where smart quotes are inserted into the editor for IOS devices
 - feat added a text controller stream to the editor which allows for the editor to be controlled from outside the editor based on which controller is focused.
 
 ### 1.2.4+1
