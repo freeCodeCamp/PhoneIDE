@@ -17,23 +17,29 @@ class Editor extends StatefulWidget {
     required this.language,
   }) : super(key: key);
 
-  // the coding language in the editor
+  // The coding language you want to enable syntax highlighting for.
   final String language;
 
-  // A stream where the text in the editor is changable
+  // Stream that enables you to change an emulated file in the editor.
   final StreamController<FileIDE> fileTextStream =
       StreamController<FileIDE>.broadcast();
 
-  // A stream where you can listen to the changes made in the editor
+  // Stream that holds the entire editor content.
   final StreamController<String> onTextChange =
       StreamController<String>.broadcast();
 
-  // options of the editor
-  final EditorOptions options;
+  // Stream that tells which controller the user is currently using. E.g.:
+  // The crontroller before the editable region, the one for the region and the
+  // one that comes after.
 
-  // The controller the user is currently using for the textfield
   final StreamController<TextFieldData> textfieldData =
       StreamController<TextFieldData>.broadcast();
+
+  // Stream that holds the contents of the editable region.
+  final StreamController<String> editableRegion =
+      StreamController<String>.broadcast();
+
+  final EditorOptions options;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -228,6 +234,7 @@ class EditorState extends State<Editor> {
         break;
       case RegionPosition.inner:
         text = '${beforeController.text}\n$event\n${afterController.text}';
+        widget.editableRegion.sink.add(event);
         break;
       case RegionPosition.after:
         text = '${beforeController.text}\n${inController.text}\n$event';
