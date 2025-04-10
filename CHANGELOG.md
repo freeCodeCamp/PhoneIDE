@@ -1,3 +1,7 @@
+## 1.5.0
+
+- feat added a new stream that returns the text in the editable region.
+
 ## 1.4.0+1
 
 - feat added the option to choose another font family.
