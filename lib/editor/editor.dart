@@ -154,7 +154,11 @@ class EditorState extends State<Editor> {
         }
       }
       scrollController.addListener(() {
-        linebarController.jumpTo(scrollController.offset);
+        if (file.hasRegion) {
+          linebarController.jumpTo(scrollController.offset);
+        } else {
+          linebarController.jumpTo(0);
+        }
       });
     });
 
@@ -223,7 +227,7 @@ class EditorState extends State<Editor> {
     );
   }
 
-  handleTextChange(String event, RegionPosition region) {
+  handleTextChange(String event, RegionPosition region, bool hasRegion) {
     updateLineCount(event, region);
 
     late String text;
@@ -233,7 +237,11 @@ class EditorState extends State<Editor> {
         text = '$event\n${inController.text}\n${afterController.text}';
         break;
       case RegionPosition.inner:
-        text = '${beforeController.text}\n$event\n${afterController.text}';
+        if (hasRegion) {
+          text = '${beforeController.text}\n$event\n${afterController.text}';
+        } else {
+          text = event;
+        }
         widget.editableRegion.sink.add(event);
         break;
       case RegionPosition.after:
@@ -271,14 +279,18 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.textfieldData.stream.listen((event) {
-      handleTextChange(event.controller.text, event.position);
-    });
-
     return StreamBuilder<FileIDE>(
       stream: widget.fileTextStream.stream,
       builder: (context, snapshot) {
         FileIDE? file;
+
+        widget.textfieldData.stream.listen((event) {
+          handleTextChange(
+            event.controller.text,
+            event.position,
+            file!.hasRegion,
+          );
+        });
 
         if (snapshot.hasData) {
           if (snapshot.data is FileIDE) {
@@ -382,7 +394,11 @@ class EditorState extends State<Editor> {
                     ),
                   ),
                   onChanged: (String event) {
-                    handleTextChange(event, RegionPosition.before);
+                    handleTextChange(
+                      event,
+                      RegionPosition.before,
+                      file.hasRegion,
+                    );
                     if (file.hasRegion) {
                       handleRegionCaching(file, event, RegionPosition.before);
                     }
@@ -416,7 +432,7 @@ class EditorState extends State<Editor> {
                   ),
                 ),
                 onChanged: (String event) {
-                  handleTextChange(event, RegionPosition.inner);
+                  handleTextChange(event, RegionPosition.inner, file.hasRegion);
                   if (file.hasRegion) {
                     handleRegionCaching(file, event, RegionPosition.inner);
                   }
@@ -460,7 +476,11 @@ class EditorState extends State<Editor> {
                     color: Colors.white.withValues(alpha: 0.87),
                   ),
                   onChanged: (String event) {
-                    handleTextChange(event, RegionPosition.after);
+                    handleTextChange(
+                      event,
+                      RegionPosition.after,
+                      file.hasRegion,
+                    );
                   },
                   onTap: () {
                     handleCurrentFocusedTextfieldController(
