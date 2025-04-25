@@ -284,17 +284,17 @@ class EditorState extends State<Editor> {
       builder: (context, snapshot) {
         FileIDE? file;
 
-        widget.textfieldData.stream.listen((event) {
-          handleTextChange(
-            event.controller.text,
-            event.position,
-            file!.hasRegion,
-          );
-        });
-
         if (snapshot.hasData) {
           if (snapshot.data is FileIDE) {
             file = snapshot.data as FileIDE;
+
+            widget.textfieldData.stream.listen((event) {
+              handleTextChange(
+                event.controller.text,
+                event.position,
+                file!.hasRegion,
+              );
+            });
 
             if (file.id != currentFileId) {
               handleFileInit(file);
