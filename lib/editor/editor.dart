@@ -75,6 +75,8 @@ class EditorState extends State<Editor> {
     linebarController.dispose();
   }
 
+  bool isLoading = false;
+
   void updateLineCount(String event, RegionPosition region) async {
     late String lines;
 
@@ -154,7 +156,7 @@ class EditorState extends State<Editor> {
         }
 
         if (file.content.split('\n').length > 7) {
-          Future.delayed(const Duration(seconds: 0), () {
+          Future.delayed(const Duration(milliseconds: 250), () {
             double offset = fileContent
                     .split('\n')
                     .sublist(0, regionStart - 1 < 0 ? 0 : regionStart - 1)
@@ -171,6 +173,7 @@ class EditorState extends State<Editor> {
 
       linebarController.jumpTo(0);
       scrollController.jumpTo(0);
+      isLoading = false;
     });
 
     TextEditingControllerIDE.language = widget.language;
@@ -308,6 +311,7 @@ class EditorState extends State<Editor> {
             });
 
             if (file.name != currentFileName) {
+              isLoading = true;
               handleFileInit(file);
               currentFileName = file.name;
             }
@@ -316,6 +320,12 @@ class EditorState extends State<Editor> {
           } else {
             return const Center(
               child: Text('Something went wrong'),
+            );
+          }
+
+          if (isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
             );
           }
 
