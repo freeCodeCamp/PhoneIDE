@@ -58,7 +58,22 @@ class EditorState extends State<Editor> {
 
   double _initialWidth = 28;
 
-  String currentFileId = '';
+  String currentFileName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController.addListener(() {
+      linebarController.jumpTo(scrollController.offset);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    scrollController.dispose();
+    linebarController.dispose();
+  }
 
   void updateLineCount(String event, RegionPosition region) async {
     late String lines;
@@ -153,13 +168,9 @@ class EditorState extends State<Editor> {
           });
         }
       }
-      scrollController.addListener(() {
-        if (file.hasRegion) {
-          linebarController.jumpTo(scrollController.offset);
-        } else {
-          linebarController.jumpTo(0);
-        }
-      });
+
+      linebarController.jumpTo(0);
+      scrollController.jumpTo(0);
     });
 
     TextEditingControllerIDE.language = widget.language;
@@ -296,9 +307,9 @@ class EditorState extends State<Editor> {
               );
             });
 
-            if (file.id != currentFileId) {
+            if (file.name != currentFileName) {
               handleFileInit(file);
-              currentFileId = file.id;
+              currentFileName = file.name;
             }
 
             TextEditingControllerIDE.language = file.ext;
