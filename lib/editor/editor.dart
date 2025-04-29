@@ -58,7 +58,22 @@ class EditorState extends State<Editor> {
 
   double _initialWidth = 28;
 
-  String currentFileId = '';
+  String currentFileName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController.addListener(() {
+      linebarController.jumpTo(scrollController.offset);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    scrollController.dispose();
+    linebarController.dispose();
+  }
 
   void updateLineCount(String event, RegionPosition region) async {
     late String lines;
@@ -153,9 +168,9 @@ class EditorState extends State<Editor> {
           });
         }
       }
-      scrollController.addListener(() {
-        linebarController.jumpTo(scrollController.offset);
-      });
+
+      linebarController.jumpTo(0);
+      scrollController.jumpTo(0);
     });
 
     TextEditingControllerIDE.language = widget.language;
@@ -223,7 +238,7 @@ class EditorState extends State<Editor> {
     );
   }
 
-  handleTextChange(String event, RegionPosition region) {
+  handleTextChange(String event, RegionPosition region, bool hasRegion) {
     updateLineCount(event, region);
 
     late String text;
@@ -233,7 +248,11 @@ class EditorState extends State<Editor> {
         text = '$event\n${inController.text}\n${afterController.text}';
         break;
       case RegionPosition.inner:
-        text = '${beforeController.text}\n$event\n${afterController.text}';
+        if (hasRegion) {
+          text = '${beforeController.text}\n$event\n${afterController.text}';
+        } else {
+          text = event;
+        }
         widget.editableRegion.sink.add(event);
         break;
       case RegionPosition.after:
@@ -271,10 +290,6 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    widget.textfieldData.stream.listen((event) {
-      handleTextChange(event.controller.text, event.position);
-    });
-
     return StreamBuilder<FileIDE>(
       stream: widget.fileTextStream.stream,
       builder: (context, snapshot) {
@@ -284,9 +299,17 @@ class EditorState extends State<Editor> {
           if (snapshot.data is FileIDE) {
             file = snapshot.data as FileIDE;
 
-            if (file.id != currentFileId) {
+            widget.textfieldData.stream.listen((event) {
+              handleTextChange(
+                event.controller.text,
+                event.position,
+                file!.hasRegion,
+              );
+            });
+
+            if (file.name != currentFileName) {
               handleFileInit(file);
-              currentFileId = file.id;
+              currentFileName = file.name;
             }
 
             TextEditingControllerIDE.language = file.ext;
@@ -382,7 +405,11 @@ class EditorState extends State<Editor> {
                     ),
                   ),
                   onChanged: (String event) {
-                    handleTextChange(event, RegionPosition.before);
+                    handleTextChange(
+                      event,
+                      RegionPosition.before,
+                      file.hasRegion,
+                    );
                     if (file.hasRegion) {
                       handleRegionCaching(file, event, RegionPosition.before);
                     }
@@ -416,7 +443,7 @@ class EditorState extends State<Editor> {
                   ),
                 ),
                 onChanged: (String event) {
-                  handleTextChange(event, RegionPosition.inner);
+                  handleTextChange(event, RegionPosition.inner, file.hasRegion);
                   if (file.hasRegion) {
                     handleRegionCaching(file, event, RegionPosition.inner);
                   }
@@ -460,7 +487,11 @@ class EditorState extends State<Editor> {
                     color: Colors.white.withValues(alpha: 0.87),
                   ),
                   onChanged: (String event) {
-                    handleTextChange(event, RegionPosition.after);
+                    handleTextChange(
+                      event,
+                      RegionPosition.after,
+                      file.hasRegion,
+                    );
                   },
                   onTap: () {
                     handleCurrentFocusedTextfieldController(
