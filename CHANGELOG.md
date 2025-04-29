@@ -1,8 +1,15 @@
-## 1.5.0
+### 1.5.1
+
+- fixes a bug where the line gutter is not aligned with the editor when switching to another file.
+- fixes a bug that inserted an extra blank line when switching to a file without an editable region.
+- fixes a bug where the previous file would be displayed for a couple of
+  millisecond when switching to another file.
+
+### 1.5.0
 
 - feat added a new stream that returns the text in the editable region.
 
-## 1.4.0+1
+### 1.4.0+1
 
 - feat added the option to choose another font family.
 
