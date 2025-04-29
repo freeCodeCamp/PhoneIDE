@@ -171,8 +171,10 @@ class EditorState extends State<Editor> {
         }
       }
 
-      linebarController.jumpTo(0);
-      scrollController.jumpTo(0);
+      if (scrollController.hasClients && linebarController.hasClients) {
+        linebarController.jumpTo(0);
+        scrollController.jumpTo(0);
+      }
       isLoading = false;
     });
 
