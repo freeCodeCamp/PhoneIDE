@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
 import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/editor/linebar.dart';
-import 'package:phone_ide/models/file.dart';
 import 'package:phone_ide/models/textfield_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,23 +13,14 @@ class Editor extends StatefulWidget {
   Editor({
     Key? key,
     required this.options,
-    required this.language,
+    required this.defaultLanguage,
+    required this.defaultValue,
+    required this.path,
   }) : super(key: key);
-
-  // The coding language you want to enable syntax highlighting for.
-  final String language;
-
-  // Stream that enables you to change an emulated file in the editor.
-  final StreamController<FileIDE> fileTextStream =
-      StreamController<FileIDE>.broadcast();
 
   // Stream that holds the entire editor content.
   final StreamController<String> onTextChange =
       StreamController<String>.broadcast();
-
-  // Stream that tells which controller the user is currently using. E.g.:
-  // The crontroller before the editable region, the one for the region and the
-  // one that comes after.
 
   final StreamController<TextFieldData> textfieldData =
       StreamController<TextFieldData>.broadcast();
@@ -40,6 +30,15 @@ class Editor extends StatefulWidget {
       StreamController<String>.broadcast();
 
   final EditorOptions options;
+
+  // The starting value of the editor
+  final String defaultValue;
+
+  // The starting language of the editor
+  final String defaultLanguage;
+
+  // The path e.g. file name "index.html"
+  final String path;
 
   @override
   State<StatefulWidget> createState() => EditorState();
@@ -141,21 +140,23 @@ class EditorState extends State<Editor> {
     return calculatedFontSize;
   }
 
-  handleFileInit(FileIDE file) async {
+  handleFileInit() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String fileContent = file.content;
+    String fileContent = widget.defaultValue;
+    EditorRegionOptions? region = widget.options.regionOptions;
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      handleRegionFields(file);
+      handleRegionFields();
 
-      if (file.hasRegion) {
-        int regionStart = file.region.start!;
-        if (prefs.get(file.id) != null) {
-          regionStart =
-              int.parse(prefs.getString(file.id)?.split(':')[0] ?? '');
+      if (widget.options.hasRegion) {
+        int regionStart = region!.start!;
+        if (prefs.get(widget.path) != null) {
+          regionStart = int.parse(
+            prefs.getString(widget.path)?.split(':')[0] ?? '',
+          );
         }
 
-        if (file.content.split('\n').length > 7) {
+        if (fileContent.split('\n').length > 7) {
           Future.delayed(const Duration(milliseconds: 250), () {
             double offset = fileContent
                     .split('\n')
@@ -178,35 +179,38 @@ class EditorState extends State<Editor> {
       isLoading = false;
     });
 
-    TextEditingControllerIDE.language = widget.language;
+    TextEditingControllerIDE.language = widget.defaultLanguage;
   }
 
-  handleRegionFields(FileIDE file) async {
+  handleRegionFields() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    EditorRegionOptions? region = widget.options.regionOptions;
+    String path = widget.path;
+    String fileContent = widget.defaultValue;
 
-    if (file.hasRegion) {
-      int regionStart = file.region.start!;
-      int regionEnd = file.region.end!;
+    if (widget.options.hasRegion) {
+      int regionStart = region!.start!;
+      int regionEnd = region.end!;
 
-      if (prefs.get(file.id) != null) {
-        regionStart = int.parse(prefs.getString(file.id)?.split(':')[0] ?? '');
-        regionEnd = int.parse(prefs.getString(file.id)?.split(':')[1] ?? '');
+      if (prefs.get(path) != null) {
+        regionStart = int.parse(prefs.getString(path)?.split(':')[0] ?? '');
+        regionEnd = int.parse(prefs.getString(path)?.split(':')[1] ?? '');
       }
 
-      int lines = file.content.split('\n').length;
+      int lines = widget.defaultValue.split('\n').length;
 
       if (lines >= 1) {
         String beforeEditableRegionText =
-            file.content.split('\n').sublist(0, regionStart).join('\n');
+            fileContent.split('\n').sublist(0, regionStart).join('\n');
 
-        String inEditableRegionText = file.content
+        String inEditableRegionText = fileContent
             .split('\n')
             .sublist(regionStart, regionEnd - 1)
             .join('\n');
 
-        String afterEditableRegionText = file.content
+        String afterEditableRegionText = fileContent
             .split('\n')
-            .sublist(regionEnd - 1, file.content.split('\n').length)
+            .sublist(regionEnd - 1, fileContent.split('\n').length)
             .join('\n');
         beforeController.text = beforeEditableRegionText;
         inController.text = inEditableRegionText;
@@ -214,14 +218,14 @@ class EditorState extends State<Editor> {
       }
     } else {
       beforeController.text = '';
-      inController.text = file.content;
+      inController.text = fileContent;
       afterController.text = '';
     }
 
     updateLineCount(inController.text, RegionPosition.inner);
   }
 
-  handleRegionCaching(FileIDE file, String event, RegionPosition region) async {
+  handleRegionCaching(String event, RegionPosition region) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     late int beforeRegionLines;
     late int inRegionLines;
@@ -238,7 +242,7 @@ class EditorState extends State<Editor> {
     }
 
     prefs.setString(
-      file.id,
+      widget.path,
       '$beforeRegionLines:$newRegionlines',
     );
   }
@@ -295,87 +299,64 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<FileIDE>(
-      stream: widget.fileTextStream.stream,
-      builder: (context, snapshot) {
-        FileIDE? file;
+    return Builder(
+      builder: (context) {
+        widget.textfieldData.stream.listen((event) {
+          handleTextChange(
+            event.controller.text,
+            event.position,
+            widget.options.hasRegion,
+          );
+        });
 
-        if (snapshot.hasData) {
-          if (snapshot.data is FileIDE) {
-            file = snapshot.data as FileIDE;
-
-            widget.textfieldData.stream.listen((event) {
-              handleTextChange(
-                event.controller.text,
-                event.position,
-                file!.hasRegion,
-              );
-            });
-
-            if (file.name != currentFileName) {
-              isLoading = true;
-              handleFileInit(file);
-              currentFileName = file.name;
-            }
-
-            TextEditingControllerIDE.language = file.ext;
-          } else {
-            return const Center(
-              child: Text('Something went wrong'),
-            );
-          }
-
-          if (isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          final mediaQueryData = MediaQuery.of(context);
-
-          return MediaQuery(
-            data: mediaQueryData.copyWith(
-              textScaler: TextScaler.noScaling,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  constraints: BoxConstraints(
-                    minWidth: 1,
-                    maxWidth: _initialWidth,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.options.linebarColor,
-                    border: const Border(
-                      right: BorderSide(
-                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
-                      ),
-                    ),
-                  ),
-                  child: linecountBar(),
-                ),
-                Expanded(
-                  child: Container(
-                    color: widget.options.editorBackgroundColor,
-                    child: MediaQuery(
-                      data: const MediaQueryData(
-                        gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
-                      ),
-                      child: editorView(context, file),
-                    ),
-                  ),
-                )
-              ],
-            ),
+        if (isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
           );
         }
 
-        return const Center(child: Text('open file'));
+        final mediaQueryData = MediaQuery.of(context);
+
+        return MediaQuery(
+          data: mediaQueryData.copyWith(
+            textScaler: TextScaler.noScaling,
+          ),
+          child: Row(
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  minWidth: 1,
+                  maxWidth: _initialWidth,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.options.linebarColor,
+                  border: const Border(
+                    right: BorderSide(
+                      color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                    ),
+                  ),
+                ),
+                child: linecountBar(),
+              ),
+              Expanded(
+                child: Container(
+                  color: widget.options.editorBackgroundColor,
+                  child: MediaQuery(
+                    data: const MediaQueryData(
+                      gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
+                    ),
+                    child: editorView(context),
+                  ),
+                ),
+              )
+            ],
+          ),
+        );
       },
     );
   }
 
-  Widget editorView(BuildContext context, FileIDE file) {
+  Widget editorView(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(top: 0),
       physics: const ClampingScrollPhysics(),
@@ -394,11 +375,11 @@ class EditorState extends State<Editor> {
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
-              if (file.hasRegion && beforeController.text.isNotEmpty)
-                editorField(context, file, RegionPosition.before),
-              editorField(context, file, RegionPosition.inner),
-              if (file.hasRegion && afterController.text.isNotEmpty)
-                editorField(context, file, RegionPosition.after),
+              if (widget.options.hasRegion && beforeController.text.isNotEmpty)
+                editorField(context, RegionPosition.before),
+              editorField(context, RegionPosition.inner),
+              if (widget.options.hasRegion && afterController.text.isNotEmpty)
+                editorField(context, RegionPosition.after),
             ],
           ),
         )
@@ -408,7 +389,6 @@ class EditorState extends State<Editor> {
 
   TextField editorField(
     BuildContext context,
-    FileIDE file,
     RegionPosition position,
   ) {
     TextEditingController returnCorrectController(RegionPosition position) {
@@ -429,8 +409,8 @@ class EditorState extends State<Editor> {
       decoration: InputDecoration(
         border: InputBorder.none,
         filled: true,
-        fillColor: file.hasRegion && position == RegionPosition.inner
-            ? file.region.color
+        fillColor: widget.options.hasRegion && position == RegionPosition.inner
+            ? widget.options.regionOptions!.color
             : widget.options.editorBackgroundColor,
         contentPadding: const EdgeInsets.only(
           left: 10,
@@ -444,15 +424,11 @@ class EditorState extends State<Editor> {
         color: Colors.white.withValues(alpha: 0.87),
       ),
       onChanged: (String event) {
-        if (file.hasRegion && position != RegionPosition.after) {
-          handleRegionCaching(file, event, position);
+        if (widget.options.hasRegion && position != RegionPosition.after) {
+          handleRegionCaching(event, position);
         }
 
-        handleTextChange(
-          event,
-          position,
-          file.hasRegion,
-        );
+        handleTextChange(event, position, widget.options.hasRegion);
       },
       onTap: () {
         handleCurrentFocusedTextfieldController(position);

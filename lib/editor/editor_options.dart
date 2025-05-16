@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class EditorOptions {
   EditorOptions({
     this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.regionOptions,
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
     this.hasRegion = false,
@@ -24,6 +25,9 @@ class EditorOptions {
   // [hasRegion] is whether the editor has a region.
 
   bool hasRegion;
+
+  // If the file has a region these are the options that are available
+  EditorRegionOptions? regionOptions;
 
   String? fontFamily;
 }
