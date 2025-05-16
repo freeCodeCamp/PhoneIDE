@@ -395,131 +395,73 @@ class EditorState extends State<Editor> {
             shrinkWrap: true,
             children: [
               if (file.hasRegion && beforeController.text.isNotEmpty)
-                TextField(
-                  smartQuotesType: SmartQuotesType.disabled,
-                  smartDashesType: SmartDashesType.disabled,
-                  controller: beforeController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    fillColor: widget.options.editorBackgroundColor,
-                    filled: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(
-                      left: 10,
-                    ),
-                  ),
-                  maxLines: null,
-                  style: TextStyle(
-                    fontSize: getFontSize(context, fontSize: 18),
-                    fontFamily: widget.options.fontFamily,
-                    color: Colors.white.withValues(
-                      alpha: 0.87,
-                    ),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(
-                      event,
-                      RegionPosition.before,
-                      file.hasRegion,
-                    );
-                    if (file.hasRegion) {
-                      handleRegionCaching(file, event, RegionPosition.before);
-                    }
-                  },
-                  onTap: () {
-                    handleCurrentFocusedTextfieldController(
-                      RegionPosition.before,
-                    );
-                  },
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
-                        replacementString: '"'),
-                    FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
-                        replacementString: "'")
-                  ],
-                ),
-              TextField(
-                smartQuotesType: SmartQuotesType.disabled,
-                smartDashesType: SmartDashesType.disabled,
-                controller: inController,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  fillColor: file.hasRegion
-                      ? file.region.color
-                      : widget.options.editorBackgroundColor,
-                  filled: true,
-                  isDense: true,
-                  contentPadding: EdgeInsets.only(
-                    left: 10,
-                    top: file.hasRegion ? 0 : 10,
-                  ),
-                ),
-                onChanged: (String event) {
-                  handleTextChange(event, RegionPosition.inner, file.hasRegion);
-                  if (file.hasRegion) {
-                    handleRegionCaching(file, event, RegionPosition.inner);
-                  }
-                },
-                onTap: () {
-                  handleCurrentFocusedTextfieldController(RegionPosition.inner);
-                },
-                inputFormatters: [
-                  FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
-                      replacementString: '"'),
-                  FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
-                      replacementString: "'")
-                ],
-                maxLines: null,
-                style: TextStyle(
-                  fontSize: getFontSize(context, fontSize: 18),
-                  fontFamily: widget.options.fontFamily,
-                  color: Colors.white.withValues(
-                    alpha: 0.87,
-                  ),
-                ),
-              ),
+                editorField(context, file, RegionPosition.before),
+              editorField(context, file, RegionPosition.inner),
               if (file.hasRegion && afterController.text.isNotEmpty)
-                TextField(
-                  smartQuotesType: SmartQuotesType.disabled,
-                  smartDashesType: SmartDashesType.disabled,
-                  controller: afterController,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    filled: true,
-                    fillColor: widget.options.editorBackgroundColor,
-                    contentPadding: const EdgeInsets.only(
-                      left: 10,
-                    ),
-                    isDense: true,
-                  ),
-                  maxLines: null,
-                  style: TextStyle(
-                    fontSize: getFontSize(context, fontSize: 18),
-                    fontFamily: widget.options.fontFamily,
-                    color: Colors.white.withValues(alpha: 0.87),
-                  ),
-                  onChanged: (String event) {
-                    handleTextChange(
-                      event,
-                      RegionPosition.after,
-                      file.hasRegion,
-                    );
-                  },
-                  onTap: () {
-                    handleCurrentFocusedTextfieldController(
-                      RegionPosition.after,
-                    );
-                  },
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
-                        replacementString: '"'),
-                    FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
-                        replacementString: "'")
-                  ],
-                ),
+                editorField(context, file, RegionPosition.after),
             ],
           ),
         )
+      ],
+    );
+  }
+
+  TextField editorField(
+    BuildContext context,
+    FileIDE file,
+    RegionPosition position,
+  ) {
+    TextEditingController returnCorrectController(RegionPosition position) {
+      switch (position) {
+        case RegionPosition.before:
+          return beforeController;
+        case RegionPosition.inner:
+          return inController;
+        case RegionPosition.after:
+          return afterController;
+      }
+    }
+
+    return TextField(
+      smartQuotesType: SmartQuotesType.disabled,
+      smartDashesType: SmartDashesType.disabled,
+      controller: returnCorrectController(position),
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        filled: true,
+        fillColor: file.hasRegion && position == RegionPosition.inner
+            ? file.region.color
+            : widget.options.editorBackgroundColor,
+        contentPadding: const EdgeInsets.only(
+          left: 10,
+        ),
+        isDense: true,
+      ),
+      maxLines: null,
+      style: TextStyle(
+        fontSize: getFontSize(context, fontSize: 18),
+        fontFamily: widget.options.fontFamily,
+        color: Colors.white.withValues(alpha: 0.87),
+      ),
+      onChanged: (String event) {
+        if (file.hasRegion && position != RegionPosition.after) {
+          handleRegionCaching(file, event, position);
+        }
+
+        handleTextChange(
+          event,
+          position,
+          file.hasRegion,
+        );
+      },
+      onTap: () {
+        handleCurrentFocusedTextfieldController(position);
+      },
+      inputFormatters: [
+        FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
+            replacementString: '"'),
+        FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
+            replacementString: "'")
       ],
     );
   }
