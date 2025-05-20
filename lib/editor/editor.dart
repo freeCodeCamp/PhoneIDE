@@ -367,9 +367,7 @@ class EditorState extends State<Editor> {
           height: 1000,
           width: 2500,
           child: ListView(
-            padding: widget.options.hasRegion
-                ? const EdgeInsets.only(top: 10)
-                : const EdgeInsets.only(top: 0),
+            padding: EdgeInsets.only(top: 10),
             physics: const ClampingScrollPhysics(),
             controller: scrollController,
             scrollDirection: Axis.vertical,
