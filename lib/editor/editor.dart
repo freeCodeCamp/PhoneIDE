@@ -62,6 +62,7 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
+    handleFileInit();
     scrollController.addListener(() {
       linebarController.jumpTo(scrollController.offset);
     });
@@ -205,7 +206,7 @@ class EditorState extends State<Editor> {
 
         String inEditableRegionText = fileContent
             .split('\n')
-            .sublist(regionStart, regionEnd - 1)
+            .sublist(regionStart + 1, regionEnd - 1)
             .join('\n');
 
         String afterEditableRegionText = fileContent
