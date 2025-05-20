@@ -340,7 +340,7 @@ class EditorState extends State<Editor> {
               ),
               Expanded(
                 child: Container(
-                  color: widget.options.editorBackgroundColor,
+                  color: widget.options.backgroundColor,
                   child: MediaQuery(
                     data: const MediaQueryData(
                       gestureSettings: DeviceGestureSettings(touchSlop: 8.0),
@@ -411,7 +411,7 @@ class EditorState extends State<Editor> {
         filled: true,
         fillColor: widget.options.hasRegion && position == RegionPosition.inner
             ? widget.options.regionOptions!.color
-            : widget.options.editorBackgroundColor,
+            : widget.options.backgroundColor,
         contentPadding: const EdgeInsets.only(
           left: 10,
         ),

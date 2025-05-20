@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class EditorOptions {
   EditorOptions({
-    this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.backgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
     this.regionOptions,
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
@@ -10,9 +10,9 @@ class EditorOptions {
     this.fontFamily,
   });
 
-  // [editorBackgroundColor] is the background color of the editor.
+  // [backgroundColor] is the background color of the editor.
 
-  Color editorBackgroundColor;
+  Color backgroundColor;
 
   // [linebarColor] is the background color of the linebar.
 
