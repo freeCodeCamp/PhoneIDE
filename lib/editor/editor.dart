@@ -206,7 +206,7 @@ class EditorState extends State<Editor> {
 
         String inEditableRegionText = fileContent
             .split('\n')
-            .sublist(regionStart + 1, regionEnd - 1)
+            .sublist(regionStart, regionEnd - 1)
             .join('\n');
 
         String afterEditableRegionText = fileContent
