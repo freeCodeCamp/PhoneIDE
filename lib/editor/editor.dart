@@ -80,7 +80,7 @@ class EditorState extends State<Editor> {
   void updateLineCount(String event, RegionPosition region) async {
     late String lines;
 
-    if (widget.options.hasRegion) {
+    if (widget.options.regionOptions != null) {
       switch (region) {
         case RegionPosition.before:
           lines = event +
@@ -106,7 +106,7 @@ class EditorState extends State<Editor> {
       }
     }
 
-    if (!widget.options.hasRegion) {
+    if (widget.options.regionOptions == null) {
       lines = event;
     }
 
@@ -149,7 +149,7 @@ class EditorState extends State<Editor> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleRegionFields();
 
-      if (widget.options.hasRegion) {
+      if (widget.options.regionOptions != null) {
         int regionStart = region!.start!;
         if (prefs.get(widget.path) != null) {
           regionStart = int.parse(
@@ -189,7 +189,7 @@ class EditorState extends State<Editor> {
     String path = widget.path;
     String fileContent = widget.defaultValue;
 
-    if (widget.options.hasRegion) {
+    if (widget.options.regionOptions != null) {
       int regionStart = region!.start!;
       int regionEnd = region.end!;
 
@@ -306,7 +306,7 @@ class EditorState extends State<Editor> {
           handleTextChange(
             event.controller.text,
             event.position,
-            widget.options.hasRegion,
+            widget.options.regionOptions != null,
           );
         });
 
@@ -374,10 +374,12 @@ class EditorState extends State<Editor> {
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
             children: [
-              if (widget.options.hasRegion && beforeController.text.isNotEmpty)
+              if (widget.options.regionOptions != null &&
+                  beforeController.text.isNotEmpty)
                 editorField(context, RegionPosition.before),
               editorField(context, RegionPosition.inner),
-              if (widget.options.hasRegion && afterController.text.isNotEmpty)
+              if (widget.options.regionOptions != null &&
+                  afterController.text.isNotEmpty)
                 editorField(context, RegionPosition.after),
             ],
           ),
@@ -408,7 +410,8 @@ class EditorState extends State<Editor> {
       decoration: InputDecoration(
         border: InputBorder.none,
         filled: true,
-        fillColor: widget.options.hasRegion && position == RegionPosition.inner
+        fillColor: widget.options.regionOptions != null &&
+                position == RegionPosition.inner
             ? widget.options.regionOptions!.color
             : widget.options.backgroundColor,
         contentPadding: const EdgeInsets.only(
@@ -423,11 +426,12 @@ class EditorState extends State<Editor> {
         color: Colors.white.withValues(alpha: 0.87),
       ),
       onChanged: (String event) {
-        if (widget.options.hasRegion && position != RegionPosition.after) {
+        if (widget.options.regionOptions != null &&
+            position != RegionPosition.after) {
           handleRegionCaching(event, position);
         }
 
-        handleTextChange(event, position, widget.options.hasRegion);
+        handleTextChange(event, position, widget.options.regionOptions != null);
       },
       onTap: () {
         handleCurrentFocusedTextfieldController(position);

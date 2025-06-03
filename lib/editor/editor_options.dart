@@ -6,7 +6,6 @@ class EditorOptions {
     this.regionOptions,
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
-    this.hasRegion = false,
     this.fontFamily,
   });
 
@@ -22,10 +21,6 @@ class EditorOptions {
 
   Color linebarTextColor;
 
-  // [hasRegion] is whether the editor has a region.
-
-  bool hasRegion;
-
   // If the file has a region these are the options that are available
   EditorRegionOptions? regionOptions;
 
@@ -37,7 +32,6 @@ class EditorRegionOptions {
     required this.start,
     required this.end,
     this.color = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
-    this.condition = false,
   });
 
   // [start] is the start line of the region.
@@ -50,8 +44,4 @@ class EditorRegionOptions {
   // [color] is the background color of the region.
 
   Color color;
-
-  // [condition] is wheter the region has a condition which will show the border red or green.
-
-  bool condition;
 }
