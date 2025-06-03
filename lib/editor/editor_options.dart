@@ -6,6 +6,7 @@ class EditorOptions {
     this.regionOptions,
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
+    this.takeFullHeight = true,
     this.fontFamily,
   });
 
@@ -23,6 +24,9 @@ class EditorOptions {
 
   // If the file has a region these are the options that are available
   EditorRegionOptions? regionOptions;
+
+  // Should take all available vertical height
+  bool takeFullHeight;
 
   String? fontFamily;
 }

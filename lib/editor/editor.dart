@@ -358,33 +358,26 @@ class EditorState extends State<Editor> {
   }
 
   Widget editorView(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(top: 0),
-      physics: const ClampingScrollPhysics(),
+    return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
-      children: [
-        SizedBox(
-          height: 1000,
-          width: 2500,
-          child: ListView(
-            padding: EdgeInsets.only(top: 10),
-            physics: const ClampingScrollPhysics(),
-            controller: scrollController,
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            children: [
-              if (widget.options.regionOptions != null &&
-                  beforeController.text.isNotEmpty)
-                editorField(context, RegionPosition.before),
-              editorField(context, RegionPosition.inner),
-              if (widget.options.regionOptions != null &&
-                  afterController.text.isNotEmpty)
-                editorField(context, RegionPosition.after),
-            ],
-          ),
-        )
-      ],
+      child: Container(
+        width: 5000,
+        child: ListView(
+          controller: scrollController,
+          physics: const ClampingScrollPhysics(),
+          shrinkWrap: !widget.options.takeFullHeight,
+          children: [
+            if (widget.options.regionOptions != null &&
+                beforeController.text.isNotEmpty)
+              editorField(context, RegionPosition.before),
+            editorField(context, RegionPosition.inner),
+            if (widget.options.regionOptions != null &&
+                afterController.text.isNotEmpty)
+              editorField(context, RegionPosition.after),
+          ],
+        ),
+      ),
     );
   }
 
@@ -447,10 +440,11 @@ class EditorState extends State<Editor> {
 
   linecountBar() {
     return Column(
+      mainAxisSize:
+          widget.options.takeFullHeight ? MainAxisSize.max : MainAxisSize.min,
       children: [
         Flexible(
           child: ListView.builder(
-            padding: const EdgeInsets.only(top: 10),
             shrinkWrap: true,
             controller: linebarController,
             physics: const NeverScrollableScrollPhysics(),
