@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 
 class EditorOptions {
   EditorOptions({
-    this.editorBackgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.backgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.regionOptions,
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
-    this.hasRegion = false,
+    this.showLinebar = true,
+    this.takeFullHeight = true,
+    this.isEditable = true,
     this.fontFamily,
   });
 
-  // [editorBackgroundColor] is the background color of the editor.
+  // [backgroundColor] is the background color of the editor.
 
-  Color editorBackgroundColor;
+  Color backgroundColor;
 
   // [linebarColor] is the background color of the linebar.
 
@@ -21,9 +24,17 @@ class EditorOptions {
 
   Color linebarTextColor;
 
-  // [hasRegion] is whether the editor has a region.
+  // If the file has a region these are the options that are available
+  EditorRegionOptions? regionOptions;
 
-  bool hasRegion;
+  // Should take all available vertical height
+  bool takeFullHeight;
+
+  // Control if the text in the editor is editable
+  bool isEditable;
+
+  // Hide or Show the linebar
+  bool showLinebar;
 
   String? fontFamily;
 }
@@ -33,7 +44,6 @@ class EditorRegionOptions {
     required this.start,
     required this.end,
     this.color = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
-    this.condition = false,
   });
 
   // [start] is the start line of the region.
@@ -46,8 +56,4 @@ class EditorRegionOptions {
   // [color] is the background color of the region.
 
   Color color;
-
-  // [condition] is wheter the region has a condition which will show the border red or green.
-
-  bool condition;
 }
