@@ -324,21 +324,22 @@ class EditorState extends State<Editor> {
           ),
           child: Row(
             children: [
-              Container(
-                constraints: BoxConstraints(
-                  minWidth: 1,
-                  maxWidth: _initialWidth,
-                ),
-                decoration: BoxDecoration(
-                  color: widget.options.linebarColor,
-                  border: const Border(
-                    right: BorderSide(
-                      color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+              if (widget.options.showLinebar)
+                Container(
+                  constraints: BoxConstraints(
+                    minWidth: 1,
+                    maxWidth: _initialWidth,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.options.linebarColor,
+                    border: const Border(
+                      right: BorderSide(
+                        color: Color.fromRGBO(0x88, 0x88, 0x88, 1),
+                      ),
                     ),
                   ),
+                  child: linecountBar(),
                 ),
-                child: linecountBar(),
-              ),
               Expanded(
                 child: Container(
                   color: widget.options.backgroundColor,
@@ -399,6 +400,7 @@ class EditorState extends State<Editor> {
     return TextField(
       smartQuotesType: SmartQuotesType.disabled,
       smartDashesType: SmartDashesType.disabled,
+      enabled: widget.options.isEditable,
       controller: returnCorrectController(position),
       decoration: InputDecoration(
         border: InputBorder.none,

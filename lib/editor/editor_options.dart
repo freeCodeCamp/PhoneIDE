@@ -6,7 +6,9 @@ class EditorOptions {
     this.regionOptions,
     this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
     this.linebarTextColor = Colors.white,
+    this.showLinebar = true,
     this.takeFullHeight = true,
+    this.isEditable = true,
     this.fontFamily,
   });
 
@@ -27,6 +29,12 @@ class EditorOptions {
 
   // Should take all available vertical height
   bool takeFullHeight;
+
+  // Control if the text in the editor is editable
+  bool isEditable;
+
+  // Hide or Show the linebar
+  bool showLinebar;
 
   String? fontFamily;
 }
