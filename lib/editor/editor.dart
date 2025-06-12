@@ -83,6 +83,7 @@ class EditorState extends State<Editor> {
   void dispose() {
     super.dispose();
     scrollController.dispose();
+    horizontalController.dispose();
     linebarController.dispose();
     _textfieldDataSub.cancel();
   }
@@ -90,6 +91,7 @@ class EditorState extends State<Editor> {
   bool isLoading = false;
 
   void updateLineCount(String event, RegionPosition region) async {
+    if (!mounted) return;
     late String lines;
 
     if (widget.options.regionOptions != null) {
@@ -169,6 +171,7 @@ class EditorState extends State<Editor> {
 
         if (fileContent.split('\n').length > 7) {
           Future.delayed(const Duration(milliseconds: 250), () {
+            if (!mounted) return;
             double offset = fileContent
                     .split('\n')
                     .sublist(0, regionStart - 1 < 0 ? 0 : regionStart - 1)
@@ -259,6 +262,7 @@ class EditorState extends State<Editor> {
   }
 
   handleTextChange(String event, RegionPosition region, bool hasRegion) {
+    if (!mounted) return;
     updateLineCount(event, region);
 
     late String text;
@@ -284,6 +288,8 @@ class EditorState extends State<Editor> {
   }
 
   handleCurrentFocusedTextfieldController(RegionPosition position) {
+    if (!mounted) return;
+
     if (position == RegionPosition.before) {
       widget.textfieldData.sink.add(
         TextFieldData(
