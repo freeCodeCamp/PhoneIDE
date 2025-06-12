@@ -53,6 +53,8 @@ class EditorState extends State<Editor> {
   TextEditingControllerIDE inController = TextEditingControllerIDE();
   TextEditingControllerIDE afterController = TextEditingControllerIDE();
 
+  late StreamSubscription<TextFieldData> _textfieldDataSub;
+
   int _currNumLines = 1;
 
   double _initialWidth = 28;
@@ -63,6 +65,15 @@ class EditorState extends State<Editor> {
   void initState() {
     super.initState();
     handleFileInit();
+
+    _textfieldDataSub = widget.textfieldData.stream.listen((event) {
+      handleTextChange(
+        event.controller.text,
+        event.position,
+        widget.options.regionOptions != null,
+      );
+    });
+
     scrollController.addListener(() {
       linebarController.jumpTo(scrollController.offset);
     });
@@ -73,6 +84,7 @@ class EditorState extends State<Editor> {
     super.dispose();
     scrollController.dispose();
     linebarController.dispose();
+    _textfieldDataSub.cancel();
   }
 
   bool isLoading = false;
@@ -300,14 +312,6 @@ class EditorState extends State<Editor> {
   Widget build(BuildContext context) {
     return Builder(
       builder: (context) {
-        widget.textfieldData.stream.listen((event) {
-          handleTextChange(
-            event.controller.text,
-            event.position,
-            widget.options.regionOptions != null,
-          );
-        });
-
         if (isLoading) {
           return const Center(
             child: CircularProgressIndicator(),
@@ -457,6 +461,7 @@ class EditorState extends State<Editor> {
                   if (i + 1 > 9) {
                     SchedulerBinding.instance.addPostFrameCallback(
                       (timeStamp) {
+                        if (!mounted) return;
                         setState(() {
                           _initialWidth = getTextHeight(context) +
                               (8 * (i + 1).toString().length);
