@@ -371,7 +371,9 @@ class EditorState extends State<Editor> {
       scrollDirection: Axis.horizontal,
       controller: horizontalController,
       child: Container(
-        width: 5000,
+        width: !widget.options.isEditable
+            ? MediaQuery.of(context).size.width + 600
+            : 5000,
         child: ListView(
           controller: scrollController,
           physics: const ClampingScrollPhysics(),
