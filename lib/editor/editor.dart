@@ -104,9 +104,7 @@ class EditorState extends State<Editor> {
               event;
           break;
       }
-    }
-
-    if (widget.options.regionOptions == null) {
+    } else {
       lines = event;
     }
 
@@ -149,8 +147,8 @@ class EditorState extends State<Editor> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       handleRegionFields();
 
-      if (widget.options.regionOptions != null) {
-        int regionStart = region!.start!;
+      if (region != null) {
+        int regionStart = region.start!;
         if (prefs.get(widget.path) != null) {
           regionStart = int.parse(
             prefs.getString(widget.path)?.split(':')[0] ?? '',
@@ -189,8 +187,8 @@ class EditorState extends State<Editor> {
     String path = widget.path;
     String fileContent = widget.defaultValue;
 
-    if (widget.options.regionOptions != null) {
-      int regionStart = region!.start!;
+    if (region != null) {
+      int regionStart = region.start!;
       int regionEnd = region.end!;
 
       if (prefs.get(path) != null) {
@@ -198,7 +196,7 @@ class EditorState extends State<Editor> {
         regionEnd = int.parse(prefs.getString(path)?.split(':')[1] ?? '');
       }
 
-      int lines = widget.defaultValue.split('\n').length;
+      int lines = fileContent.split('\n').length;
 
       if (lines >= 1) {
         String beforeEditableRegionText =
