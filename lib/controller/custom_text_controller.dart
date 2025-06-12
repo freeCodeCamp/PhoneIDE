@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phone_ide/enums/syntax.dart';
 import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
 
@@ -52,14 +51,12 @@ class TextEditingControllerIDE extends TextEditingController {
   }
 
   @override
-  TextSpan buildTextSpan(
-      {required BuildContext context,
-      TextStyle? style,
-      required bool withComposing}) {
-    Syntax syntax =
-        Syntax.values.firstWhere((s) => s.name == language.toUpperCase());
-    var nodes =
-        highlight.parse(text, language: syntax.name.toLowerCase()).nodes!;
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    var nodes = highlight.parse(text, language: language).nodes!;
     return TextSpan(style: style, children: _convert(nodes));
   }
 }
