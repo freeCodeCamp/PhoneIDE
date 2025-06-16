@@ -1,3 +1,13 @@
+### 2.0.0
+
+- feat: adds support to make the editor read-only.
+- feat: adds support to make the editor take minium height instead of full height.
+- feat: adds support to hide the line gutter.
+- refactor: `filteTextStream` as it is no longer needed use `defaultValue` instead.
+- refactor: changes `editorBackgroundColor` to `backgroundColor`.
+- refactor: removes `hasRegion` just supply a `region` to the editor if you want to use it.
+- fix: gets rid of `condition` a relic from the past.
+
 ### 1.5.1
 
 - fixes a bug where the line gutter is not aligned with the editor when switching to another file.
