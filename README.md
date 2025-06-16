@@ -17,26 +17,26 @@ Here's a basic example of how to integrate the `Editor` widget into your Flutter
 
 ```dart
 Editor(
-options: EditorOptions(
-backgroundColor: Colors.black,
-linebarColor: Colors.grey.shade800,
-linebarTextColor: Colors.white,
-showLinebar: true,
-takeFullHeight: true,
-fontFamily: 'Courier',
-regionOptions: EditorRegionOptions(
-start: 3,
-end: 10,
-color: Colors.grey.shade900,
-),
-),
-defaultLanguage: 'dart',
-defaultValue: '''
+  options: EditorOptions(
+    backgroundColor: Colors.black,
+    linebarColor: Colors.grey.shade800,
+    linebarTextColor: Colors.white,
+    showLinebar: true,
+    takeFullHeight: true,
+    fontFamily: 'Courier',
+    regionOptions: EditorRegionOptions(
+      start: 3,
+      end: 10,
+      color: Colors.grey.shade900,
+    ),
+  ),
+  defaultLanguage: 'dart',
+  defaultValue: '''
 void main() {
-print('Hello, World!');
+  print('Hello, World!');
 }
 ''',
-path: 'main.dart',
+  path: 'main.dart',
 );
 ```
 
@@ -53,10 +53,10 @@ You can adjust the appearance by tweaking the `EditorOptions`:
 
 ```dart
 EditorOptions(
-backgroundColor: Colors.blueGrey,
-linebarColor: Colors.black54,
-fontFamily: 'Monaco',
-isEditable: false,
+  backgroundColor: Colors.blueGrey,
+  linebarColor: Colors.black54,
+  fontFamily: 'Monaco',
+  isEditable: false,
 );
 ```
 
@@ -66,18 +66,18 @@ You can listen for changes in the editor content through the provided streams:
 
 ```dart
 final editor = Editor(
-options: EditorOptions(),
-defaultLanguage: 'dart',
-defaultValue: '',
-path: 'script.dart',
+  options: EditorOptions(),
+  defaultLanguage: 'dart',
+  defaultValue: '',
+  path: 'script.dart',
 );
 
 editor.onTextChange.stream.listen((content) {
-print('Editor content changed: $content');
+  print('Editor content changed: \$content');
 });
 
 editor.editableRegion.stream.listen((editableContent) {
-print('Editable region content: $editableContent');
+  print('Editable region content: \$editableContent');
 });
 ```
 
