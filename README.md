@@ -1,95 +1,86 @@
-## Usage
+# Editor Widget
 
-To use PhoneIDE in your Flutter app, simply add the `phone_ide` package to your project dependencies and import the `phone_ide.dart` file. You can then use the `Editor` widget to display the code editor in your app.
+A versatile text editor widget for Flutter applications, supporting syntax highlighting, editable regions, and customizable appearance.
+
+## Installation
+
+Include the necessary imports in your Dart file:
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_code_editor/phone_ide.dart';
+import 'package:phone_ide/editor/editor.dart';
+import 'package:phone_ide/editor/editor_options.dart';
+```
 
+## Usage
+
+Here's a basic example of how to integrate the `Editor` widget into your Flutter app:
+
+```dart
+Editor(
+options: EditorOptions(
+backgroundColor: Colors.black,
+linebarColor: Colors.grey.shade800,
+linebarTextColor: Colors.white,
+showLinebar: true,
+takeFullHeight: true,
+fontFamily: 'Courier',
+regionOptions: EditorRegionOptions(
+start: 3,
+end: 10,
+color: Colors.grey.shade900,
+),
+),
+defaultLanguage: 'dart',
+defaultValue: '''
 void main() {
-  runApp(const App());
+print('Hello, World!');
 }
+''',
+path: 'main.dart',
+);
+```
 
-class App extends StatelessWidget {
-  const App({Key? key}) : super(key: key);
+### Parameters
 
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: EditorView(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
+- **options** (`EditorOptions`): Customize appearance and behavior of the editor.
+- **defaultLanguage** (`String`): Initial programming language setting (for syntax highlighting).
+- **defaultValue** (`String`): Initial content displayed in the editor.
+- **path** (`String`): Identifier for the file, typically the filename.
 
-class EditorView extends StatefulWidget {
-  const EditorView({
-    Key? key,
-  }) : super(key: key);
+## Customizing the Editor
 
-  @override
-  State<StatefulWidget> createState() => EditorViewState();
-}
+You can adjust the appearance by tweaking the `EditorOptions`:
 
-class EditorViewState extends State<EditorView> {
-  Editor editor = Editor(
-    language: 'html',
-    options: EditorOptions(
-      hasRegion: true,
-    ),
-  );
+```dart
+EditorOptions(
+backgroundColor: Colors.blueGrey,
+linebarColor: Colors.black54,
+fontFamily: 'Monaco',
+isEditable: false,
+);
+```
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      editor.fileTextStream.add(FileIDE(
-        id: '1',
-        ext: 'HTML',
-        name: 'index',
-        content: """
-          <div>
-            <h1> Hello World! </h1>
-          </div>
-        """,
-        hasRegion: true,
-        region: EditorRegionOptions(start: 1, end: 3),
-      ));
-    });
-  }
+## Listening to Text Changes
 
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: editor.fileTextStream.stream,
-      builder: (context, snapshot) {
-        return Scaffold(
-          body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(child: editor),
-                ElevatedButton(
-                  onPressed: () {
-                    editor.fileTextStream.add(FileIDE(
-                      id: '2',
-                      ext: 'HTML',
-                      name: 'index',
-                      content: """
-                        <div>
-                          <h1> Hello World from file two! </h1>
-                        </div>
-                      """,
-                      hasRegion: true,
-                      region: EditorRegionOptions(start: 1, end: 3),
-                    ));
-                  },
-                  child: const Text('open another file'),
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
+You can listen for changes in the editor content through the provided streams:
+
+```dart
+final editor = Editor(
+options: EditorOptions(),
+defaultLanguage: 'dart',
+defaultValue: '',
+path: 'script.dart',
+);
+
+editor.onTextChange.stream.listen((content) {
+print('Editor content changed: $content');
+});
+
+editor.editableRegion.stream.listen((editableContent) {
+print('Editable region content: $editableContent');
+});
+```
+
+## License
+
+This project is licensed under the MIT License.
