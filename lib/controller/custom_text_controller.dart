@@ -59,7 +59,10 @@ class TextEditingControllerIDE extends TextEditingController {
     required bool withComposing,
   }) {
     if (!useHighlightJs) {
-      final highlighted = HighlightEngine().highlight(text);
+      final highlighted = HighlightEngine().highlight(
+        text,
+        language: language.toLowerCase(),
+      );
       return TextSpan(style: style, children: highlighted.children);
     } else {
       var nodes = highlight.parse(text, language: language).nodes!;

@@ -1,6 +1,7 @@
 import 'package:flutter/painting.dart';
 import 'package:phone_ide/highlight_engine/highlight_rules.dart';
 
+/// Engine to highlight HTML (default), CSS, or JavaScript source.
 class HighlightEngine {
   static final TextStyle defaultStyle = HighlightStyles.defaultStyle;
   static final TextStyle commentStyle = HighlightStyles.commentStyle;
@@ -14,47 +15,85 @@ class HighlightEngine {
   static final TextStyle cssPropertyStyle = HighlightStyles.cssPropertyStyle;
   static final TextStyle cssValueStyle = HighlightStyles.cssValueStyle;
 
-  TextSpan highlight(String sourceCode) {
-    final List<TextSpan> children = [];
-    final lines = sourceCode.split('\n');
-    bool inStyleBlock = false;
-    bool inScriptBlock = false;
-    int cssBracesCount = 0;
+  /// Highlights [sourceCode] according to [language]: 'html', 'css', or 'js'.
+  TextSpan highlight(String sourceCode, {String language = 'html'}) {
+    switch (language.toLowerCase()) {
+      case 'css':
+        return _highlightCss(sourceCode);
+      case 'js':
+      case 'javascript':
+        return _highlightJs(sourceCode);
+      case 'html':
+      default:
+        return _highlightHtml(sourceCode);
+    }
+  }
 
-    for (final line in lines) {
-      if (!inStyleBlock && !inScriptBlock) {
+  TextSpan _highlightHtml(String sourceCode) {
+    final children = <TextSpan>[];
+    final lines = sourceCode.split('\n');
+    bool inStyle = false, inScript = false;
+    int braceCount = 0;
+
+    for (var line in lines) {
+      if (!inStyle && !inScript) {
         if (_handleStyleOpen(line, children)) {
-          inStyleBlock = true;
-          cssBracesCount = 0;
-          continue;
+          inStyle = true;
+          braceCount = 0;
         } else if (_handleScriptOpen(line, children)) {
-          inScriptBlock = true;
-          continue;
+          inScript = true;
         } else {
           children.addAll(_highlightLine(line, htmlRules));
           children.add(TextSpan(text: '\n', style: defaultStyle));
         }
-      } else if (inStyleBlock) {
-        if (_handleStyleClose(line, children, cssBracesCount)) {
-          inStyleBlock = false;
-          cssBracesCount = 0;
-          continue;
+      } else if (inStyle) {
+        if (_handleStyleClose(line, children, braceCount)) {
+          inStyle = false;
+          braceCount = 0;
+        } else {
+          final rules = braceCount == 0 ? cssSelectorRules : cssPropertyRules;
+          children.addAll(_highlightLine(line, rules));
+          children.add(TextSpan(text: '\n', style: defaultStyle));
+          braceCount += RegExp(r'\{').allMatches(line).length;
+          braceCount -= RegExp(r'\}').allMatches(line).length;
         }
-        final activeRules =
-            cssBracesCount == 0 ? cssSelectorRules : cssPropertyRules;
-        children.addAll(_highlightLine(line, activeRules));
-        children.add(TextSpan(text: '\n', style: defaultStyle));
-        cssBracesCount += RegExp(r'\{').allMatches(line).length;
-        cssBracesCount -= RegExp(r'\}').allMatches(line).length;
-        if (cssBracesCount < 0) cssBracesCount = 0;
-      } else if (inScriptBlock) {
+      } else {
+        // inScript
         if (_handleScriptClose(line, children)) {
-          inScriptBlock = false;
-          continue;
+          inScript = false;
+        } else {
+          children.addAll(_highlightLine(line, jsRules));
+          children.add(TextSpan(text: '\n', style: defaultStyle));
         }
-        children.addAll(_highlightLine(line, jsRules));
-        children.add(TextSpan(text: '\n', style: defaultStyle));
       }
+    }
+    if (children.isNotEmpty && children.last.toPlainText() == '\n') {
+      children.removeLast();
+    }
+    return TextSpan(style: defaultStyle, children: children);
+  }
+
+  TextSpan _highlightCss(String sourceCode) {
+    final children = <TextSpan>[];
+    int braceCount = 0;
+    for (var line in sourceCode.split('\n')) {
+      final rules = braceCount == 0 ? cssSelectorRules : cssPropertyRules;
+      children.addAll(_highlightLine(line, rules));
+      children.add(TextSpan(text: '\n', style: defaultStyle));
+      braceCount += RegExp(r'\{').allMatches(line).length;
+      braceCount -= RegExp(r'\}').allMatches(line).length;
+    }
+    if (children.isNotEmpty && children.last.toPlainText() == '\n') {
+      children.removeLast();
+    }
+    return TextSpan(style: defaultStyle, children: children);
+  }
+
+  TextSpan _highlightJs(String sourceCode) {
+    final children = <TextSpan>[];
+    for (var line in sourceCode.split('\n')) {
+      children.addAll(_highlightLine(line, jsRules));
+      children.add(TextSpan(text: '\n', style: defaultStyle));
     }
     if (children.isNotEmpty && children.last.toPlainText() == '\n') {
       children.removeLast();
@@ -66,27 +105,8 @@ class HighlightEngine {
     final start = RegExp(r'<\s*style\b', caseSensitive: false);
     final end = RegExp(r'<\s*/\s*style\s*>', caseSensitive: false);
     if (start.hasMatch(line)) {
-      if (end.hasMatch(line)) {
-        final low = line.toLowerCase();
-        final openEnd = low.indexOf('>');
-        final closeStart = low.indexOf('</style');
-        if (openEnd != -1 && closeStart != -1) {
-          final openingTag = line.substring(0, openEnd + 1);
-          final cssContent = line.substring(openEnd + 1, closeStart);
-          final closingTag = line.substring(closeStart);
-          children.addAll(_highlightLine(openingTag, htmlRules));
-          if (cssContent.isNotEmpty) {
-            children.addAll(_highlightLine(cssContent, cssPropertyRules));
-          }
-          children.addAll(_highlightLine(closingTag, htmlRules));
-          children.add(TextSpan(text: '\n', style: defaultStyle));
-          return true; // skip further processing
-        }
-      } else {
-        children.addAll(_highlightLine(line, htmlRules));
-        children.add(TextSpan(text: '\n', style: defaultStyle));
-        return true;
-      }
+      children.addAll(_highlightLine(line, htmlRules));
+      return !end.hasMatch(line);
     }
     return false;
   }
@@ -95,46 +115,16 @@ class HighlightEngine {
     final start = RegExp(r'<\s*script\b', caseSensitive: false);
     final end = RegExp(r'<\s*/\s*script\s*>', caseSensitive: false);
     if (start.hasMatch(line)) {
-      if (end.hasMatch(line)) {
-        final low = line.toLowerCase();
-        final openEnd = low.indexOf('>');
-        final closeStart = low.indexOf('</script');
-        if (openEnd != -1 && closeStart != -1) {
-          final openingTag = line.substring(0, openEnd + 1);
-          final jsContent = line.substring(openEnd + 1, closeStart);
-          final closingTag = line.substring(closeStart);
-          children.addAll(_highlightLine(openingTag, htmlRules));
-          if (jsContent.isNotEmpty) {
-            children.addAll(_highlightLine(jsContent, jsRules));
-          }
-          children.addAll(_highlightLine(closingTag, htmlRules));
-          children.add(TextSpan(text: '\n', style: defaultStyle));
-          return true;
-        }
-      } else {
-        children.addAll(_highlightLine(line, htmlRules));
-        children.add(TextSpan(text: '\n', style: defaultStyle));
-        return true;
-      }
+      children.addAll(_highlightLine(line, htmlRules));
+      return !end.hasMatch(line);
     }
     return false;
   }
 
-  bool _handleStyleClose(
-      String line, List<TextSpan> children, int cssBracesCount) {
+  bool _handleStyleClose(String line, List<TextSpan> children, int braceCount) {
     final end = RegExp(r'<\s*/\s*style\s*>', caseSensitive: false);
     if (end.hasMatch(line)) {
-      final low = line.toLowerCase();
-      final idx = low.indexOf('</style');
-      final cssPart = line.substring(0, idx);
-      final closingTag = line.substring(idx);
-      if (cssPart.isNotEmpty) {
-        final activeRules =
-            cssBracesCount == 0 ? cssSelectorRules : cssPropertyRules;
-        children.addAll(_highlightLine(cssPart, activeRules));
-      }
-      children.addAll(_highlightLine(closingTag, htmlRules));
-      children.add(TextSpan(text: '\n', style: defaultStyle));
+      children.addAll(_highlightLine(line, htmlRules));
       return true;
     }
     return false;
@@ -143,15 +133,7 @@ class HighlightEngine {
   bool _handleScriptClose(String line, List<TextSpan> children) {
     final end = RegExp(r'<\s*/\s*script\s*>', caseSensitive: false);
     if (end.hasMatch(line)) {
-      final low = line.toLowerCase();
-      final idx = low.indexOf('</script');
-      final jsPart = line.substring(0, idx);
-      final closingTag = line.substring(idx);
-      if (jsPart.isNotEmpty) {
-        children.addAll(_highlightLine(jsPart, jsRules));
-      }
-      children.addAll(_highlightLine(closingTag, htmlRules));
-      children.add(TextSpan(text: '\n', style: defaultStyle));
+      children.addAll(_highlightLine(line, htmlRules));
       return true;
     }
     return false;
