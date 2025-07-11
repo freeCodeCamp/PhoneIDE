@@ -49,9 +49,9 @@ class EditorState extends State<Editor> {
   ScrollController horizontalController = ScrollController();
   ScrollController linebarController = ScrollController();
 
-  TextEditingControllerIDE beforeController = TextEditingControllerIDE();
-  TextEditingControllerIDE inController = TextEditingControllerIDE();
-  TextEditingControllerIDE afterController = TextEditingControllerIDE();
+  late TextEditingControllerIDE beforeController;
+  late TextEditingControllerIDE inController;
+  late TextEditingControllerIDE afterController;
 
   late StreamSubscription<TextFieldData> _textfieldDataSub;
 
@@ -64,6 +64,19 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     super.initState();
+
+    beforeController = TextEditingControllerIDE(
+      useHighlightJs: widget.options.useHighlightJs,
+    );
+
+    inController = TextEditingControllerIDE(
+      useHighlightJs: widget.options.useHighlightJs,
+    );
+
+    afterController = TextEditingControllerIDE(
+      useHighlightJs: widget.options.useHighlightJs,
+    );
+
     handleFileInit();
 
     _textfieldDataSub = widget.textfieldData.stream.listen((event) {

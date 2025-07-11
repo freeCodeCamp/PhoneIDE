@@ -9,6 +9,7 @@ class EditorOptions {
     this.showLinebar = true,
     this.takeFullHeight = true,
     this.isEditable = true,
+    this.useHighlightJs = true,
     this.fontFamily,
   });
 
@@ -37,6 +38,9 @@ class EditorOptions {
   bool showLinebar;
 
   String? fontFamily;
+
+  // [useHighlightJs] is used to determine if the editor should use highlight.js for syntax highlighting.
+  bool useHighlightJs;
 }
 
 class EditorRegionOptions {
