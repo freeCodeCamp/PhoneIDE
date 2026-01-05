@@ -3,9 +3,9 @@ import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
 
 class TextEditingControllerIDE extends TextEditingController {
-  TextEditingControllerIDE({Key? key, this.font});
+  TextEditingControllerIDE({Key? key, this.font, this.language = 'HTML'});
 
-  static String language = 'HTML';
+  String language;
   final TextStyle? font;
 
   List<TextSpan> _convert(List<Node> nodes) {
