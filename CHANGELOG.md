@@ -1,3 +1,6 @@
+### 2.0.1
+- fix: having multiple editors at once will now have the correct highlighting for both editors
+
 ### 2.0.0
 
 - feat: adds support to make the editor read-only.
