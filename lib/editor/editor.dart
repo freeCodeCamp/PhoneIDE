@@ -193,7 +193,9 @@ class EditorState extends State<Editor> {
       isLoading = false;
     });
 
-    TextEditingControllerIDE.language = widget.defaultLanguage;
+    beforeController.language = widget.defaultLanguage;
+    inController.language = widget.defaultLanguage;
+    afterController.language = widget.defaultLanguage;
   }
 
   handleRegionFields() async {
