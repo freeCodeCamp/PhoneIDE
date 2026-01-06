@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phone_ide/models/editor_language.dart';
 import 'package:phone_ide/phone_ide.dart';
 
 void main() {
@@ -28,7 +29,7 @@ class EditorView extends StatefulWidget {
 
 class EditorViewState extends State<EditorView> {
   Editor editor = Editor(
-    defaultLanguage: 'html',
+    defaultLanguage: EditorLanguage.html,
     defaultValue: '<h1> Hello World</h1>',
     path: 'index.html',
     options: EditorOptions(),

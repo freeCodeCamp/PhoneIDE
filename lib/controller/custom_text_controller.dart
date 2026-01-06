@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
+import 'package:phone_ide/models/editor_language.dart';
 
 class TextEditingControllerIDE extends TextEditingController {
-  TextEditingControllerIDE({Key? key, this.font, this.language = 'HTML'});
+  TextEditingControllerIDE({Key? key, this.font, this.language = EditorLanguage.html});
 
-  String language;
+  EditorLanguage language;
   final TextStyle? font;
 
   List<TextSpan> _convert(List<Node> nodes) {
@@ -56,7 +57,7 @@ class TextEditingControllerIDE extends TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
-    var nodes = highlight.parse(text, language: language).nodes!;
+    var nodes = highlight.parse(text, language: language.identifier).nodes!;
     return TextSpan(style: style, children: _convert(nodes));
   }
 }

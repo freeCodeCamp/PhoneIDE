@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:phone_ide/controller/custom_text_controller.dart';
 import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/editor/linebar.dart';
+import 'package:phone_ide/models/editor_language.dart';
 import 'package:phone_ide/models/textfield_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +36,7 @@ class Editor extends StatefulWidget {
   final String defaultValue;
 
   // The starting language of the editor
-  final String defaultLanguage;
+  final EditorLanguage defaultLanguage;
 
   // The path e.g. file name "index.html"
   final String path;
