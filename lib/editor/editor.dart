@@ -450,10 +450,11 @@ class EditorState extends State<Editor> {
     final hasActive = active != null &&
         active >= firstLine &&
         active < firstLine + lines.length;
-    return ColoredBox(
-      color: options.regionOptions != null && position == RegionPosition.inner
-          ? options.regionOptions!.color
-          : options.backgroundColor,
+    final region =
+        position == RegionPosition.inner ? options.regionOptions : null;
+    final borderColor = region?.borderColor;
+    final field = ColoredBox(
+      color: region?.color ?? options.backgroundColor,
       child: CustomPaint(
         key: ValueKey('phone-ide-highlights-${position.name}'),
         painter: _DiagnosticPainter(
@@ -541,6 +542,16 @@ class EditorState extends State<Editor> {
           ),
         ]),
       ),
+    );
+    return DecoratedBox(
+      key: ValueKey('phone-ide-region-${position.name}'),
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        border: borderColor == null
+            ? null
+            : Border(left: BorderSide(color: borderColor, width: 3)),
+      ),
+      child: field,
     );
   }
 }

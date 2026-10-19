@@ -65,9 +65,14 @@ class EditorRegionOptions {
     required this.start,
     required this.end,
     this.color = const Color(0xFF0A0A23),
+    this.borderColor,
   });
 
   int? start;
   int? end;
   Color color;
+
+  /// Optional 3 logical pixel leading border across the entire editable region.
+  /// It remains visible without focus and does not change the text's padding.
+  Color? borderColor;
 }

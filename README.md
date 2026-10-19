@@ -91,6 +91,19 @@ larger text or longer line numbers. Long source lines scroll horizontally.
 The editor supplies its own field decoration, independently of the host's
 `InputDecorationTheme`.
 
+An editable region can span several lines. Its fill and optional leading border
+cover the whole region, including an empty insertion row, and resize as code is
+added. They stay visible when the caret moves elsewhere.
+
+```dart
+EditorRegionOptions(
+  start: 1,
+  end: 5,
+  color: const Color(0xFFF6F6FE),
+  borderColor: const Color(0xFF5B4BDB), // Optional 3 logical pixel border.
+);
+```
+
 Leaving `syntaxTheme` null retains the original Atom One Dark colors. Supported
 languages are HTML, CSS, JavaScript (`js`) and Python (`py`); HTML can contain
 embedded CSS and JavaScript. Unknown languages remain editable as plain text.

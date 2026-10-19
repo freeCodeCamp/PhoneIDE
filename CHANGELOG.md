@@ -1,5 +1,6 @@
 ### Unreleased
 - Add per-editor syntax, caret, selection, active-line and diagnostic styling.
+- Add an optional leading border that spans the full editable region as it grows.
 - Add Python highlighting and preserve IME composing underlines.
 - Isolate code fields from host form decoration and replace gutter fields with text.
 - Keep source and gutter rows aligned with accessibility text scaling and horizontal scrolling.

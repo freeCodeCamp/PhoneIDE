@@ -38,6 +38,7 @@ EditorOptions _options({
   bool dark = false,
   EditorRegionOptions? region,
   bool editable = true,
+  bool activeLine = true,
 }) =>
     EditorOptions(
       backgroundColor: dark ? _darkCode : _lightCode,
@@ -49,8 +50,8 @@ EditorOptions _options({
       selectionColor: const Color(0x665B4BDB),
       selectionHandleColor: const Color(0xFF5B4BDB),
       linebarBorderColor: const Color(0xFF3D3466),
-      activeLineColor: _activeFill,
-      activeLineBorderColor: _activeBorder,
+      activeLineColor: activeLine ? _activeFill : null,
+      activeLineBorderColor: activeLine ? _activeBorder : null,
       diagnosticColor: _diagnosticInk,
       diagnosticBackgroundColor: _diagnosticFill,
       fontFamily: 'RobotoMono',
@@ -69,6 +70,7 @@ class _Host extends StatefulWidget {
     this.scale = 1,
     this.region,
     this.editable = true,
+    this.activeLine = true,
     this.diagnostics = const [],
   });
 
@@ -77,6 +79,7 @@ class _Host extends StatefulWidget {
   final double scale;
   final EditorRegionOptions? region;
   final bool editable;
+  final bool activeLine;
   final List<EditorDiagnostic> diagnostics;
 
   @override
@@ -136,6 +139,7 @@ class _HostState extends State<_Host> {
                   dark: dark,
                   region: widget.region,
                   editable: widget.editable,
+                  activeLine: widget.activeLine,
                 ),
                 defaultLanguage: 'html',
                 defaultValue: widget.code,
@@ -157,6 +161,7 @@ Future<EditorState> _pump(
   double scale = 1,
   EditorRegionOptions? region,
   bool editable = true,
+  bool activeLine = true,
   List<EditorDiagnostic> diagnostics = const [],
   GlobalKey<_HostState>? hostKey,
 }) async {
@@ -168,6 +173,7 @@ Future<EditorState> _pump(
       scale: scale,
       region: region,
       editable: editable,
+      activeLine: activeLine,
       diagnostics: diagnostics,
     ),
   );
@@ -567,6 +573,127 @@ void main() {
         _codeGlyph(tester, _fieldFor(state.inController), 0),
         _gutterGlyph(tester, 2),
       );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final dark in [false, true]) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('whole editable region stays marked dark=$dark scale=$scale',
+          (tester) async {
+        final hostKey = GlobalKey<_HostState>();
+        final region = EditorRegionOptions(
+          start: 1,
+          end: 4,
+          color: dark ? const Color(0xFF29216C) : const Color(0xFFF6F6FE),
+          borderColor: dark ? const Color(0xFFA99BFF) : const Color(0xFF5B4BDB),
+        );
+        final state = await _pump(
+          tester,
+          hostKey: hostKey,
+          code: 'before\none\ntwo\nafter',
+          dark: dark,
+          scale: scale,
+          region: region,
+          activeLine: false,
+        );
+        final inner = _fieldFor(state.inController);
+        final before = _fieldFor(state.beforeController);
+        final after = _fieldFor(state.afterController);
+        final marker = find.byKey(const ValueKey('phone-ide-region-inner'));
+        final rowHeight = 21 * scale;
+
+        Future<void> expectRegion(int rows, Color background) async {
+          final rect = tester.getRect(inner);
+          expect(tester.getRect(marker), rect);
+          expect(rect.height, closeTo(rows * rowHeight, .01));
+          expect(rect.left, tester.getRect(before).left);
+          expect(rect.left, tester.getRect(after).left);
+          expect(tester.getRect(before).bottom, rect.top);
+          expect(tester.getRect(after).top, rect.bottom);
+          final rowSamples = [
+            for (var row = 0; row < rows; row++) ...[
+              Offset(rect.left + 1, rect.top + (row + .5) * rowHeight),
+              Offset(250, rect.top + (row + .5) * rowHeight),
+            ],
+          ];
+          expect(await _pixels(tester, rowSamples), [
+            for (var row = 0; row < rows; row++) ...[
+              region.borderColor!,
+              region.color,
+            ],
+          ]);
+          expect(
+            await _pixels(tester, [
+              Offset(250, tester.getRect(before).center.dy),
+              Offset(250, tester.getRect(after).center.dy),
+              Offset(rect.left + 1, tester.getRect(before).center.dy),
+              Offset(rect.left + 1, tester.getRect(after).center.dy),
+            ]),
+            List.filled(4, background),
+          );
+          _expectAligned(_codeGlyph(tester, inner, 0), _gutterGlyph(tester, 2));
+          _expectAligned(
+            _codeGlyph(tester, after, 0),
+            _gutterGlyph(tester, rows + 2),
+          );
+        }
+
+        expect(tester.widget<TextField>(inner).focusNode!.hasFocus, isFalse);
+        await expectRegion(2, dark ? _darkCode : _lightCode);
+        await _shot(tester, 'phoneide-region-dark$dark-scale$scale');
+        await tester.showKeyboard(before);
+        await _settle(tester);
+        await expectRegion(2, dark ? _darkCode : _lightCode);
+        await tester.enterText(inner, 'one\ntwo\nthree');
+        await _settle(tester);
+        await tester.showKeyboard(after);
+        await _settle(tester);
+        await expectRegion(3, dark ? _darkCode : _lightCode);
+        FocusManager.instance.primaryFocus?.unfocus();
+        await _settle(tester);
+        await expectRegion(3, dark ? _darkCode : _lightCode);
+        hostKey.currentState!.switchTheme();
+        await _settle(tester);
+        expect(state.inController.text, 'one\ntwo\nthree');
+        await expectRegion(3, dark ? _lightCode : _darkCode);
+        await _shot(tester, 'phoneide-region-grown-startdark$dark-scale$scale');
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('empty insertion region is marked without focus dark=$dark',
+        (tester) async {
+      final region = EditorRegionOptions(
+        start: 1,
+        end: 2,
+        color: dark ? const Color(0xFF29216C) : const Color(0xFFF6F6FE),
+        borderColor: dark ? const Color(0xFFA99BFF) : const Color(0xFF5B4BDB),
+      );
+      final state = await _pump(
+        tester,
+        code: 'before\nafter',
+        dark: dark,
+        region: region,
+        activeLine: false,
+      );
+      final field = _fieldFor(state.inController);
+      final rect = tester.getRect(field);
+      expect(state.inController.text, isEmpty);
+      expect(tester.widget<TextField>(field).focusNode!.hasFocus, isFalse);
+      expect(rect.height, 21);
+      expect(
+        tester.getRect(find.byKey(const ValueKey('phone-ide-region-inner'))),
+        rect,
+      );
+      expect(
+        await _pixels(tester, [
+          Offset(rect.left + 1, rect.center.dy),
+          Offset(250, rect.center.dy),
+        ]),
+        [region.borderColor!, region.color],
+      );
+      await _shot(tester, 'phoneide-region-empty-dark$dark');
       expect(tester.takeException(), isNull);
     });
   }
