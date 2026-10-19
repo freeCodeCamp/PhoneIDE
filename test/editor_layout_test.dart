@@ -27,6 +27,29 @@ Finder _fieldFor(TextEditingController controller) => find.byWidgetPredicate(
       (widget) => widget is TextField && widget.controller == controller,
     );
 
+({List<String> changes, List<String> regions, List<TextFieldData> focus})
+    _recordEditorEvents(Editor editor) {
+  final changes = <String>[];
+  final regions = <String>[];
+  final focus = <TextFieldData>[];
+  final subscriptions = <StreamSubscription<Object?>>[
+    editor.onTextChange.stream.listen(changes.add),
+    editor.editableRegion.stream.listen(regions.add),
+    editor.textfieldData.stream.listen(focus.add),
+  ];
+  addTearDown(() async {
+    for (final subscription in subscriptions) {
+      await subscription.cancel();
+    }
+  });
+  return (changes: changes, regions: regions, focus: focus);
+}
+
+Offset _unusedEditorPoint(WidgetTester tester, {bool gutter = false}) {
+  final rect = tester.getRect(find.byType(Editor));
+  return Offset(gutter ? rect.left + 12 : rect.right - 30, rect.bottom - 30);
+}
+
 Future<void> _settle(WidgetTester tester) async {
   for (var i = 0; i < 6; i++) {
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
@@ -556,6 +579,188 @@ void main() {
     await _settle(tester);
     expect(changes, ['original)']);
     expect(regions, ['original)']);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final bounded in [false, true]) {
+    for (final gutter in [false, true]) {
+      testWidgets(
+          'unused editor tap focuses inner bounded=$bounded gutter=$gutter',
+          (tester) async {
+        final state = await _pump(
+          tester,
+          code: bounded ? 'before\neditable\nafter' : 'editable',
+          region: bounded ? EditorRegionOptions(start: 1, end: 3) : null,
+        );
+        final events = _recordEditorEvents(state.widget);
+        expect(tester.testTextInput.isVisible, isFalse);
+        await tester.tapAt(_unusedEditorPoint(tester, gutter: gutter));
+        await _settle(tester);
+        expect(tester.testTextInput.isVisible, isTrue);
+        expect(
+            tester
+                .widget<TextField>(_fieldFor(state.inController))
+                .focusNode!
+                .hasFocus,
+            isTrue);
+        expect(events.focus.last.position, RegionPosition.inner);
+        expect(events.focus.last.controller, same(state.inController));
+        expect(state.inController.text, 'editable');
+        expect(state.beforeController.text, bounded ? 'before' : '');
+        expect(state.afterController.text, bounded ? 'after' : '');
+        expect(events.changes, isEmpty);
+        expect(events.regions, isEmpty);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  testWidgets('blank editor tap focuses an empty insertion region',
+      (tester) async {
+    final state = await _pump(
+      tester,
+      code: 'before\nafter',
+      region: EditorRegionOptions(start: 1, end: 2),
+    );
+    final events = _recordEditorEvents(state.widget);
+    await tester.tapAt(_unusedEditorPoint(tester));
+    await _settle(tester);
+    expect(tester.testTextInput.isVisible, isTrue);
+    expect(
+        tester
+            .widget<TextField>(_fieldFor(state.inController))
+            .focusNode!
+            .hasFocus,
+        isTrue);
+    expect(events.focus.last.position, RegionPosition.inner);
+    expect(state.inController.text, isEmpty);
+    expect(state.beforeController.text, 'before');
+    expect(state.afterController.text, 'after');
+    expect(events.changes, isEmpty);
+    expect(events.regions, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('gutter tap restores a lazily unmounted editable region',
+      (tester) async {
+    final state = await _pump(
+      tester,
+      code: [
+        'before',
+        'editable',
+        for (var line = 1; line <= 120; line++) 'after $line',
+      ].join('\n'),
+      region: EditorRegionOptions(start: 1, end: 3),
+    );
+    final events = _recordEditorEvents(state.widget);
+    final focusNode =
+        tester.widget<TextField>(_fieldFor(state.inController)).focusNode!;
+    state.scrollController
+        .jumpTo(state.scrollController.position.maxScrollExtent);
+    await _settle(tester);
+    expect(_fieldFor(state.inController), findsNothing);
+    expect(focusNode.context?.mounted ?? false, isFalse);
+    expect(tester.testTextInput.isVisible, isFalse);
+    await tester.tapAt(_unusedEditorPoint(tester, gutter: true));
+    await _settle(tester);
+    expect(_fieldFor(state.inController), findsOneWidget);
+    expect(focusNode.hasFocus, isTrue);
+    expect(tester.testTextInput.isVisible, isTrue);
+    final editorRect = tester.getRect(find.byType(Editor));
+    final inputRect = tester.getRect(_fieldFor(state.inController));
+    expect(inputRect.top, greaterThanOrEqualTo(editorRect.top));
+    expect(inputRect.bottom, lessThanOrEqualTo(editorRect.bottom));
+    expect(events.focus.last.position, RegionPosition.inner);
+    expect(events.focus.last.controller, same(state.inController));
+    expect(state.inController.text, 'editable');
+    expect(events.changes, isEmpty);
+    expect(events.regions, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('blank tap reopens a hidden keyboard without moving selection',
+      (tester) async {
+    final state = await _pump(tester, code: 'editable');
+    final events = _recordEditorEvents(state.widget);
+    await tester.tapAt(_unusedEditorPoint(tester));
+    await _settle(tester);
+    expect(tester.testTextInput.isVisible, isTrue);
+    const selection = TextSelection(baseOffset: 1, extentOffset: 5);
+    state.inController.selection = selection;
+    await tester.pump();
+    tester.testTextInput.hide();
+    expect(tester.widget<TextField>(_fields).focusNode!.hasFocus, isTrue);
+    expect(tester.testTextInput.isVisible, isFalse);
+    await tester.tapAt(_unusedEditorPoint(tester));
+    await _settle(tester);
+    expect(tester.testTextInput.isVisible, isTrue);
+    expect(state.inController.selection, selection);
+    expect(events.changes, isEmpty);
+    expect(events.regions, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('direct before and after code taps retain their own target',
+      (tester) async {
+    final state = await _pump(
+      tester,
+      code: 'before\neditable\nafter',
+      region: EditorRegionOptions(start: 1, end: 3),
+    );
+    final events = _recordEditorEvents(state.widget);
+    for (final entry in [
+      (controller: state.beforeController, position: RegionPosition.before),
+      (controller: state.afterController, position: RegionPosition.after),
+    ]) {
+      final field = _fieldFor(entry.controller);
+      await tester.tapAt(tester.getTopLeft(field) + const Offset(15, 10));
+      await _settle(tester);
+      expect(tester.widget<TextField>(field).focusNode!.hasFocus, isTrue);
+      expect(
+          tester
+              .widget<TextField>(_fieldFor(state.inController))
+              .focusNode!
+              .hasFocus,
+          isFalse);
+      expect(events.focus.last.position, entry.position);
+      expect(events.focus.last.controller, same(entry.controller));
+      expect(tester.testTextInput.isVisible, isTrue);
+    }
+    expect(events.changes, isEmpty);
+    expect(events.regions, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('dragging unused editor space does not focus or open keyboard',
+      (tester) async {
+    final state = await _pump(tester, code: 'editable');
+    final events = _recordEditorEvents(state.widget);
+    for (final offset in [const Offset(0, -90), const Offset(-90, 0)]) {
+      await tester.dragFrom(_unusedEditorPoint(tester), offset);
+      await _settle(tester);
+      expect(tester.widget<TextField>(_fields).focusNode!.hasFocus, isFalse);
+      expect(tester.testTextInput.isVisible, isFalse);
+    }
+    expect(events.focus, isEmpty);
+    expect(events.changes, isEmpty);
+    expect(events.regions, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unused read-only editor taps do not summon the keyboard',
+      (tester) async {
+    final state = await _pump(tester, code: 'read only', editable: false);
+    final events = _recordEditorEvents(state.widget);
+    for (final gutter in [false, true]) {
+      await tester.tapAt(_unusedEditorPoint(tester, gutter: gutter));
+      await _settle(tester);
+      expect(tester.widget<TextField>(_fields).focusNode!.hasFocus, isFalse);
+      expect(tester.testTextInput.isVisible, isFalse);
+    }
+    expect(events.focus, isEmpty);
+    expect(events.changes, isEmpty);
+    expect(events.regions, isEmpty);
+    expect(state.inController.text, 'read only');
     expect(tester.takeException(), isNull);
   });
 

@@ -261,6 +261,33 @@ class EditorState extends State<Editor> {
         TextFieldData(controller: _controller(position), position: position));
   }
 
+  void _focusMainField({bool reveal = true}) {
+    if (isLoading || !widget.options.isEditable) return;
+    final focusNode = _focusNodes[RegionPosition.inner]!;
+    final targetContext = focusNode.context;
+    final editable = targetContext != null && targetContext.mounted
+        ? targetContext.findAncestorStateOfType<EditableTextState>()
+        : null;
+    // requestKeyboard also reopens a dismissed keyboard when focus was retained.
+    if (editable != null) {
+      editable.requestKeyboard();
+    } else if (reveal && scrollController.hasClients) {
+      // A long before/after region can scroll the main field out of the list.
+      final generation = _initialization;
+      final target =
+          (_firstLine(RegionPosition.inner) - 1) * getTextHeight(context);
+      scrollController
+          .jumpTo(target.clamp(0.0, scrollController.position.maxScrollExtent));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && generation == _initialization) {
+          _focusMainField(reveal: false);
+        }
+      });
+    } else {
+      focusNode.requestFocus();
+    }
+  }
+
   double getTextHeight(BuildContext context, {double? fontSize}) =>
       MediaQuery.textScalerOf(context)
           .scale(fontSize ?? widget.options.fontSize) *
@@ -332,7 +359,7 @@ class EditorState extends State<Editor> {
     final gutterWidth = math.max(options.linebarWidth, numberWidth + 8);
     final diagnostics = _diagnostics;
     final selection = Theme.of(context).textSelectionTheme;
-    return TextSelectionTheme(
+    final editor = TextSelectionTheme(
       data: selection.copyWith(
         cursorColor: options.cursorColor,
         selectionColor: options.selectionColor,
@@ -434,6 +461,14 @@ class EditorState extends State<Editor> {
           ]),
         );
       }),
+    );
+    return TextFieldTapRegion(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        onTap: options.isEditable ? _focusMainField : null,
+        child: editor,
+      ),
     );
   }
 

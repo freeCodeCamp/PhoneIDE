@@ -91,6 +91,10 @@ larger text or longer line numbers. Long source lines scroll horizontally.
 The editor supplies its own field decoration, independently of the host's
 `InputDecorationTheme`.
 
+Tapping unused editor space or the gutter focuses the main editable region and
+opens the keyboard. Direct taps on code keep their normal cursor placement;
+scrolling and read-only editors do not trigger this focus behavior.
+
 An editable region can span several lines. Its fill and optional leading border
 cover the whole region, including an empty insertion row, and resize as code is
 added. They stay visible when the caret moves elsewhere.
