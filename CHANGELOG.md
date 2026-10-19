@@ -1,3 +1,11 @@
+### Unreleased
+- Add per-editor syntax, caret, selection, active-line and diagnostic styling.
+- Add Python highlighting and preserve IME composing underlines.
+- Isolate code fields from host form decoration and replace gutter fields with text.
+- Keep source and gutter rows aligned with accessibility text scaling and horizontal scrolling.
+- Preserve edits and stream connections during live theme changes; stop reporting focus as a code edit.
+- Add optional source diagnostics with bold line numbers, underlines and inline messages.
+
 ### 3.0.0
 - feat: adds TextMate syntax highlighting for `html`, `css`, and `javascript`, including embedded styles/scripts inside HTML.
 - refactor: replaces `highlight` and `flutter_highlight` with `syntax_highlight`.

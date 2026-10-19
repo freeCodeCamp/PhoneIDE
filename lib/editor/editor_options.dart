@@ -1,41 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:phone_ide/editor/editor_syntax_theme.dart';
 
 class EditorOptions {
   EditorOptions({
-    this.backgroundColor = const Color.fromRGBO(0x2a, 0x2a, 0x40, 1),
+    this.backgroundColor = const Color(0xFF2A2A40),
     this.regionOptions,
-    this.linebarColor = const Color.fromRGBO(0x3b, 0x3b, 0x4f, 1),
+    this.linebarColor = const Color(0xFF3B3B4F),
     this.linebarTextColor = Colors.white,
+    this.linebarBorderColor = const Color(0xFF888888),
+    this.textColor = const Color(0xDDFFFFFF),
+    this.cursorColor,
+    this.selectionColor,
+    this.selectionHandleColor,
+    this.activeLineColor,
+    this.activeLineBorderColor,
+    this.diagnosticColor = const Color(0xFFD32F2F),
+    this.diagnosticBackgroundColor = const Color(0x0FD32F2F),
+    this.fontSize = 18,
+    this.lineHeight = 1.5,
+    this.linebarWidth = 28,
+    this.syntaxTheme,
     this.showLinebar = true,
     this.takeFullHeight = true,
     this.isEditable = true,
     this.fontFamily,
-  });
-
-  // [backgroundColor] is the background color of the editor.
+  })  : assert(fontSize > 0),
+        assert(lineHeight > 0),
+        assert(linebarWidth >= 0);
 
   Color backgroundColor;
-
-  // [linebarColor] is the background color of the linebar.
-
   Color linebarColor;
-
-  // [linebarTextColor] is the text color of the linebar.
-
   Color linebarTextColor;
+  Color linebarBorderColor;
+  Color textColor;
+  Color? cursorColor;
+  Color? selectionColor;
+  Color? selectionHandleColor;
 
-  // If the file has a region these are the options that are available
+  /// Optional background and 3 logical pixel leading stripe for the caret row.
+  Color? activeLineColor;
+  Color? activeLineBorderColor;
+  Color diagnosticColor;
+  Color diagnosticBackgroundColor;
+
+  double fontSize;
+
+  /// Line height as a multiple of [fontSize], before accessibility text scaling.
+  double lineHeight;
+
+  /// Minimum gutter width. It grows to fit longer numbers and larger text.
+  double linebarWidth;
+
+  /// Null retains the original Atom One Dark syntax colors.
+  EditorSyntaxTheme? syntaxTheme;
   EditorRegionOptions? regionOptions;
-
-  // Should take all available vertical height
   bool takeFullHeight;
-
-  // Control if the text in the editor is editable
   bool isEditable;
-
-  // Hide or Show the linebar
   bool showLinebar;
-
   String? fontFamily;
 }
 
@@ -43,17 +64,10 @@ class EditorRegionOptions {
   EditorRegionOptions({
     required this.start,
     required this.end,
-    this.color = const Color.fromRGBO(0x0a, 0x0a, 0x23, 1),
+    this.color = const Color(0xFF0A0A23),
   });
 
-  // [start] is the start line of the region.
-
   int? start;
-
-  // [end] is the end line of the region.
   int? end;
-
-  // [color] is the background color of the region.
-
   Color color;
 }

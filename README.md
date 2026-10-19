@@ -49,16 +49,83 @@ void main() {
 
 ## Customizing the Editor
 
-You can adjust the appearance by tweaking the `EditorOptions`:
+Import the public API with `package:phone_ide/phone_ide.dart`. Surface, gutter,
+caret, selection, active-line and syntax colors are configured per editor, so
+light and dark editors can coexist without changing a global theme.
 
 ```dart
 EditorOptions(
-  backgroundColor: Colors.blueGrey,
-  linebarColor: Colors.black54,
-  fontFamily: 'Monaco',
-  isEditable: false,
+  backgroundColor: Colors.white,
+  textColor: const Color(0xFF2B2140),
+  linebarColor: const Color(0xFFFFF8EC),
+  linebarTextColor: const Color(0xFF5E5470),
+  linebarBorderColor: const Color(0xFFF1E2C8),
+  cursorColor: const Color(0xFF5B4BDB),
+  selectionColor: const Color(0x405B4BDB),
+  activeLineColor: const Color(0xFFF6F6FE),
+  activeLineBorderColor: const Color(0xFF5B4BDB),
+  fontFamily: 'YourMonospaceFont',
+  fontSize: 16,
+  lineHeight: 1.5,
+  linebarWidth: 28,
+  syntaxTheme: const EditorSyntaxTheme(
+    foreground: Color(0xFF2B2140),
+    comment: Color(0xFF5E5470),
+    keyword: Color(0xFF5B4BDB),
+    string: Color(0xFF1E7F46),
+    number: Color(0xFFB93D0A),
+    type: Color(0xFF8B3FD9),
+    function: Color(0xFF1F6FD1),
+    tag: Color(0xFF5B4BDB),
+    attribute: Color(0xFFC2185B),
+    operator: Color(0xFF5E5470),
+    punctuation: Color(0xFF5E5470),
+    variable: Color(0xFF2B2140),
+  ),
 );
 ```
+
+`lineHeight` is a font-size multiplier: 16 × 1.5 gives a 24 logical pixel row
+before accessibility scaling. `linebarWidth` is a minimum; the gutter grows for
+larger text or longer line numbers. Long source lines scroll horizontally.
+The editor supplies its own field decoration, independently of the host's
+`InputDecorationTheme`.
+
+Leaving `syntaxTheme` null retains the original Atom One Dark colors. Supported
+languages are HTML, CSS, JavaScript (`js`) and Python (`py`); HTML can contain
+embedded CSS and JavaScript. Unknown languages remain editable as plain text.
+
+Rebuild an editor with the same key, path and starting value to change its
+options without resetting code, selection or undo history. If you listen to the
+widget's streams, move those subscriptions to the replacement `Editor` widget.
+The editor state disposes its internal controllers and listeners; callers retain
+ownership of subscriptions and public streams.
+
+### Source diagnostics
+
+The host can supply actual source errors through `Editor.diagnostics`:
+
+```dart
+diagnostics: const [
+  EditorDiagnostic(
+    line: 6,
+    column: 17,
+    length: 11,
+    message: 'Expected a value',
+  ),
+],
+```
+
+Positions are one-based in the complete file. Columns and lengths use UTF-16
+code units, matching Flutter text selections. The editor renders a bold colored
+line number, row tint, wavy underline and optional inline message. Colors come
+from `diagnosticColor` and `diagnosticBackgroundColor`. Invalid positions are
+ignored. Supply a new list to refresh diagnostics and clear it when an edit
+invalidates the result.
+
+PhoneIDE does not run a compiler or infer source locations from failed-test
+messages. Only provide diagnostics when your analyzer or compiler identifies the
+source position.
 
 ## Listening to Text Changes
 
