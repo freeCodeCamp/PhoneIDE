@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show BoxHeightStyle;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,10 @@ import 'package:phone_ide/editor/editor_options.dart';
 import 'package:phone_ide/highlighting/textmate_highlighter_registry.dart';
 import 'package:phone_ide/models/textfield_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+part 'editor_document.dart';
+part 'editor_layout.dart';
+part 'editor_painters.dart';
 
 class Editor extends StatefulWidget {
   Editor({
@@ -57,6 +62,15 @@ class EditorState extends State<Editor> {
   int _initialization = 0;
   RegionPosition _activePosition = RegionPosition.inner;
   String _lastText = '';
+  final _activeLine = ValueNotifier<int?>(null);
+  final _widthCache = _ContentWidthCache();
+  final _values = <RegionPosition, TextEditingValue>{
+    for (final position in RegionPosition.values)
+      position: TextEditingValue.empty,
+  };
+  final _controllerListeners = <RegionPosition, VoidCallback>{};
+  _EditorDocument? _document;
+  bool _restoringValue = false;
 
   TextEditingControllerIDE _controller(RegionPosition position) =>
       switch (position) {
@@ -71,40 +85,31 @@ class EditorState extends State<Editor> {
         if (_hasAfter) RegionPosition.after,
       ];
 
-  Iterable<RegionPosition> get _sourcePositions => _positions.where(
-        (position) => position != RegionPosition.inner || !_emptyInner,
+  _EditorDocument get _currentDocument => _document ??= _EditorDocument(
+        {
+          for (final position in _positions)
+            position: _controller(position).text
+        },
+        emptyInner: _emptyInner,
       );
-  String get _sourceText =>
-      _sourcePositions.map((p) => _controller(p).text).join('\n');
-  int? _fileLine(int visualLine) {
-    if (!_emptyInner) return visualLine;
-    final insertion = _firstLine(RegionPosition.inner);
-    if (visualLine == insertion) return null;
-    return visualLine > insertion ? visualLine - 1 : visualLine;
-  }
-
+  String get _sourceText => _currentDocument.sourceText;
   int _lineCount(RegionPosition position) =>
-      _controller(position).text.split('\n').length;
-  int get _numLines =>
-      _positions.fold(0, (count, position) => count + _lineCount(position));
-  int _firstLine(RegionPosition position) {
-    var line = 1;
-    for (final part in _positions) {
-      if (part == position) break;
-      line += _lineCount(part);
-    }
-    return line;
-  }
+      _currentDocument.region(position).lineCount;
+  int _firstLine(RegionPosition position) =>
+      _currentDocument.region(position).firstLine;
 
   @override
   void initState() {
     super.initState();
     _bindStream();
     for (final position in RegionPosition.values) {
-      _controller(position).addListener(_selectionChanged);
+      void listener() => _controllerChanged(position);
+      _controllerListeners[position] = listener;
+      _controller(position).addListener(listener);
       _focusNodes[position]!.addListener(() {
         if (_focusNodes[position]!.hasFocus) {
-          setState(() => _activePosition = position);
+          _activePosition = position;
+          _updateActiveLine();
           handleCurrentFocusedTextfieldController(position);
         }
       });
@@ -148,8 +153,35 @@ class EditorState extends State<Editor> {
     }
   }
 
-  void _selectionChanged() {
-    if (mounted) setState(() {});
+  void _controllerChanged(RegionPosition position) {
+    if (!mounted || _restoringValue) return;
+    final controller = _controller(position);
+    final previous = _values[position]!;
+    final textChanged = previous.text != controller.text;
+    if (textChanged && !isLoading && !widget.options.isEditable) {
+      // Host toolbar insertions use the same controllers as keyboard input.
+      _restoringValue = true;
+      controller.value = previous;
+      _restoringValue = false;
+      return;
+    }
+    _values[position] = controller.value;
+    if (isLoading) return;
+    if (textChanged) {
+      if (_emptyInner && inController.text.isNotEmpty) _emptyInner = false;
+      _document = null;
+      setState(() {});
+    }
+    _updateActiveLine();
+  }
+
+  void _updateActiveLine() {
+    if (isLoading) return;
+    final controller = _controller(_activePosition);
+    _activeLine.value = controller.selection.isValid
+        ? _currentDocument.region(_activePosition).lineAtOffset(
+            controller.selection.extentOffset.clamp(0, controller.text.length))
+        : null;
   }
 
   void _syncGutter() {
@@ -163,10 +195,11 @@ class EditorState extends State<Editor> {
   void dispose() {
     unawaited(_textfieldDataSub.cancel());
     for (final position in RegionPosition.values) {
-      _controller(position).removeListener(_selectionChanged);
+      _controller(position).removeListener(_controllerListeners[position]!);
       _controller(position).dispose();
       _focusNodes[position]!.dispose();
     }
+    _activeLine.dispose();
     scrollController.dispose();
     horizontalController.dispose();
     linebarController.dispose();
@@ -215,9 +248,12 @@ class EditorState extends State<Editor> {
       inController.text = lines.sublist(from, to).join('\n');
       afterController.text = lines.skip(to).join('\n');
     }
+    _document = null;
+    _activePosition = RegionPosition.inner;
     _lastText = _sourceText;
     _applySyntaxTheme();
     setState(() => isLoading = false);
+    _updateActiveLine();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || generation != _initialization) return;
       if (scrollController.hasClients) {
@@ -240,8 +276,7 @@ class EditorState extends State<Editor> {
   }
 
   void handleTextChange(String event, RegionPosition region, bool hasRegion) {
-    if (!mounted) return;
-    if (_emptyInner && inController.text.isNotEmpty) _emptyInner = false;
+    if (!mounted || !widget.options.isEditable) return;
     final text = _sourceText;
     // Focus notifications use the same public stream as toolbar insertions.
     // Only actual edits should be saved or invalidate the host's test results.
@@ -252,7 +287,6 @@ class EditorState extends State<Editor> {
     }
     if (region == RegionPosition.inner) widget.editableRegion.add(event);
     widget.onTextChange.add(text);
-    setState(() {});
   }
 
   void handleCurrentFocusedTextfieldController(RegionPosition position) {
@@ -292,10 +326,6 @@ class EditorState extends State<Editor> {
       MediaQuery.textScalerOf(context)
           .scale(fontSize ?? widget.options.fontSize) *
       widget.options.lineHeight;
-  double getFontSize(BuildContext context, {double? fontSize}) =>
-      MediaQuery.textScalerOf(context)
-          .scale(fontSize ?? widget.options.fontSize);
-
   TextStyle get _style => TextStyle(
         fontFamily: widget.options.fontFamily,
         fontSize: widget.options.fontSize,
@@ -305,389 +335,127 @@ class EditorState extends State<Editor> {
         wordSpacing: 0,
         fontWeight: FontWeight.w400,
       );
-  StrutStyle get _strut =>
-      StrutStyle.fromTextStyle(_style, forceStrutHeight: true);
-
-  double _textWidth(String text, {TextStyle? style}) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: style ?? _style),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      strutStyle: _strut,
-    )..layout();
-    final width = painter.width;
-    painter.dispose();
-    return width;
-  }
-
-  int? get _activeLine {
-    final controller = _controller(_activePosition);
-    if (!controller.selection.isValid) return null;
-    final offset =
-        controller.selection.extentOffset.clamp(0, controller.text.length);
-    return _firstLine(_activePosition) +
-        '\n'.allMatches(controller.text.substring(0, offset)).length;
-  }
-
-  List<EditorDiagnostic> get _diagnostics {
-    final lines = _sourceText.split('\n');
-    final insertion = _firstLine(RegionPosition.inner);
-    return [
-      for (final diagnostic in widget.diagnostics)
-        if (diagnostic.line > 0 &&
-            diagnostic.line <= lines.length &&
-            diagnostic.column > 0 &&
-            diagnostic.column <= lines[diagnostic.line - 1].length + 1 &&
-            diagnostic.length >= 0)
-          EditorDiagnostic(
-            line: _emptyInner && diagnostic.line >= insertion
-                ? diagnostic.line + 1
-                : diagnostic.line,
-            column: diagnostic.column,
-            length: diagnostic.length,
-            message: diagnostic.message,
-          ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
+    final document = _currentDocument;
     final options = widget.options;
+    final style = _style;
+    final scaler = MediaQuery.textScalerOf(context);
+    final strut = StrutStyle.fromTextStyle(style, forceStrutHeight: true);
     final rowHeight = getTextHeight(context);
-    final numberWidth = _textWidth(math.max(99, _numLines).toString());
-    final gutterWidth = math.max(options.linebarWidth, numberWidth + 8);
-    final diagnostics = _diagnostics;
+    final numberWidth = _measureText(
+        math.max(_minimumGutterNumber, document.lineCount).toString(),
+        style,
+        scaler,
+        strut);
+    final gutterWidth =
+        math.max(options.linebarWidth, numberWidth + _gutterPadding);
+    final diagnostics = document.placeDiagnostics(widget.diagnostics);
+    final contentWidth =
+        _widthCache.measure(document, diagnostics, style, scaler);
     final selection = Theme.of(context).textSelectionTheme;
-    final editor = TextSelectionTheme(
-      data: selection.copyWith(
-        cursorColor: options.cursorColor,
-        selectionColor: options.selectionColor,
-        selectionHandleColor: options.selectionHandleColor,
-      ),
-      child: LayoutBuilder(builder: (context, constraints) {
-        final fullHeight = _numLines * rowHeight;
-        final height = constraints.hasBoundedHeight
-            ? options.takeFullHeight
-                ? constraints.maxHeight
-                : math.min(fullHeight, constraints.maxHeight)
-            : fullHeight;
-        final viewportWidth =
-            constraints.maxWidth - (options.showLinebar ? gutterWidth : 0);
-        var contentWidth = math.max(0.0, viewportWidth);
-        var line = 1;
-        for (final position in _positions) {
-          for (final text in _controller(position).text.split('\n')) {
-            var width = _textWidth(text).ceilToDouble() + 24;
-            for (final diagnostic in diagnostics
-                .where((d) => d.line == line && d.message.isNotEmpty)) {
-              width = math.max(
-                  width,
-                  _textWidth(text) +
-                      _textWidth(diagnostic.message,
-                          style: _style.copyWith(
-                              fontSize: options.fontSize * .85)) +
-                      36);
-            }
-            contentWidth = math.max(contentWidth, width);
-            line++;
-          }
-        }
-        return SizedBox(
-          height: height,
-          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            if (options.showLinebar)
-              Container(
-                key: const ValueKey('phone-ide-gutter'),
-                width: gutterWidth,
-                decoration: BoxDecoration(
-                    color: options.linebarColor,
-                    border: Border(
-                        right: BorderSide(color: options.linebarBorderColor))),
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  controller: linebarController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _numLines,
-                  itemExtent: rowHeight,
-                  itemBuilder: (_, index) {
-                    final error = diagnostics.any((d) => d.line == index + 1);
-                    return Align(
-                      key: ValueKey('phone-ide-line-${index + 1}'),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${_fileLine(index + 1) ?? ''}',
-                        textDirection: TextDirection.ltr,
-                        strutStyle: _strut,
-                        style: _style.copyWith(
-                            color: error
-                                ? options.diagnosticColor
-                                : options.linebarTextColor,
-                            fontWeight:
-                                error ? FontWeight.w700 : FontWeight.w400),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            Expanded(
-                child: ColoredBox(
-              color: options.backgroundColor,
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                    gestureSettings: const DeviceGestureSettings(touchSlop: 8)),
-                child: Scrollbar(
-                  controller: horizontalController,
-                  notificationPredicate: (notification) =>
-                      notification.metrics.axis == Axis.horizontal,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: horizontalController,
-                    child: SizedBox(
-                        width: contentWidth,
-                        child: ListView(
-                          padding: EdgeInsets.zero,
-                          controller: scrollController,
-                          physics: const ClampingScrollPhysics(),
-                          children: [
-                            for (final position in _positions)
-                              _editorField(position, diagnostics, rowHeight)
-                          ],
-                        )),
-                  ),
-                ),
-              ),
-            )),
-          ]),
-        );
-      }),
-    );
     return TextFieldTapRegion(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         excludeFromSemantics: true,
         onTap: options.isEditable ? _focusMainField : null,
-        child: editor,
+        child: TextSelectionTheme(
+          data: selection.copyWith(
+              cursorColor: options.cursorColor,
+              selectionColor: options.selectionColor,
+              selectionHandleColor: options.selectionHandleColor),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final fullHeight = document.lineCount * rowHeight;
+            final height = constraints.hasBoundedHeight
+                ? options.takeFullHeight
+                    ? constraints.maxHeight
+                    : math.min(fullHeight, constraints.maxHeight)
+                : fullHeight;
+            final viewportWidth =
+                constraints.maxWidth - (options.showLinebar ? gutterWidth : 0);
+            return SizedBox(
+              height: height,
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (options.showLinebar)
+                      _Gutter(
+                          document: document,
+                          diagnostics: diagnostics,
+                          controller: linebarController,
+                          width: gutterWidth,
+                          rowHeight: rowHeight,
+                          style: style,
+                          options: options),
+                    Expanded(
+                        child: _codeViewport(
+                            document,
+                            diagnostics,
+                            style,
+                            rowHeight,
+                            math.max(
+                                contentWidth, math.max(0.0, viewportWidth)))),
+                  ]),
+            );
+          }),
+        ),
       ),
     );
   }
 
-  Widget _editorField(RegionPosition position,
-      List<EditorDiagnostic> diagnostics, double rowHeight) {
-    final options = widget.options;
-    final firstLine = _firstLine(position);
-    final controller = _controller(position);
-    final lines = controller.text.split('\n');
-    final active = _activeLine;
-    final localDiagnostics = diagnostics
-        .where((d) => d.line >= firstLine && d.line < firstLine + lines.length)
-        .toList();
-    final hasActive = active != null &&
-        active >= firstLine &&
-        active < firstLine + lines.length;
-    final region =
-        position == RegionPosition.inner ? options.regionOptions : null;
-    final borderColor = region?.borderColor;
-    final field = ColoredBox(
-      color: region?.color ?? options.backgroundColor,
-      child: CustomPaint(
-        key: ValueKey('phone-ide-highlights-${position.name}'),
-        painter: _DiagnosticPainter(
-            diagnostics: localDiagnostics,
-            lines: lines,
-            firstLine: firstLine,
-            rowHeight: rowHeight,
-            options: options,
-            textScaler: MediaQuery.textScalerOf(context),
-            foreground: false,
-            insertionLine:
-                _emptyInner ? _firstLine(RegionPosition.inner) : null),
-        foregroundPainter: _DiagnosticPainter(
-            diagnostics: localDiagnostics,
-            lines: lines,
-            firstLine: firstLine,
-            rowHeight: rowHeight,
-            options: options,
-            textScaler: MediaQuery.textScalerOf(context),
-            foreground: true,
-            insertionLine:
-                _emptyInner ? _firstLine(RegionPosition.inner) : null),
-        child: Stack(children: [
-          if (hasActive &&
-              (options.activeLineColor != null ||
-                  options.activeLineBorderColor != null))
-            Positioned(
-              top: (active - firstLine) * rowHeight,
-              left: 0,
-              right: 0,
-              height: rowHeight,
-              child: IgnorePointer(
-                  child: Container(
-                key: const ValueKey('phone-ide-active-line'),
-                decoration: BoxDecoration(
-                  color: localDiagnostics.any((d) => d.line == active)
-                      ? null
-                      : options.activeLineColor,
-                  border: Border(
-                      left: BorderSide(
-                          color: options.activeLineBorderColor ??
-                              Colors.transparent,
-                          width: 3)),
-                ),
-              )),
-            ),
-          TextField(
-            focusNode: _focusNodes[position],
-            controller: controller,
-            readOnly: !options.isEditable,
-            smartQuotesType: SmartQuotesType.disabled,
-            smartDashesType: SmartDashesType.disabled,
-            autocorrect: false,
-            enableSuggestions: false,
-            keyboardType: TextInputType.multiline,
-            textDirection: TextDirection.ltr,
-            cursorColor: options.cursorColor,
-            selectionHeightStyle: BoxHeightStyle.strut,
-            strutStyle: _strut,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              disabledBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              filled: false,
-              fillColor: Colors.transparent,
-              isCollapsed: true,
-              isDense: true,
-              contentPadding: EdgeInsets.only(left: 10, right: 10),
-            ),
-            maxLines: null,
-            minLines: lines.length,
-            style: _style,
-            onChanged: (text) =>
-                handleTextChange(text, position, options.regionOptions != null),
-            onTap: () => handleCurrentFocusedTextfieldController(position),
-            inputFormatters: [
-              FilteringTextInputFormatter.deny(RegExp(r'[“”]'),
-                  replacementString: '"'),
-              FilteringTextInputFormatter.deny(RegExp(r'[‘’]'),
-                  replacementString: "'"),
-            ],
-          ),
-        ]),
-      ),
-    );
-    return DecoratedBox(
-      key: ValueKey('phone-ide-region-${position.name}'),
-      position: DecorationPosition.foreground,
-      decoration: BoxDecoration(
-        border: borderColor == null
-            ? null
-            : Border(left: BorderSide(color: borderColor, width: 3)),
-      ),
-      child: field,
-    );
-  }
-}
-
-class _DiagnosticPainter extends CustomPainter {
-  const _DiagnosticPainter(
-      {required this.diagnostics,
-      required this.lines,
-      required this.firstLine,
-      required this.rowHeight,
-      required this.options,
-      required this.textScaler,
-      required this.foreground,
-      this.insertionLine});
-  final List<EditorDiagnostic> diagnostics;
-  final List<String> lines;
-  final int firstLine;
-  final double rowHeight;
-  final EditorOptions options;
-  final TextScaler textScaler;
-  final bool foreground;
-  final int? insertionLine;
-
-  TextPainter _text(String text, {bool message = false}) => TextPainter(
-        text: TextSpan(
-            text: text,
-            style: TextStyle(
-                fontFamily: options.fontFamily,
-                fontSize: options.fontSize * (message ? .85 : 1),
-                height: options.lineHeight,
-                color: options.diagnosticColor,
-                letterSpacing: 0,
-                wordSpacing: 0,
-                fontWeight: FontWeight.w400)),
-        textDirection: TextDirection.ltr,
-        textScaler: textScaler,
-      )..layout();
-
-  double _width(String text) {
-    final painter = _text(text);
-    final width = painter.width;
-    painter.dispose();
-    return width;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final annotated = <int>{};
-    for (final diagnostic in diagnostics) {
-      final line = diagnostic.line - firstLine;
-      final top = line * rowHeight;
-      if (!foreground) {
-        canvas.drawRect(Rect.fromLTWH(0, top, size.width, rowHeight),
-            Paint()..color = options.diagnosticBackgroundColor);
-        continue;
-      }
-      final text = lines[line];
-      final from = (diagnostic.column - 1).clamp(0, text.length);
-      final to = (from + diagnostic.length).clamp(from, text.length);
-      final start = 10 + _width(text.substring(0, from));
-      final end = math.max(start + 6, 10 + _width(text.substring(0, to)));
-      final path = Path()..moveTo(start, top + rowHeight - 3);
-      for (var x = start + 1; x <= end; x++) {
-        path.lineTo(
-            x, top + rowHeight - 3 + math.sin((x - start) * math.pi / 3) * 1.2);
-      }
-      canvas.drawPath(
-          path,
-          Paint()
-            ..color = options.diagnosticColor
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.3);
-      if (diagnostic.message.isNotEmpty && annotated.add(line)) {
-        final message =
-            _text(diagnostic.message.replaceAll('\n', ' '), message: true);
-        message.paint(canvas,
-            Offset(_width(text) + 26, top + (rowHeight - message.height) / 2));
-        message.dispose();
-      }
-    }
-  }
-
-  @override
-  SemanticsBuilderCallback? get semanticsBuilder => !foreground
-      ? null
-      : (size) => [
-            for (final diagnostic in diagnostics)
-              CustomPainterSemantics(
-                rect: Rect.fromLTWH(
-                    0,
-                    (diagnostic.line - firstLine) * rowHeight,
-                    size.width,
-                    rowHeight),
-                properties: SemanticsProperties(
-                  label:
-                      'Line ${insertionLine != null && diagnostic.line > insertionLine! ? diagnostic.line - 1 : diagnostic.line}: ${diagnostic.message.isEmpty ? 'Error' : diagnostic.message}',
-                  textDirection: TextDirection.ltr,
+  Widget _codeViewport(
+          _EditorDocument document,
+          List<_PlacedDiagnostic> diagnostics,
+          TextStyle style,
+          double rowHeight,
+          double width) =>
+      ColoredBox(
+        color: widget.options.backgroundColor,
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+              gestureSettings:
+                  const DeviceGestureSettings(touchSlop: _editorTouchSlop)),
+          child: Scrollbar(
+            controller: horizontalController,
+            notificationPredicate: (notification) =>
+                notification.metrics.axis == Axis.horizontal,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              controller: horizontalController,
+              child: SizedBox(
+                width: width,
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  controller: scrollController,
+                  physics: const ClampingScrollPhysics(),
+                  children: [
+                    for (final region in document.regions)
+                      _CodeField(
+                          region: region,
+                          controller: _controller(region.position),
+                          focusNode: _focusNodes[region.position]!,
+                          options: widget.options,
+                          style: style,
+                          rowHeight: rowHeight,
+                          activeLine: _activeLine,
+                          diagnostics: diagnostics
+                              .where((d) =>
+                                  d.visualLine >= region.firstLine &&
+                                  d.visualLine <
+                                      region.firstLine + region.lineCount)
+                              .toList(),
+                          onChanged: (text) => handleTextChange(
+                              text,
+                              region.position,
+                              widget.options.regionOptions != null),
+                          onTap: () => handleCurrentFocusedTextfieldController(
+                              region.position)),
+                  ],
                 ),
               ),
-          ];
-
-  @override
-  bool shouldRepaint(_DiagnosticPainter oldDelegate) => true;
+            ),
+          ),
+        ),
+      );
 }

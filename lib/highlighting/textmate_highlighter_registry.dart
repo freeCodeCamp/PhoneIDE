@@ -64,6 +64,9 @@ class TextMateHighlighterRegistry {
     'while',
   };
 
+  static const int _themeCacheCapacity = 8;
+  static const Set<String> _bracketCharacters = {'(', ')', '[', ']', '{', '}'};
+
   static const String _neverMatchingRegexPattern = r'^(?!x)x';
   static const String _scriptEmbedBeginPattern = r'(<script)(\s[^>]*?)?>';
   static const String _styleEmbedBeginPattern = r'(<style)(\s[^>]*?)?>';
@@ -221,7 +224,7 @@ class TextMateHighlighterRegistry {
   // each bracket as a separate span, while strings/comments retain their tokens.
   TextSpan _themeBrackets(TextSpan span, Color punctuation) => TextSpan(
         text: span.text,
-        style: const {'(', ')', '[', ']', '{', '}'}.contains(span.text)
+        style: _bracketCharacters.contains(span.text)
             ? (span.style ?? const TextStyle()).copyWith(color: punctuation)
             : span.style,
         children: span.children
@@ -321,7 +324,7 @@ class TextMateHighlighterRegistry {
         language: Highlighter(language: language, theme: theme),
     };
     // Keep simultaneous themes independent without retaining every theme ever used.
-    if (_themedHighlighters.length >= 8) {
+    if (_themedHighlighters.length >= _themeCacheCapacity) {
       _themedHighlighters.remove(_themedHighlighters.keys.first);
     }
     _themedHighlighters[syntaxTheme] = highlighters;
